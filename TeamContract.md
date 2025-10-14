@@ -74,3 +74,5 @@ contract is binding for the duration of the course and may be revised with the a
 Team Member Signatures:
 
 (type names here)
+
+Freeman Wang  
