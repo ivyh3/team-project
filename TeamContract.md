@@ -1,20 +1,5 @@
 # Team Contract
 
-**This is currently using the sample team contract. Delete the text in this section one done**
-
-**Your team is free to revise this contract as your team wishes; we have scaffolded it with a recommended structure
-similar to the provided sample on Quercus.**
-
-After you reflect on past teamwork experiences and brainstorm a list of actions required for a positive teamwork
-experience, answer these questions.
-
-Once you have all agreed on the contents of the team contract, make a PR to merge your team contract into the main
-branch of your team's repo on GitHub.
-
-**Please remember to remove any of the initial instruction text when your team finalizes your team contract; it should
-resemble the provided sample once complete, but with details specific to the expectations and norms agreed to by your
-entire team.**
-
 ---
 
 ## Purpose of this Contract
@@ -26,6 +11,12 @@ assurance tests, in-class activities, and our course project.
 ---
 
 ## Team Norms and Expectations
+
+### Preparation
+
+- Each team member commits to reading assigned materials and completing individual readiness work before class.
+
+- Members who come unprepared agree to accept reasonable consequences determined by the team (e.g., lower peer evaluation scores).
 
 ### Communication
 
