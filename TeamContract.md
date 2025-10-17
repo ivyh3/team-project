@@ -75,4 +75,4 @@ Team Member Signatures:
 
 (type names here)
 
-Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc
+Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc, Tess Madison
