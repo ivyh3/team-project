@@ -73,4 +73,4 @@ contract is binding for the duration of the course and may be revised with the a
 
 Team Member Signatures:
 
-Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc, Tess Madison
+Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc, Tess Madison, Sarah Hamdi
