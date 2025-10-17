@@ -75,4 +75,4 @@ Team Member Signatures:
 
 (type names here)
 
-Freeman Wang, Ivy Huang  
+Freeman Wang, Ivy Huang, Mia Sung  
