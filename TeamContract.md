@@ -18,6 +18,8 @@ assurance tests, in-class activities, and our course project.
 
 - Members who come unprepared agree to accept reasonable consequences determined by the team (e.g., lower peer evaluation scores).
 
+---
+
 ### Communication
 
 - We will be using **Discord** as our primary communication channel.
@@ -38,6 +40,14 @@ assurance tests, in-class activities, and our course project.
 
 - Decisions will be made by consensus when possible.
 - If consensus cannot be reached, a vote will be taken; majority rules.
+
+---
+
+## Work Quality
+
+- All deliverables should be completed on time, tested, and meet the agreed quality standard.
+
+- Members agree to review each other’s work constructively before submission. Each Pull Request will be reviewed by at least two team members.
 
 ---
 
