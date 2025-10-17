@@ -30,9 +30,8 @@ assurance tests, in-class activities, and our course project.
 
 ### Attendance and Participation
 
-- Members will attend all scheduled classes and team meetings unless illness or emergencies occur.
+- Members will attend team meetings unless illness or emergencies occur.
 - If unable to attend, a member must notify the team in advance and provide input asynchronously.
-- During team activities, every member will contribute ideas and engage in the discussion.
 
 ---
 
