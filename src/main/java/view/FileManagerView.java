@@ -5,14 +5,14 @@ import app.AppBuilder;
 import javax.swing.*;
 import java.awt.*;
 
-public class ScheduleSessionView extends View {
-    public ScheduleSessionView() {
-        super("scheduleSession");
+public class FileManagerView extends View {
+    public FileManagerView() {
+        super("fileManager");
 
-        JPanel header = new ViewHeader("Schedule Session");
+        JPanel header = new ViewHeader("Manage Files");
         JPanel main = new JPanel();
 
-        JButton returnButton = new JButton("Return");
+        JButton returnButton = new JButton("Return Home");
         returnButton.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("dashboard");
         });
