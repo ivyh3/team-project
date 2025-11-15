@@ -24,7 +24,7 @@ public class StudySessionConfigState {
         this.sessionType = sessionType;
     }
 
-    public int getTargetDuration() {
+    public Integer getTargetDuration() {
         return targetDurationMinutes;
     }
 

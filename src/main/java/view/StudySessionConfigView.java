@@ -12,10 +12,22 @@ import java.util.Map;
 
 public class StudySessionConfigView extends StatefulView<StudySessionConfigState> {
     private final JPanel viewHeader = new ViewHeader("Session Config");
-    private final JLabel currentStepLabel = new JLabel("1.Select Type");
+    private final JLabel currentStepLabel = new JLabel();
     private final JPanel mainCardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel chooseSessionTypePanel, chooseDurationPanel, chooseReferenceMaterialsPanel;
+
+    private static final Map<StudySessionConfigState.ConfigStep, String> STEP_LABELS = Map.of(
+            StudySessionConfigState.ConfigStep.CHOOSE_TYPE, "Select Session Type",
+            StudySessionConfigState.ConfigStep.CHOOSE_DURATION, "Select Session Duration",
+            StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE, "Provide Session Context"
+    );
+    private static final Map<StudySessionConfigState.ConfigStep, String> VIEW_NAMES = Map.of(
+            StudySessionConfigState.ConfigStep.CHOOSE_TYPE, "chooseSessionType",
+            StudySessionConfigState.ConfigStep.CHOOSE_DURATION, "chooseDuration",
+            StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE, "chooseReferenceMaterials"
+    );
+
     private StudySessionConfigController studySessionConfigController;
     public StudySessionConfigView(StudySessionConfigViewModel viewModel) {
         super("studySessionConfig", viewModel);
@@ -26,12 +38,13 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         chooseDurationPanel = buildChooseDurationPanel();
         chooseReferenceMaterialsPanel = buildChooseReferenceMaterialsPanel();
 
-        mainCardPanel.add(chooseSessionTypePanel, "chooseSessionType");
-        mainCardPanel.add(chooseDurationPanel, "chooseDuration");
-        mainCardPanel.add(chooseReferenceMaterialsPanel, "chooseReferenceMaterials");
+        mainCardPanel.add(chooseSessionTypePanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_TYPE));
+        mainCardPanel.add(chooseDurationPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_DURATION));
+        mainCardPanel.add(chooseReferenceMaterialsPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE));
 
-        cardLayout.show(mainCardPanel, "chooseSessionType");
+        cardLayout.show(mainCardPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_TYPE));
 
+        currentStepLabel.setText(STEP_LABELS.get(viewModel.getState().getStep()));
         currentStepLabel.setFont(new Font(null, Font.BOLD, 16));
         viewHeader.add(currentStepLabel, BorderLayout.EAST);
         this.add(viewHeader, BorderLayout.NORTH);
@@ -72,6 +85,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton nextButton = new JButton("Next");
 
         cancelButton.addActionListener(e -> {
+            // TODO: Remove back navigation or somehow add to CA
             StudySessionConfigState state = viewModel.getState();
             state.setSessionType(null);
             state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_TYPE);
@@ -80,8 +94,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         nextButton.addActionListener(e -> {
             StudySessionConfigState state = viewModel.getState();
             state.setTargetDuration((Integer) hoursSelector.getValue() * 60 + (Integer) minutesSelector.getValue());
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE);
-            viewModel.firePropertyChange();
+            studySessionConfigController.execute(state);
         });
 
         navigationContainer.add(cancelButton);
@@ -128,9 +141,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         timedSessionButton.addActionListener(e -> {
             StudySessionConfigState state = viewModel.getState();
             state.setSessionType(StudySessionConfigState.SessionType.FIXED);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_DURATION);
             studySessionConfigController.execute(state);
-//            viewModel.firePropertyChange();
         });
 
         timedSessionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -154,8 +165,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         variableSessionButton.addActionListener(e -> {
             StudySessionConfigState state = viewModel.getState();
             state.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE);
-            viewModel.firePropertyChange();
+            studySessionConfigController.execute(state);
         });
 
         variableSessionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -173,6 +183,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         final JButton returnButton = new JButton("Cancel");
         returnButton.addActionListener(e -> {
             if (e.getSource().equals(returnButton)) {
+                // TODO: Remove back navigation or somehow add to CA
                 viewModel.setState(new StudySessionConfigState());
                 AppBuilder.viewManagerModel.setView("dashboard");
             }
@@ -194,6 +205,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton nextButton = new JButton("Next");
 
         cancelButton.addActionListener(e -> {
+            // TODO: Remove back navigation or somehow add to CA
             StudySessionConfigState state = viewModel.getState();
             state.setSessionType(null);
             state.setTargetDuration(null);
@@ -202,12 +214,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         });
         nextButton.addActionListener(e -> {
             StudySessionConfigState state = viewModel.getState();
-            if (state.getSessionType() == StudySessionConfigState.SessionType.FIXED) {
-                // NEED A NAVIGATION USE CASE AND CONTROLLER LATER
-                AppBuilder.viewManagerModel.setView("fixedSession");
-            } else {
-                AppBuilder.viewManagerModel.setView("variableSession");
-            }
+            studySessionConfigController.execute(state);
         });
 
         chooseReferenceMaterialsPanel.add(cancelButton);
@@ -220,17 +227,17 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         switch (step) {
             case CHOOSE_TYPE:
                 cardLayout.show(mainCardPanel, "chooseSessionType");
-                currentStepLabel.setText("1. Select Type");
                 break;
             case CHOOSE_REFERENCE:
                 cardLayout.show(mainCardPanel, "chooseReferenceMaterials");
-                currentStepLabel.setText("2. Select Reference");
+
                 break;
             case CHOOSE_DURATION:
                 cardLayout.show(mainCardPanel, "chooseDuration");
-                currentStepLabel.setText("1.5 Select Duration");
+
                 break;
         }
+        currentStepLabel.setText(STEP_LABELS.get(step));
     }
 
     public void setStudySessionConfigController(StudySessionConfigController studySessionConfigController) {

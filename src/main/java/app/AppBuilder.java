@@ -5,6 +5,7 @@ import interface_adapter.controller.StudySessionConfigController;
 import interface_adapter.presenter.ConfigStudySessionPresenter;
 import interface_adapter.view_model.SettingsViewModel;
 import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import use_case.config_study_session.ConfigStudySessionInteractor;
 import view.*;
@@ -26,7 +27,10 @@ public class AppBuilder {
 
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
+    private StudySessionView studySessionView;
+
     private StudySessionConfigViewModel studySessionConfigViewModel;
+    private StudySessionViewModel studySessionViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -49,6 +53,14 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addStudySessionView() {
+        studySessionViewModel = new StudySessionViewModel();
+        studySessionView = new StudySessionView(studySessionViewModel);
+
+        cardPanel.add(studySessionView, studySessionView.getViewName());
+        return this;
+    }
+
     public AppBuilder addStudySessionConfigView() {
         studySessionConfigViewModel = new StudySessionConfigViewModel();
         studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel);
@@ -57,7 +69,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addConfigStudySessionUseCase() {
-        ConfigStudySessionPresenter configStudySessionPresenter = new ConfigStudySessionPresenter(studySessionConfigViewModel);
+        ConfigStudySessionPresenter configStudySessionPresenter = new ConfigStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel);
         ConfigStudySessionInteractor configStudySessionInteractor = new ConfigStudySessionInteractor(configStudySessionPresenter);
         StudySessionConfigController studySessionConfigController = new StudySessionConfigController(configStudySessionInteractor);
         studySessionConfigView.setStudySessionConfigController(studySessionConfigController);

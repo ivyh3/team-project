@@ -46,6 +46,7 @@ public class Main {
                     .addQuizHistoryView()
                     .addScheduleSessionView()
                     .addStudyMetricsView()
+                    .addStudySessionView()
                     .addStudySessionConfigView()
                     .addConfigStudySessionUseCase()
                     .build();
