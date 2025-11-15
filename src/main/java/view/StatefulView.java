@@ -2,6 +2,7 @@ package view;
 
 import interface_adapter.view_model.ViewModel;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
@@ -14,7 +15,11 @@ public abstract class StatefulView<T> extends View implements PropertyChangeList
     public StatefulView(String viewName, ViewModel<T> viewModel) {
         super(viewName);
         this.viewModel = viewModel;
-
         this.viewModel.addPropertyChangeListener(this);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+
     }
 }

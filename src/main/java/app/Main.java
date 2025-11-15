@@ -37,8 +37,8 @@ public class Main {
             JFrame app = appBuilder
                     .addDashboardView()
                     .addSettingsView()
-                    .addChooseStudySessionView()
-                    .addUploadSessionMaterialsView()
+//                    .addChooseStudySessionView()
+//                    .addUploadSessionMaterialsView()
                     .addStudySessionEndView()
                     .addVariableSessionView()
                     .addStudyQuizView()
@@ -46,6 +46,8 @@ public class Main {
                     .addQuizHistoryView()
                     .addScheduleSessionView()
                     .addStudyMetricsView()
+                    .addStudySessionConfigView()
+                    .addConfigStudySessionUseCase()
                     .build();
 
             app.pack();

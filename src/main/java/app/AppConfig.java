@@ -43,7 +43,7 @@ public class AppConfig {
 	private StudySessionViewModel studySessionViewModel;
 	private QuizViewModel quizViewModel;
 	private MetricsViewModel metricsViewModel;
-	private UploadMaterialsViewModel uploadMaterialsViewModel;
+//	private UploadMaterialsViewModel uploadMaterialsViewModel;
 	private ScheduleSessionViewModel scheduleSessionViewModel;
 
 	// Presenters (Interface Adapter layer - implement Output Boundaries)
@@ -103,7 +103,7 @@ public class AppConfig {
 		studySessionViewModel = new StudySessionViewModel();
 		quizViewModel = new QuizViewModel();
 		metricsViewModel = new MetricsViewModel();
-		uploadMaterialsViewModel = new UploadMaterialsViewModel();
+//		uploadMaterialsViewModel = new UploadMaterialsViewModel();
 		scheduleSessionViewModel = new ScheduleSessionViewModel();
 	}
 
@@ -164,9 +164,9 @@ public class AppConfig {
 		return metricsViewModel;
 	}
 
-	public UploadMaterialsViewModel getUploadMaterialsViewModel() {
-		return uploadMaterialsViewModel;
-	}
+//	public UploadMaterialsViewModel getUploadMaterialsViewModel() {
+//		return uploadMaterialsViewModel;
+//	}
 
 	public ScheduleSessionViewModel getScheduleSessionViewModel() {
 		return scheduleSessionViewModel;

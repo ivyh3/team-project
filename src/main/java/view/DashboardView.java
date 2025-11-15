@@ -46,7 +46,7 @@ public class DashboardView extends View {
             AppBuilder.viewManagerModel.setView("quizHistory");
         });
         startStudyingButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("chooseStudySession");
+            AppBuilder.viewManagerModel.setView("studySessionConfig");
         });
         scheduleStudySessionButton.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("scheduleSession");

@@ -1,8 +1,12 @@
 package app;
 
 
+import interface_adapter.controller.StudySessionConfigController;
+import interface_adapter.presenter.ConfigStudySessionPresenter;
 import interface_adapter.view_model.SettingsViewModel;
+import interface_adapter.view_model.StudySessionConfigViewModel;
 import interface_adapter.view_model.ViewManagerModel;
+import use_case.config_study_session.ConfigStudySessionInteractor;
 import view.*;
 import view.SettingsView;
 
@@ -21,6 +25,8 @@ public class AppBuilder {
 //    final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
 
     private DashboardView dashboardView;
+    private StudySessionConfigView studySessionConfigView;
+    private StudySessionConfigViewModel studySessionConfigViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -40,6 +46,21 @@ public class AppBuilder {
 
         cardPanel.add(settingsView, settingsView.getViewName());
 
+        return this;
+    }
+
+    public AppBuilder addStudySessionConfigView() {
+        studySessionConfigViewModel = new StudySessionConfigViewModel();
+        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel);
+        cardPanel.add(studySessionConfigView, studySessionConfigView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addConfigStudySessionUseCase() {
+        ConfigStudySessionPresenter configStudySessionPresenter = new ConfigStudySessionPresenter(studySessionConfigViewModel);
+        ConfigStudySessionInteractor configStudySessionInteractor = new ConfigStudySessionInteractor(configStudySessionPresenter);
+        StudySessionConfigController studySessionConfigController = new StudySessionConfigController(configStudySessionInteractor);
+        studySessionConfigView.setStudySessionConfigController(studySessionConfigController);
         return this;
     }
 
