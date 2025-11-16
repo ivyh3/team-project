@@ -57,4 +57,8 @@ public interface ReferenceMaterialRepository {
 	 * @return true if the material exists, false otherwise
 	 */
 	boolean existsByFingerprint(String userId, String fingerprint);
+
+    Object findById(String materialId);
+
+    void deleteById(String materialId);
 }
