@@ -1,17 +1,24 @@
 package use_case.config_study_session;
 
 import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigState.ConfigStep;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ConfigStudySessionInteractor implements ConfigStudySessionInputBoundary {
     private final ConfigStudySessionOutputBoundary presenter;
+    // private ReferenceFilesDataAccessInterface referenceFilesDataAccessObject
+    private final List<String> files = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf",
+            "pdf.pdf");
 
     public ConfigStudySessionInteractor(ConfigStudySessionOutputBoundary presenter) {
         this.presenter = presenter;
     }
 
-    public void execute(StudySessionConfigState state) {
+    public void execute(ConfigStudySessionInputData inputData) {
+        StudySessionConfigState state = inputData.getState();
         switch (state.getStep()) {
             case CHOOSE_TYPE:
                 handleSessionTypeSelection(state);
@@ -26,41 +33,69 @@ public class ConfigStudySessionInteractor implements ConfigStudySessionInputBoun
     }
 
     private void handleSessionTypeSelection(StudySessionConfigState state) {
-        switch (state.getSessionType()) {
+        StudySessionConfigState nextState = state;
+
+        switch (nextState.getSessionType()) {
             case FIXED:
-                state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_DURATION);
+                nextState.setStep(ConfigStep.CHOOSE_DURATION);
                 break;
             case VARIABLE:
-                state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE);
+                nextState.setStep(ConfigStep.CHOOSE_REFERENCE);
+                nextState.setFileOptions(files); // prep options
                 break;
         }
-        presenter.updateConfig(state);
+
+        ConfigStudySessionOutputData outputData = new ConfigStudySessionOutputData(
+            nextState
+        );
+
+        presenter.updateConfig(outputData);
     }
 
     private void handleDurationSelection(StudySessionConfigState state) {
+        List<String> errors = new ArrayList<>();
         if (state.getTargetDuration() == null || state.getTargetDuration() <= 0) {
-            // Throw exception
+            errors.add("Please study a bit more seriously!");
         }
-        state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE);
-        presenter.updateConfig(state);
+
+        if (!errors.isEmpty()) {
+            presenter.prepareErrorView(errors);
+            return;
+        }
+
+        state.setStep(ConfigStep.CHOOSE_REFERENCE);
+        state.setFileOptions(files); // prep options
+
+        ConfigStudySessionOutputData outputData = new ConfigStudySessionOutputData(
+                state);
+        presenter.updateConfig(outputData);
     }
 
     private void handleReferenceSelection(StudySessionConfigState state) {
+        List<String> errors = new ArrayList<>();
         String file = state.getReferenceFile();
-        if (file == null) {
-            // Throw exception
+        if (file == null || file.isEmpty()) {
+            errors.add("Please select a reference file.");
         } else if (!checkIfFileExists(file)) {
-            // throw exception
+            errors.add("Reference file does not exist in storage.");
         }
 
         String prompt = state.getPrompt();
 
         if (prompt == null || prompt.isEmpty()) {
-            // throw exception
+            errors.add("Please provide a prompt describing what to study.");
         }
 
-        // Valid reference materials (textbook, prompt)
-        presenter.startStudySession(state);
+        ConfigStudySessionOutputData outputData = new ConfigStudySessionOutputData(
+            state
+        );
+        if (errors.isEmpty()) {
+            // No errors, can start session
+            presenter.startStudySession(outputData);
+        } else {
+            // Errors, remain on current step
+            presenter.prepareErrorView(errors);
+        }
     }
 
     private boolean checkIfFileExists(String file) {

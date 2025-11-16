@@ -8,6 +8,7 @@ public class EndStudySessionInteractor implements EndStudySessionInputBoundary {
         this.presenter = presenter;
     }
     public void execute(StudySessionState state) {
+        // TODO: Save the sttudy session data to a database here
         presenter.prepareEndView(state);
     }
 }

@@ -17,12 +17,18 @@ public class ConfigStudySessionPresenter implements ConfigStudySessionOutputBoun
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
     }
-    public void updateConfig(StudySessionConfigState state) {
-        studySessionConfigViewModel.setState(state);
+    public void updateConfig(ConfigStudySessionOutputData outputData) {
+        studySessionConfigViewModel.setState(outputData.getState());
     }
 
-    public void startStudySession(StudySessionConfigState config) {
-        studySessionViewModel.setState(new StudySessionState(config, LocalDateTime.now()));
+    public void prepareErrorView(java.util.List<String> errors) {
+        studySessionConfigViewModel.getState().setErrors(errors);
+        studySessionConfigViewModel.firePropertyChange("errors");
+    }
+
+    public void startStudySession(ConfigStudySessionOutputData outputData) {
+        StudySessionConfigState finalConfig = outputData.getState();
+        studySessionViewModel.setState(new StudySessionState(finalConfig, LocalDateTime.now()));
 
         studySessionConfigViewModel.setState(new StudySessionConfigState()); // Reset state
         AppBuilder.viewManagerModel.setView(studySessionViewModel.getViewName());

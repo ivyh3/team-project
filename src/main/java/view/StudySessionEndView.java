@@ -49,7 +49,8 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        System.out.println(viewModel.getState());
-        resultLabel.setText("You studied for " + formatDuration(viewModel.getState().getDuration()));
+        StudySessionEndState state = (StudySessionEndState) evt.getNewValue();
+        System.out.println(state);
+        resultLabel.setText("You studied for " + formatDuration(state.getDuration()));
     }
 }

@@ -1,6 +1,5 @@
 package view;
 
-import app.AppBuilder;
 import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionState;
@@ -107,8 +106,9 @@ public class StudySessionView extends StatefulView<StudySessionState> {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        System.out.println(viewModel.getState());
-        if (viewModel.getState().isActive()) {
+        final StudySessionState newState = (StudySessionState) evt.getNewValue();
+        System.out.println(newState);
+        if (newState.isActive()) {
             onSessionStart();
         } else {
             onSessionEnd();

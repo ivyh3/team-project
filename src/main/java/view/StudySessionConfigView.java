@@ -8,14 +8,18 @@ import interface_adapter.view_model.StudySessionConfigViewModel;
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
+import java.util.List;
 import java.util.Map;
 
+// TODO: Reset stateful components to initial state somehow when resetting state
 public class StudySessionConfigView extends StatefulView<StudySessionConfigState> {
     private final JPanel viewHeader = new ViewHeader("Session Config");
     private final JLabel currentStepLabel = new JLabel();
     private final JPanel mainCardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel chooseSessionTypePanel, chooseDurationPanel, chooseReferenceMaterialsPanel;
+
+    private final JComboBox<String> fileSelector = new JComboBox<>();
 
     private static final Map<StudySessionConfigState.ConfigStep, String> STEP_LABELS = Map.of(
             StudySessionConfigState.ConfigStep.CHOOSE_TYPE, "Select Session Type",
@@ -29,6 +33,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     );
 
     private StudySessionConfigController studySessionConfigController;
+
     public StudySessionConfigView(StudySessionConfigViewModel viewModel) {
         super("studySessionConfig", viewModel);
 
@@ -42,9 +47,10 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         mainCardPanel.add(chooseDurationPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_DURATION));
         mainCardPanel.add(chooseReferenceMaterialsPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE));
 
-        cardLayout.show(mainCardPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_TYPE));
 
-        currentStepLabel.setText(STEP_LABELS.get(viewModel.getState().getStep()));
+        updateFileSelector(viewModel.getState().getFileOptions());
+        updateViewStep(viewModel.getState().getStep());
+
         currentStepLabel.setFont(new Font(null, Font.BOLD, 16));
         viewHeader.add(currentStepLabel, BorderLayout.EAST);
         this.add(viewHeader, BorderLayout.NORTH);
@@ -203,7 +209,18 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     }
 
     private JPanel buildChooseReferenceMaterialsPanel() {
+        // TODO: Make this look better
         JPanel chooseReferenceMaterialsPanel = new JPanel();
+
+        JPanel promptPanel = new JPanel();
+        promptPanel.setBorder(BorderFactory.createTitledBorder("Study Session Context"));
+        JTextArea promptTextArea = new JTextArea();
+        promptPanel.add(promptTextArea);
+
+
+        JPanel selectorPanel = new JPanel();
+        selectorPanel.setBorder(BorderFactory.createTitledBorder("Study Session Textbook"));
+        selectorPanel.add(fileSelector);
 
 
         JButton cancelButton = new JButton("Cancel");
@@ -219,29 +236,29 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         });
         nextButton.addActionListener(e -> {
             StudySessionConfigState state = viewModel.getState();
+            state.setPrompt(promptTextArea.getText());
+            state.setReferenceFile((String) fileSelector.getSelectedItem());
             studySessionConfigController.execute(state);
         });
 
+        chooseReferenceMaterialsPanel.add(promptPanel);
+        chooseReferenceMaterialsPanel.add(selectorPanel);
         chooseReferenceMaterialsPanel.add(cancelButton);
         chooseReferenceMaterialsPanel.add(nextButton);
 
         return chooseReferenceMaterialsPanel;
     }
 
-    private void setViewStep(StudySessionConfigState.ConfigStep step) {
-        switch (step) {
-            case CHOOSE_TYPE:
-                cardLayout.show(mainCardPanel, "chooseSessionType");
-                break;
-            case CHOOSE_REFERENCE:
-                cardLayout.show(mainCardPanel, "chooseReferenceMaterials");
-
-                break;
-            case CHOOSE_DURATION:
-                cardLayout.show(mainCardPanel, "chooseDuration");
-
-                break;
+    private void updateFileSelector(List<String> fileNames) {
+        fileSelector.removeAllItems();
+        if (fileNames == null) return;
+        for (String fileName : fileNames) {
+            fileSelector.addItem(fileName);
         }
+    }
+
+    private void updateViewStep(StudySessionConfigState.ConfigStep step) {
+        cardLayout.show(mainCardPanel, VIEW_NAMES.get(step));
         currentStepLabel.setText(STEP_LABELS.get(step));
     }
 
@@ -252,9 +269,18 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
-            StudySessionConfigState state = viewModel.getState();
+            StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
             System.out.println(state);
-            setViewStep(state.getStep());
+            updateViewStep(state.getStep());
+            updateFileSelector(state.getFileOptions());
+        }
+        else if (evt.getPropertyName().equals("errors")) {
+            StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
+            List<String> errors = state.getErrors();
+            if (errors != null && !errors.isEmpty()) {
+                String errorMessage = String.join("\n", errors);
+                JOptionPane.showMessageDialog(this, errorMessage, "Configuration Errors", JOptionPane.ERROR_MESSAGE);
+            }
         }
 
     }

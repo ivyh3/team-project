@@ -30,10 +30,6 @@ public class StudySessionState {
         return Duration.between(startTime, LocalDateTime.now());
     }
 
-    public boolean isSessionOver() {
-        return isActive;
-    }
-
     public StudySessionConfigState.SessionType getSessionType() {
         return sessionType;
     }
