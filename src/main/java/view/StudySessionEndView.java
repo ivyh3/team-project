@@ -1,13 +1,19 @@
 package view;
 
 import app.AppBuilder;
+import interface_adapter.view_model.StudySessionEndState;
+import interface_adapter.view_model.StudySessionEndViewModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.time.Duration;
 
-public class StudySessionEndView extends View {
-    public StudySessionEndView() {
-        super("studySessionEnd");
+public class StudySessionEndView extends StatefulView<StudySessionEndState> {
+    private final JLabel resultLabel = new JLabel();
+
+    public StudySessionEndView(StudySessionEndViewModel viewModel) {
+        super("studySessionEnd", viewModel);
 
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -15,9 +21,8 @@ public class StudySessionEndView extends View {
         JLabel studySessionEndLabel = new JLabel("Study Session End");
         studySessionEndLabel.setFont(new Font(null, Font.BOLD, 52));
         studySessionEndLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel durationLabel = new JLabel("You studied for 1h 40m");
-        durationLabel.setFont(new Font(null, Font.BOLD, 28));
-        durationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resultLabel.setFont(new Font(null, Font.BOLD, 28));
+        resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JButton quizMeButton = new JButton("Quiz Me");
         quizMeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -27,11 +32,24 @@ public class StudySessionEndView extends View {
 
         main.add(Box.createVerticalGlue());
         main.add(studySessionEndLabel);
-        main.add(durationLabel);
+        main.add(resultLabel);
         main.add(Box.createVerticalGlue());
         main.add(quizMeButton);
         main.add(Box.createVerticalGlue());
 
         this.add(main, BorderLayout.CENTER);
+    }
+
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+        return String.format("%02dh %02dm %02ds", hours, minutes, seconds);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        System.out.println(viewModel.getState());
+        resultLabel.setText("You studied for " + formatDuration(viewModel.getState().getDuration()));
     }
 }

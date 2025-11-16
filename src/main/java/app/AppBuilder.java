@@ -1,13 +1,13 @@
 package app;
 
 
+import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.StudySessionConfigController;
 import interface_adapter.presenter.ConfigStudySessionPresenter;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.StudySessionConfigViewModel;
-import interface_adapter.view_model.StudySessionViewModel;
-import interface_adapter.view_model.ViewManagerModel;
+import interface_adapter.presenter.EndStudySessionPresenter;
+import interface_adapter.view_model.*;
 import use_case.config_study_session.ConfigStudySessionInteractor;
+import use_case.end_study_session.EndStudySessionInteractor;
 import view.*;
 import view.SettingsView;
 
@@ -28,9 +28,11 @@ public class AppBuilder {
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
+    private StudySessionEndView studySessionEndView;
 
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
+    private StudySessionEndViewModel studySessionEndViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -90,8 +92,17 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudySessionEndView() {
-        StudySessionEndView studySessionEndView = new StudySessionEndView();
+        studySessionEndViewModel = new StudySessionEndViewModel();
+        studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
         cardPanel.add(studySessionEndView, studySessionEndView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addEndStudySessionUseCase() {
+        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel, studySessionEndViewModel);
+        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
+        EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
+        studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
     }
 
