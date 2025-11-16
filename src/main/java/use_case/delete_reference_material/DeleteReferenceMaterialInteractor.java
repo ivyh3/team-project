@@ -50,7 +50,7 @@ public class DeleteReferenceMaterialInteractor implements DeleteReferenceMateria
         try {
             // Ensure material exists
             for (String materialId : materialIds) {
-                var material = materialRepository.findById(materialId);
+                var material = materialRepository.getById(inputData.getUserId(),  materialId);
                 if (material == null) {
                     outputBoundary.prepareFailView(materialId);
                     return;
@@ -69,7 +69,7 @@ public class DeleteReferenceMaterialInteractor implements DeleteReferenceMateria
 
             // 3. Delete metadata from repository
             for (String materialId : materialIds) {
-                materialRepository.deleteById(materialId);
+                materialRepository.delete(inputData.getUserId(), materialId);
             }
 
             // 4. Prepare success view

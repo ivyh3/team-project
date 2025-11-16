@@ -58,7 +58,4 @@ public interface ReferenceMaterialRepository {
 	 */
 	boolean existsByFingerprint(String userId, String fingerprint);
 
-    Object findById(String materialId);
-
-    void deleteById(String materialId);
 }
