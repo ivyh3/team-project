@@ -62,11 +62,16 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JLabel hoursLabel = new JLabel("Hours");
         hoursLabel.setFont(new Font(null, Font.BOLD, 24));
         JSpinner hoursSelector = new JSpinner(new SpinnerNumberModel(1, 0, 23, 1));
+        hoursSelector.setEditor(new JSpinner.DefaultEditor(hoursSelector)); // Prevent manual edit of field
+//        ((JSpinner.DefaultEditor) hoursSelector.getEditor()).getTextField().setEditable(false); alternative way (right aligned text)
+
         hoursSelector.setMaximumSize(new Dimension(100, 30));
         hoursSelector.setFont(new Font(null, Font.PLAIN, 20));
+
         JLabel minutesLabel = new JLabel("Minutes");
         minutesLabel.setFont(new Font(null, Font.BOLD, 24));
         JSpinner minutesSelector = new JSpinner(new SpinnerNumberModel(0, 0, 55, 5));
+        minutesSelector.setEditor(new JSpinner.DefaultEditor(minutesSelector)); // Prevent manual edit of field
         minutesSelector.setMaximumSize(new Dimension(100, 30));
         minutesSelector.setFont(new Font(null, Font.PLAIN, 20));
 
