@@ -18,4 +18,15 @@ public class StudySessionConfigController {
 
         interactor.execute(inputData);
     }
+
+    public void undo(StudySessionConfigState state) {
+        ConfigStudySessionInputData inputData = new ConfigStudySessionInputData(
+                state.copy()
+        );
+        interactor.undo(inputData);
+    }
+//
+//    public void updateSessionDuration(int targetMinutes) {
+//        interactor.setSessionDuration();
+//    }
 }

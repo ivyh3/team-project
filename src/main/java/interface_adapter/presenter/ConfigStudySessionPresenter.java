@@ -34,4 +34,15 @@ public class ConfigStudySessionPresenter implements ConfigStudySessionOutputBoun
         AppBuilder.viewManagerModel.setView(studySessionViewModel.getViewName());
 
     }
+
+    @Override
+    public void abortStudySessionConfig() {
+        // Reset config state.
+        studySessionConfigViewModel.setState(new StudySessionConfigState());
+        System.out.println("full reset");
+        System.out.println(studySessionConfigViewModel.getState());
+        // Navigate back to the dashboard.
+        // TODO: MAke the presenter contain reference to the dashboard view/viewmodel
+        AppBuilder.viewManagerModel.setView("dashboard");
+    }
 }

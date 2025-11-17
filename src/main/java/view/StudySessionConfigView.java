@@ -96,14 +96,11 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton nextButton = new JButton("Next");
 
         cancelButton.addActionListener(e -> {
-            // TODO: Remove back navigation or somehow add to CA
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(null);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_TYPE);
-            viewModel.firePropertyChange();
+            StudySessionConfigState state = viewModel.getState().copy();
+            studySessionConfigController.undo(state);
         });
         nextButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
+            StudySessionConfigState state = viewModel.getState().copy();
             state.setTargetDuration((Integer) hoursSelector.getValue() * 60 + (Integer) minutesSelector.getValue());
             studySessionConfigController.execute(state);
         });
@@ -150,7 +147,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton timedSessionButton = new JButton("I want a timed session!");
 
         timedSessionButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
+            StudySessionConfigState state = viewModel.getState().copy();
             state.setSessionType(StudySessionConfigState.SessionType.FIXED);
             studySessionConfigController.execute(state);
         });
@@ -174,7 +171,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
 
         JButton variableSessionButton = new JButton("I want a variable session!");
         variableSessionButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
+            StudySessionConfigState state = viewModel.getState().copy();
             state.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
             studySessionConfigController.execute(state);
         });
@@ -193,11 +190,8 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
 
         final JButton returnButton = new JButton("Cancel");
         returnButton.addActionListener(e -> {
-            if (e.getSource().equals(returnButton)) {
-                // TODO: Remove back navigation or somehow add to CA
-                viewModel.setState(new StudySessionConfigState());
-                AppBuilder.viewManagerModel.setView("dashboard");
-            }
+            StudySessionConfigState state = viewModel.getState().copy();
+            studySessionConfigController.undo(state);
         });
         returnButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -227,15 +221,11 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton nextButton = new JButton("Next");
 
         cancelButton.addActionListener(e -> {
-            // TODO: Remove back navigation or somehow add to CA
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(null);
-            state.setTargetDuration(null);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_TYPE);
-            viewModel.firePropertyChange();
+            StudySessionConfigState state = viewModel.getState().copy();
+            studySessionConfigController.undo(state);
         });
         nextButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
+            StudySessionConfigState state = viewModel.getState().copy();
             state.setPrompt(promptTextArea.getText());
             state.setReferenceFile((String) fileSelector.getSelectedItem());
             studySessionConfigController.execute(state);
