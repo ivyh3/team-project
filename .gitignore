@@ -41,5 +41,4 @@ build/
 ### Environment Variables ###
 # NEVER commit these files!
 .env
-!.env.example
-src/main/resources/firebase-config.json
+src/main/resources/*

@@ -1,12 +1,22 @@
 package app;
 
 import javax.swing.*;
+import java.io.IOException;
 
 /**
  * Main entry point for the AI Study Companion application.
  */
 public class Main {
 	public static void main(String[] args) {
+		// Initialize Firebase
+		try {
+			Config.initializeFirebase();
+		} catch (IOException e) {
+			System.err.println("Failed to initialize Firebase: " + e.getMessage());
+			System.err.println("Please ensure firebase config json is in the correct location.");
+			System.exit(1);
+		}
+
 		// Set look and feel
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

@@ -24,7 +24,7 @@ public class AppConfig {
 
 	// Services (Frameworks & Drivers layer)
 	private FirebaseAuthService authService;
-	private FirestoreService firestoreService;
+	private FirestoreDatabaseService firestoreService;
 	private StorageService storageService;
 	private GeminiService geminiService;
 	private GoogleCalendarService calendarService;
@@ -32,7 +32,7 @@ public class AppConfig {
 
 	// Repositories (Frameworks & Drivers layer - implements interfaces from
 	// Interface Adapter layer)
-	private FirebaseUserRepositoryImpl userRepository;
+	private FirebaseStorageService userRepository;
 	// TODO: Add other repository implementations
 	// private FirebaseStudySessionRepositoryImpl sessionRepository;
 	// private FirebaseStudyQuizRepositoryImpl quizRepository;
@@ -79,7 +79,7 @@ public class AppConfig {
 	private void initializeServices() {
 		// Initialize all framework services (outermost layer)
 		authService = new FirebaseAuthService();
-		firestoreService = new FirestoreService();
+		firestoreService = new FirestoreDatabaseService();
 		storageService = new StorageService();
 		geminiService = new GeminiService();
 		calendarService = new GoogleCalendarService();
@@ -88,7 +88,7 @@ public class AppConfig {
 
 	private void initializeRepositories() {
 		// Initialize all repositories with service dependencies
-		userRepository = new FirebaseUserRepositoryImpl(firestoreService);
+		userRepository = new FirebaseStorageService(firestoreService);
 		// TODO: Create and initialize other repository implementations
 		// sessionRepository = new FirebaseStudySessionRepositoryImpl(firestoreService);
 		// quizRepository = new FirebaseStudyQuizRepositoryImpl(firestoreService);
