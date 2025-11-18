@@ -32,4 +32,3 @@ public class StartStudySessionController {
         interactor.execute(inputData);
     }
 }
-

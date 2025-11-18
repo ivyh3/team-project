@@ -1,8 +1,5 @@
 package app;
 
-import view.LoginView;
-import view.MainView;
-
 import javax.swing.*;
 
 /**
@@ -19,21 +16,46 @@ public class Main {
 
 		// Start application on EDT
 		SwingUtilities.invokeLater(() -> {
-			// TODO: Initialize dependencies (repositories, services, interactors)
-			// TODO: Set up dependency injection
-			// TODO: Show login view first
+//			// TODO: Initialize dependencies (repositories, services, interactors)
+//			// TODO: Set up dependency injection
+//			// TODO: Show login view first
+//
+//			// For now, just show a placeholder window
+//			JFrame frame = new JFrame("AI Study Companion");
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(800, 600);
+//
+//			JLabel placeholder = new JLabel("Welcome to AI Study Companion", SwingConstants.CENTER);
+//			placeholder.setFont(placeholder.getFont().deriveFont(24f));
+//			frame.add(placeholder);
+//
+//			frame.setLocationRelativeTo(null);
+//			frame.setVisible(true);
 
-			// For now, just show a placeholder window
-			JFrame frame = new JFrame("AI Study Companion");
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(800, 600);
+            // Now actual code
+            AppBuilder appBuilder = new AppBuilder();
+            JFrame app = appBuilder
+                    .addDashboardView()
+                    .addSettingsView()
+//                    .addChooseStudySessionView()
+                    .addUploadSessionMaterialsView()
+                    .addUploadMaterialsView()
+                    .addStudySessionView()
+                    .addStudySessionEndView()
+                    .addEndStudySessionUseCase()
+                    .addVariableSessionView()
+                    .addStudyQuizView()
+                    .addFileManagerView()
+                    .addQuizHistoryView()
+                    .addScheduleSessionView()
+                    .addStudyMetricsView()
+                    .addStudySessionConfigView()
+                    .addConfigStudySessionUseCase()
+                    .build();
 
-			JLabel placeholder = new JLabel("Welcome to AI Study Companion", SwingConstants.CENTER);
-			placeholder.setFont(placeholder.getFont().deriveFont(24f));
-			frame.add(placeholder);
-
-			frame.setLocationRelativeTo(null);
-			frame.setVisible(true);
+            app.pack();
+            app.setLocationRelativeTo(null);
+            app.setVisible(true);
 		});
 	}
 }

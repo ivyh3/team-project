@@ -31,4 +31,3 @@ public class ScheduleStudySessionController {
         interactor.execute(inputData);
     }
 }
-

@@ -1,107 +1,117 @@
 package view;
 
+import interface_adapter.controller.EndStudySessionController;
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionState;
 import interface_adapter.view_model.StudySessionViewModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.time.Duration;
+import java.util.Map;
 
-/**
- * View for starting and managing a study session.
- * Observes the StudySessionViewModel and updates the UI accordingly.
- */
-public class StudySessionView extends JPanel implements PropertyChangeListener {
-	private final StudySessionViewModel viewModel;
-	
-	private JComboBox<String> courseSelector;
-	private JTextArea promptArea;
-	private JList<String> referenceMaterialsList;
-	private JButton startTimerButton;
-	private JButton startStopwatchButton;
-	private JButton endSessionButton;
-	private JLabel timerLabel;
-	private JLabel statusLabel;
-	private JLabel errorLabel;
-	private JSpinner durationSpinner;
-	
-	public StudySessionView(StudySessionViewModel viewModel) {
-		this.viewModel = viewModel;
-		this.viewModel.addPropertyChangeListener(this);
-		
-		initializeComponents();
-		layoutComponents();
-	}
-	
-	private void initializeComponents() {
-		courseSelector = new JComboBox<>();
-		promptArea = new JTextArea(5, 30);
-		promptArea.setLineWrap(true);
-		referenceMaterialsList = new JList<>();
-		startTimerButton = new JButton("Start Timer");
-		startStopwatchButton = new JButton("Start Stopwatch");
-		endSessionButton = new JButton("End Session");
-		endSessionButton.setEnabled(false);
-		
-		timerLabel = new JLabel("00:00:00");
-		timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
-		
-		statusLabel = new JLabel(" ");
-		errorLabel = new JLabel(" ");
-		errorLabel.setForeground(Color.RED);
-		
-		durationSpinner = new JSpinner(new SpinnerNumberModel(25, 1, 180, 5));
-	}
-	
-	private void layoutComponents() {
-		setLayout(new BorderLayout());
-		
-		// TODO: Properly layout the components
-		// Top: Course selector
-		// Middle: Prompt area, reference materials
-		// Bottom: Timer controls and display, status and error labels
-	}
-	
-	public String getSelectedCourse() {
-		return (String) courseSelector.getSelectedItem();
-	}
-	
-	public String getPrompt() {
-		return promptArea.getText();
-	}
-	
-	public void setStartTimerButtonListener(java.awt.event.ActionListener listener) {
-		startTimerButton.addActionListener(listener);
-	}
-	
-	public void setEndSessionButtonListener(java.awt.event.ActionListener listener) {
-		endSessionButton.addActionListener(listener);
-	}
-	
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		// Update view based on ViewModel changes
-		switch (evt.getPropertyName()) {
-			case "timerDisplay":
-				timerLabel.setText(viewModel.getTimerDisplay());
-				break;
-			case "sessionActive":
-				boolean active = viewModel.isSessionActive();
-				startTimerButton.setEnabled(!active);
-				startStopwatchButton.setEnabled(!active);
-				endSessionButton.setEnabled(active);
-				break;
-			case "statusMessage":
-				statusLabel.setText(viewModel.getStatusMessage());
-				break;
-			case "errorMessage":
-				String error = viewModel.getErrorMessage();
-				errorLabel.setText(error.isEmpty() ? " " : error);
-				break;
-			case "courseName":
-				// Update course display if needed
-				break;
-		}
-	}
+
+public class StudySessionView extends StatefulView<StudySessionState> {
+    // Todo: Seperate these into two different views? And then have different types of state???
+    private EndStudySessionController endStudySessionController;
+    private final JLabel durationLabel = new JLabel();
+    private final JLabel headerLabel = new JLabel();
+    private Map<StudySessionConfigState.SessionType, String> HEADER_LABEL = Map.of(
+            StudySessionConfigState.SessionType.FIXED, "Time left:",
+            StudySessionConfigState.SessionType.VARIABLE, "Time studied:"
+    );
+    private static int ONE_SECOND = 1000;
+    private Timer uiTimer; // todo: find a better place for this
+
+    public StudySessionView(StudySessionViewModel studySessionViewModel) {
+        super("studySession", studySessionViewModel);
+
+        JPanel main = new JPanel();
+        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+
+        headerLabel.setText("Loading...");
+        headerLabel.setFont(new Font(null, Font.BOLD, 52));
+        headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        durationLabel.setText("Loading...");
+        durationLabel.setFont(new Font(null, Font.BOLD, 52));
+        durationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+
+        uiTimer = new Timer(ONE_SECOND, e -> {
+            System.out.println("Timer update");
+            updateDurationLabel();
+            // Todo: probably have this logic set in the viewmodel? or controller? I don't know since time is involved
+            if (viewModel.getState().getSessionType() == StudySessionConfigState.SessionType.FIXED &&
+                    viewModel.getState().getRemainingDuration().isZero()) {
+                StudySessionState state = viewModel.getState();
+                state.setActive(false);
+                endStudySessionController.execute(state);
+            }
+        });
+
+        JButton finalizeSession = new JButton("Finalize Session");
+        finalizeSession.addActionListener(e -> {
+            StudySessionState state = viewModel.getState();
+            state.setActive(false);
+            endStudySessionController.execute(state);
+            // Use case interactor will need to create an actual study session entity and save it
+            // using the end time (the time when this button was pressed
+            // Then hand off reference materials to create a quiz?????????
+            // Is it just me or is my use case cooked bro time shenanigans + config (many use cases in one ???) + multiple views
+
+        });
+        finalizeSession.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        main.add(Box.createVerticalGlue());
+        main.add(headerLabel);
+        main.add(durationLabel);
+        main.add(Box.createVerticalGlue());
+        main.add(finalizeSession);
+        main.add(Box.createVerticalGlue());
+        this.add(main, BorderLayout.CENTER);
+    }
+
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    private void updateDurationLabel() {
+        switch (viewModel.getState().getSessionType()) {
+            case FIXED:
+                durationLabel.setText(formatDuration(viewModel.getState().getRemainingDuration()));
+                break;
+            case VARIABLE:
+                durationLabel.setText(formatDuration(viewModel.getState().getDurationElapsed()));
+        }
+    }
+
+    public void addEndStudySessionController(EndStudySessionController endStudySessionController) {
+        this.endStudySessionController = endStudySessionController;
+    }
+
+    public void onSessionStart() {
+        uiTimer.start();
+        headerLabel.setText(HEADER_LABEL.get(viewModel.getState().getSessionType()));
+        updateDurationLabel();
+    }
+
+    public void onSessionEnd() {
+        uiTimer.stop();
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        final StudySessionState newState = (StudySessionState) evt.getNewValue();
+        System.out.println(newState);
+        if (newState.isActive()) {
+            onSessionStart();
+        } else {
+            onSessionEnd();
+        }
+    }
 }
-

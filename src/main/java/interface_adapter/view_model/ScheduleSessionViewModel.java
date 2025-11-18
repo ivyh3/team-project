@@ -139,4 +139,3 @@ public class ScheduleSessionViewModel {
 		support.firePropertyChange("scheduleInProgress", oldValue, scheduleInProgress);
 	}
 }
-
