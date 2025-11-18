@@ -4,6 +4,11 @@ import app.AppBuilder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 // JfreeChart to create a dual axis line chart
 import org.jfree.chart.ChartFactory;
@@ -16,12 +21,19 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
 
-public class StudyMetricsView extends View{
-//    private final MetricsViewModel viewModel;
-//    private final ViewStudyMetricsController controller;
+public class StudyMetricsView extends View implements PropertyChangeListener {
+    private final MetricsViewModel viewModel;
+    private final ViewStudyMetricsController controller;
 
-    public StudyMetricsView() {
+    private ChartPanel chartPanel;
+    private JPanel main;
+
+    public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller) {
         super("studyMetrics");
+        this.viewModel = viewModel;
+        this.controller = controller;
+
+        viewModel.addPropertyChangeListener(this);
 
         JPanel header = new ViewHeader("Study Metrics");
         this.add(header, BorderLayout.NORTH);
@@ -34,27 +46,78 @@ public class StudyMetricsView extends View{
         subheading.add(nextWeekButton, BorderLayout.EAST);
         this.add(subheading, BorderLayout.CENTER);
 
-        JPanel main = new JPanel();
-
+        main = new JPanel();
         main.setLayout(new BorderLayout());
+
+        // Create initial chart with data from viewModel
+        updateChart();
+
+        JPanel returnPanel = new JPanel();
+        JButton returnButton = new JButton("Return");
+        returnButton.addActionListener(e -> {
+            AppBuilder.viewManagerModel.setView("dashboard");
+        });
+        returnPanel.add(returnButton);
+
+        main.add(returnPanel, BorderLayout.SOUTH);
+        this.add(main, BorderLayout.SOUTH);
+
+        // Load metrics when view is created
+        loadMetrics();
+    }
+
+    private void loadMetrics() {
+        // Trigger the use case to load metrics
+        String userId = "user123"; // TODO: Get from session
+        String courseId = "all"; // TODO: Get from UI selection
+        String timeFilter = "week"; // TODO: Get from UI selection
+
+        controller.execute(userId, courseId, timeFilter);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        String propertyName = evt.getPropertyName();
+
+        // Update chart when daily study durations or course scores change
+        if ("dailyStudyDurations".equals(propertyName) || "courseScores".equals(propertyName)) {
+            updateChart();
+        }
+
+        // Handle error messages
+        if ("errorMessage".equals(propertyName)) {
+            String error = viewModel.getErrorMessage();
+            if (!error.isEmpty()) {
+                JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void updateChart() {
+        // Remove old chart if it exists
+        if (chartPanel != null) {
+            main.remove(chartPanel);
+        }
 
         // DATASET 1 — Study duration (left axis)
         DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
 
-//        Map<String, String> dailyData = viewModel.getDailyStudyDurations();
-//        for (Map.Entry<String, String> entry : dailyData.entrySet()) {}
-//        double hour = (double) duration.toMinutes() / 60;
+        Map<String, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        leftDataset.addValue(0.5, "Study Duration", "Sun");
-        leftDataset.addValue(1, "Study Duration", "Mon");
-        leftDataset.addValue(5, "Study Duration", "Tue");
-        leftDataset.addValue(2, "Study Duration", "Wed");
-        leftDataset.addValue(2, "Study Duration", "Thu");
-        leftDataset.addValue(0, "Study Duration", "Fri");
-        leftDataset.addValue(1.5, "Study Duration", "Sat");
+        String[] daysOrder = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        for (String day : daysOrder) {
+            Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
+            double hours = (double) duration.toMinutes() / 60;
+            leftDataset.addValue(hours, "Study Duration", day);
+        }
+
+        // Get start date for chart title
+        // TODO: You can get this from viewModel if you add a getter for startDate
+         LocalDateTime startDate = viewModel.getStartDate();
+         String dateRange = formatDateRange(startDate);
 
         JFreeChart chart = ChartFactory.createLineChart(
-                "Week of yyyy-mm-dd to yyyy-mm-dd",
+                dateRange,
                 "",
                 "Hours Studied",
                 leftDataset
@@ -70,13 +133,15 @@ public class StudyMetricsView extends View{
 
         // DATASET 2 — Quiz score (right axis)
         DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
-        rightDataset.addValue(80, "Quiz Score", "Sun");
-        rightDataset.addValue(70, "Quiz Score", "Mon");
-        rightDataset.addValue(80, "Quiz Score", "Tue");
-        rightDataset.addValue(90, "Quiz Score", "Wed");
-        rightDataset.addValue(75, "Quiz Score", "Thu");
-        rightDataset.addValue(0, "Quiz Score", "Fri");
-        rightDataset.addValue(98, "Quiz Score", "Sat");
+
+        // Get quiz scores from viewModel
+        Map<String, String> courseScores = viewModel.getCourseScores();
+        for (String day : daysOrder) {
+            String scoreStr = courseScores.getOrDefault(day, "0%");
+            // Parse the percentage string (e.g., "80.0%")
+            double score = parseScore(scoreStr);
+            rightDataset.addValue(score, "Quiz Score", day);
+        }
 
         // Add the second dataset
         plot.setDataset(1, rightDataset);
@@ -94,21 +159,34 @@ public class StudyMetricsView extends View{
         rightRenderer.setSeriesPaint(0, Color.BLUE);
         plot.setRenderer(1, rightRenderer);
 
-
-        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(350, 450));
 
         main.add(chartPanel, BorderLayout.CENTER);
 
-        JPanel returnPanel = new JPanel();
-        JButton returnButton = new JButton("Return");
-        returnButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("dashboard");
-        });
-        returnPanel.add(returnButton);
+        // Refresh the panel
+        main.revalidate();
+        main.repaint();
+    }
 
-        main.add(returnPanel, BorderLayout.SOUTH);
-        this.add(main, BorderLayout.SOUTH);
+    /**
+     * Helper method to parse score strings like "80.0%" into doubles.
+     */
+    private double parseScore(String scoreStr) {
+        try {
+            // Remove the % sign and parse
+            return Double.parseDouble(scoreStr.replace("%", "").trim());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
 
+    /**
+     * Helper method to format date range for chart title.
+     */
+    private String formatDateRange(LocalDateTime startDate) {
+        LocalDateTime endDate = startDate.plusDays(6);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return "Week of " + startDate.format(formatter) + " to " + endDate.format(formatter);
     }
 }

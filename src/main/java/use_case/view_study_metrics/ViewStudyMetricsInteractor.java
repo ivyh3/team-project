@@ -4,6 +4,7 @@ import entity.StudyQuiz;
 import interface_adapter.repository.StudySessionRepository;
 import interface_adapter.repository.StudyQuizRepository;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.List;
 
@@ -69,12 +70,16 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
                 "Linear Algebra 1", "Weak"
         );
 
+        LocalDateTime startDate = LocalDateTime.of(
+                2025, 4, 6, 14, 33);
+
         ViewStudyMetricsOutputData outputData = new ViewStudyMetricsOutputData(
                 dailyStudyDurations,
                 averageQuizScores,
                 averageWeeklyStudyTime,
                 mostStudiedSubject,
-                subjectStrengths
+                subjectStrengths,
+                startDate
         );
 
         outputBoundary.prepareSuccessView(outputData);

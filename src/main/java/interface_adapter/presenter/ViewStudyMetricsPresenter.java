@@ -26,12 +26,12 @@ public class ViewStudyMetricsPresenter implements ViewStudyMetricsOutputBoundary
 		String formattedWeeklyTime = formatDuration(avgWeekly);
 		viewModel.setAverageWeeklyStudyTime(formattedWeeklyTime);
 		
-		// Format daily study durations
-		Map<String, String> formattedDurations = new HashMap<>();
-		outputData.getDailyStudyDurations().forEach((date, duration) ->
-				formattedDurations.put(date, formatDuration(duration)));
-		viewModel.setDailyStudyDurations(formattedDurations);
-		
+		// Set daily study durations
+		viewModel.setDailyStudyDurations(outputData.getDailyStudyDurations());
+
+		// Set start date (date filtering)
+		viewModel.setStartDate(outputData.getStartDate());
+
 		// Format course scores
 		Map<String, String> formattedScores = new HashMap<>();
 		outputData.getAverageQuizScores().forEach((course, score) ->
