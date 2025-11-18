@@ -2,11 +2,11 @@ package app;
 
 
 import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StudySessionConfigController;
-import interface_adapter.presenter.ConfigStudySessionPresenter;
+import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.presenter.StartStudySessionPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.view_model.*;
-import use_case.config_study_session.ConfigStudySessionInteractor;
+import use_case.start_study_session.StartStudySessionInteractor;
 import use_case.end_study_session.EndStudySessionInteractor;
 import view.*;
 import view.SettingsView;
@@ -71,10 +71,10 @@ public class AppBuilder {
     }
 
     public AppBuilder addConfigStudySessionUseCase() {
-        ConfigStudySessionPresenter configStudySessionPresenter = new ConfigStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel);
-        ConfigStudySessionInteractor configStudySessionInteractor = new ConfigStudySessionInteractor(configStudySessionPresenter);
-        StudySessionConfigController studySessionConfigController = new StudySessionConfigController(configStudySessionInteractor);
-        studySessionConfigView.setStudySessionConfigController(studySessionConfigController);
+        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel);
+        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(startStudySessionPresenter);
+        StartStudySessionController studySessionConfigController = new StartStudySessionController(configStudySessionInteractor);
+        studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
 

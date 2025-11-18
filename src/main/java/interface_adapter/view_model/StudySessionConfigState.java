@@ -1,26 +1,26 @@
 package interface_adapter.view_model;
 
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import entity.StudySession;
-
 public class StudySessionConfigState {
-    private List<String> fileOptions;
+    // Todo: need this to be brought from somewhere.
+    private List<String> fileOptions = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf", "pdf.pdf");
     private SessionType sessionType;
-    private Integer targetDurationMinutes; // null if variable session.
+    private Integer targetDurationHours;
+    private Integer targetDurationMinutes;
     private String prompt;
     private String referenceFile;
-    private ConfigStep step;
-    private List<String> errors;
+    private String error;
+
     public StudySessionConfigState() {
-        this.sessionType = null;
-        this.targetDurationMinutes = null;
-        this.prompt = null;
-        this.referenceFile = null;
-        this.errors = new ArrayList<>();
-        this.step = ConfigStep.CHOOSE_TYPE;
+        this.sessionType = SessionType.VARIABLE;
+        this.targetDurationMinutes = 0;
+        this.targetDurationHours = 0;
+
+        this.prompt = "";
+        this.referenceFile = !fileOptions.isEmpty() ? fileOptions.get(0) : "";
     }
 
     public SessionType getSessionType() {
@@ -31,12 +31,18 @@ public class StudySessionConfigState {
         this.sessionType = sessionType;
     }
 
-    public Integer getTargetDuration() {
+    public Integer getTargetDurationMinutes() {
         return targetDurationMinutes;
     }
 
-    public void setTargetDuration(Integer targetDurationMinutes) {
+    public void setTargetDurationMinutes(Integer targetDurationMinutes) {
         this.targetDurationMinutes = targetDurationMinutes;
+    }
+
+    public Integer getTotalTargetDurationMinutes() {
+        int mins = this.targetDurationMinutes == null ? 0 : this.targetDurationMinutes;
+        int hours = this.targetDurationHours == null ? 0 : this.targetDurationHours;
+        return mins + hours * 60;
     }
 
     public String getPrompt() {
@@ -55,14 +61,6 @@ public class StudySessionConfigState {
         this.referenceFile = referenceFile;
     }
 
-    public void setStep(ConfigStep step) {
-        this.step = step;
-    }
-
-    public ConfigStep getStep() {
-        return step;
-    }
-
     public List<String> getFileOptions() {
         return fileOptions;
     }
@@ -71,12 +69,20 @@ public class StudySessionConfigState {
         this.fileOptions = fileOptions;
     }
 
-    public void setErrors(List<String> errors) {
-        this.errors = errors;
+    public Integer getTargetDurationHours() {
+        return targetDurationHours;
     }
 
-    public List<String> getErrors() {
-        return errors;
+    public void setTargetDurationHours(Integer targetDurationHours) {
+        this.targetDurationHours = targetDurationHours;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public enum SessionType {
@@ -84,34 +90,27 @@ public class StudySessionConfigState {
         VARIABLE
     }
 
-    public enum ConfigStep {
-        CHOOSE_TYPE,
-        CHOOSE_DURATION,
-        CHOOSE_REFERENCE,
-    }
-
     public StudySessionConfigState copy() {
         StudySessionConfigState copy = new StudySessionConfigState();
         copy.setFileOptions(this.fileOptions);
         copy.setSessionType(this.sessionType);
-        copy.setTargetDuration(this.targetDurationMinutes);
+        copy.setTargetDurationMinutes(this.targetDurationMinutes);
+        copy.setTargetDurationHours(this.targetDurationHours);
         copy.setPrompt(this.prompt);
         copy.setReferenceFile(this.referenceFile);
-        copy.setStep(this.step);
-        copy.setErrors(new ArrayList<String>(errors));
         return copy;
     }
 
     @Override
     public String toString() {
         return "StudySessionConfigState{" +
-                "fileOptions=" + fileOptions +
+                "sessionType=" + sessionType +
+                ", fileOptions=" + fileOptions +
                 ", sessionType=" + sessionType +
                 ", targetDurationMinutes=" + targetDurationMinutes +
+                ", targetDurationHours=" + targetDurationHours +
                 ", prompt='" + prompt + '\'' +
                 ", referenceFile='" + referenceFile + '\'' +
-                ", step=" + step +
-                ", errors=" + errors +
                 '}';
     }
 }

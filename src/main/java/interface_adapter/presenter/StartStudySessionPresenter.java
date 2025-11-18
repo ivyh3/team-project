@@ -1,40 +1,54 @@
 package interface_adapter.presenter;
 
+import app.AppBuilder;
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionState;
 import interface_adapter.view_model.StudySessionViewModel;
 import use_case.start_study_session.StartStudySessionOutputBoundary;
 import use_case.start_study_session.StartStudySessionOutputData;
 
-/**
- * Presenter for the Start Study Session use case.
- * Formats output data and updates the StudySessionViewModel.
- */
 public class StartStudySessionPresenter implements StartStudySessionOutputBoundary {
-	private final StudySessionViewModel viewModel;
+    StudySessionConfigViewModel studySessionConfigViewModel;
+    StudySessionViewModel studySessionViewModel;
 
-	public StartStudySessionPresenter(StudySessionViewModel viewModel) {
-		this.viewModel = viewModel;
-	}
+    public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel, StudySessionViewModel studySessionViewModel) {
+        this.studySessionConfigViewModel = studySessionConfigViewModel;
+        this.studySessionViewModel = studySessionViewModel;
+    }
 
-	@Override
-	public void prepareSuccessView(StartStudySessionOutputData outputData) {
-//		// Update the view model with formatted data
-//		viewModel.setSessionId(outputData.getSessionId());
-//		viewModel.setCourseName(outputData.getCourseId());
-//		viewModel.setSessionActive(true);
-//		viewModel.setStatusMessage("Study session started successfully!");
-//		viewModel.setErrorMessage("");
-//
-//		// Format the start time for display
-//		String formattedTime = outputData.getStartTime().toLocalTime().toString();
-//		viewModel.setTimerDisplay(formattedTime);
-	}
+    @Override
+    public void prepareErrorView(String errorMessage) {
+        studySessionConfigViewModel.getState().setError(errorMessage);
+        studySessionConfigViewModel.firePropertyChange("error");
+    }
 
-	@Override
-	public void prepareFailView(String error) {
-		// Update the view model with error message
-//		viewModel.setSessionActive(false);
-//		viewModel.setErrorMessage(error);
-//		viewModel.setStatusMessage("");
-	}
+    @Override
+    public void startStudySession(StartStudySessionOutputData outputData) {
+        // Prepare study session view state with set config
+        studySessionViewModel.setState(new StudySessionState(outputData.getConfig(), outputData.getStartTime()));
+
+        studySessionConfigViewModel.setState(new StudySessionConfigState()); // Reset state
+
+        // Navigate to study session view
+        AppBuilder.viewManagerModel.setView(studySessionViewModel.getViewName());
+
+    }
+
+    @Override
+    public void abortStudySessionConfig() {
+        // Reset config state.
+        studySessionConfigViewModel.setState(new StudySessionConfigState());
+
+        // Navigate back to the dashboard.
+        // TODO: MAke the presenter contain reference to the dashboard view/viewmodel
+        AppBuilder.viewManagerModel.setView("dashboard");
+    }
+
+    @Override
+    public void setSessionType(StudySessionConfigState.SessionType sessionType) {
+        studySessionConfigViewModel.getState().setSessionType(sessionType);
+
+        studySessionConfigViewModel.firePropertyChange();
+    }
 }
-

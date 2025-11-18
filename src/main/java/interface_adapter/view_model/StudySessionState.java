@@ -5,19 +5,19 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class StudySessionState {
-
     private StudySessionConfigState.SessionType sessionType;
     private LocalDateTime startTime;
-    private Integer targetDurationMinutes;
     private boolean isActive;
     private String prompt;
     private String referenceFile;
+    private Integer targetDurationMinutes; // TODO: Find a better way to work with this
+
     public StudySessionState(StudySessionConfigState config, LocalDateTime startTime) {
         this.sessionType = config.getSessionType();
+        this.targetDurationMinutes = config.getTotalTargetDurationMinutes();
         this.startTime = startTime;
         this.prompt = config.getPrompt();
         this.referenceFile = config.getReferenceFile();
-        targetDurationMinutes = config.getTargetDuration();
 
         isActive = true;
     }
@@ -28,10 +28,6 @@ public class StudySessionState {
 
     public Duration getDurationElapsed() {
         return Duration.between(startTime, LocalDateTime.now());
-    }
-
-    public StudySessionConfigState.SessionType getSessionType() {
-        return sessionType;
     }
 
     public Duration getRemainingDuration() {
@@ -45,16 +41,9 @@ public class StudySessionState {
 
         return remaining;
     }
-    public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-        this.sessionType = sessionType;
-    }
 
     public Integer getTargetDurationMinutes() {
         return targetDurationMinutes;
-    }
-
-    public void setDurationMinutes(Integer targetDurationMinutes) {
-        this.targetDurationMinutes = targetDurationMinutes;
     }
 
     public boolean isActive() {
@@ -91,5 +80,13 @@ public class StudySessionState {
                 ", prompt='" + prompt + '\'' +
                 ", referenceFile='" + referenceFile + '\'' +
                 '}';
+    }
+
+    public StudySessionConfigState.SessionType getSessionType() {
+        return sessionType;
+    }
+
+    public void setSessionType(StudySessionConfigState.SessionType sessionType) {
+        this.sessionType = sessionType;
     }
 }
