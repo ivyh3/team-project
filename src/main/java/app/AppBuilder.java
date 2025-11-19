@@ -1,6 +1,39 @@
 package app;
 
 
+// TODO: PUT EVERYTHING IN THE PROPER PLACE
+import frameworks_drivers.TEMP.FileUserDataAccessObject;
+import entity.UserFactory;
+import interface_adapter.logged_in.ChangePasswordController;
+import interface_adapter.logged_in.ChangePasswordPresenter;
+import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.login.LoginController;
+import interface_adapter.login.LoginPresenter;
+import interface_adapter.login.LoginViewModel;
+import interface_adapter.logout.LogoutController;
+import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.signup.SignupController;
+import interface_adapter.signup.SignupPresenter;
+import interface_adapter.signup.SignupViewModel;
+import interface_adapter.login.InitialViewModel;
+import use_case.change_password.ChangePasswordInputBoundary;
+import use_case.change_password.ChangePasswordInteractor;
+import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.login.LoginInputBoundary;
+import use_case.login.LoginInteractor;
+import use_case.login.LoginOutputBoundary;
+import use_case.logout.LogoutInputBoundary;
+import use_case.logout.LogoutInteractor;
+import use_case.logout.LogoutOutputBoundary;
+import use_case.signup.SignupInputBoundary;
+import use_case.signup.SignupInteractor;
+import use_case.signup.SignupOutputBoundary;
+import view.LoggedInView;
+import view.LoginView;
+import view.SignupView;
+import view.ViewManager;
+import view.InitialView;
+
 import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.StartStudySessionController;
 import interface_adapter.presenter.StartStudySessionPresenter;
@@ -34,8 +67,120 @@ public class AppBuilder {
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
 
+
+    // TODO: Sort things out.
+    final UserFactory userFactory = new UserFactory();
+    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    private InitialView initialView;
+    private SignupView signupView;
+    private SignupViewModel signupViewModel;
+    private LoginViewModel loginViewModel;
+    private LoggedInViewModel loggedInViewModel;
+    private LoggedInView loggedInView;
+    private LoginView loginView;
+    private InitialViewModel initialViewModel;
+
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
+    }
+
+    public AppBuilder addInitialView() {
+        // Create the InitialViewModel and InitialView
+        initialViewModel = new InitialViewModel();
+        initialView = new InitialView(initialViewModel);
+
+        // Add the InitialView to the CardLayout
+        cardPanel.add(initialView, initialView.getViewName());
+
+        // Attach ActionListeners for the buttons
+        initialView.addLoginButtonListener(e -> {
+            // Switch to LoginView
+            if (loginView != null) {
+                viewManagerModel.setState(loginView.getViewName());
+                viewManagerModel.firePropertyChange();
+            }
+        });
+
+        initialView.addSignupButtonListener(e -> {
+            // Switch to SignupView
+            if (signupView != null) {
+                viewManagerModel.setState(signupView.getViewName());
+                viewManagerModel.firePropertyChange();
+            }
+        });
+
+        return this;
+    }
+
+    public AppBuilder addSignupView() {
+        signupViewModel = new SignupViewModel();
+        signupView = new SignupView(signupViewModel);
+        cardPanel.add(signupView, signupView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addLoginView() {
+        loginViewModel = new LoginViewModel();
+        loginView = new LoginView(loginViewModel);
+        cardPanel.add(loginView, loginView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addLoggedInView() {
+        loggedInViewModel = new LoggedInViewModel();
+        loggedInView = new LoggedInView(loggedInViewModel);
+        cardPanel.add(loggedInView, loggedInView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addSignupUseCase() {
+        final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
+                signupViewModel, loginViewModel);
+        final SignupInputBoundary userSignupInteractor = new SignupInteractor(
+                userDataAccessObject, signupOutputBoundary, userFactory);
+
+        SignupController controller = new SignupController(userSignupInteractor);
+        signupView.setSignupController(controller);
+        return this;
+    }
+
+    public AppBuilder addLoginUseCase() {
+        final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
+                loggedInViewModel, loginViewModel);
+        final LoginInputBoundary loginInteractor = new LoginInteractor(
+                userDataAccessObject, loginOutputBoundary);
+
+        LoginController loginController = new LoginController(loginInteractor);
+        loginView.setLoginController(loginController);
+        return this;
+    }
+
+    public AppBuilder addChangePasswordUseCase() {
+        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
+                loggedInViewModel);
+
+        final ChangePasswordInputBoundary changePasswordInteractor =
+                new ChangePasswordInteractor(userDataAccessObject, changePasswordOutputBoundary, userFactory);
+
+        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
+        loggedInView.setChangePasswordController(changePasswordController);
+        return this;
+    }
+
+    /**
+     * Adds the Logout Use Case to the application.
+     * @return this builder
+     */
+    public AppBuilder addLogoutUseCase() {
+        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
+                loggedInViewModel, loginViewModel);
+
+        final LogoutInputBoundary logoutInteractor =
+                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+
+        final LogoutController logoutController = new LogoutController(logoutInteractor);
+        loggedInView.setLogoutController(logoutController);
+        return this;
     }
 
     public AppBuilder addDashboardView() {

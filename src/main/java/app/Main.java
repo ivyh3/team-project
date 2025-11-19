@@ -35,6 +35,15 @@ public class Main {
             // Now actual code
             AppBuilder appBuilder = new AppBuilder();
             JFrame app = appBuilder
+                    .addInitialView()
+                    .addLoginView()
+                    .addSignupView()
+                    .addLoggedInView()
+                    .addSignupUseCase()
+                    .addLoginUseCase()
+                    .addLogoutUseCase()
+                    .addChangePasswordUseCase()
+                    // TODO: Sort out later.
                     .addDashboardView()
                     .addSettingsView()
 //                    .addChooseStudySessionView()
