@@ -1,54 +1,36 @@
 package entity;
 
-import java.time.LocalDateTime;
-
 /**
- * Represents a user in the AI Study Companion application.
+ * A simple entity representing a user. Users have a username and password..
  */
 public class User {
-    private String id;
-    private String name;
-    private String email;
-    private LocalDateTime createdAt;
-    
-    public User(String id, String name, String email, LocalDateTime createdAt) {
-        this.id = id;
+
+    private final String name;
+    private final String password;
+
+    /**
+     * Creates a new user with the given non-empty name and non-empty password.
+     * @param name the username
+     * @param password the password
+     * @throws IllegalArgumentException if the password or name are empty
+     */
+    public User(String name, String password) {
+        if ("".equals(name)) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+        if ("".equals(password)) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
         this.name = name;
-        this.email = email;
-        this.createdAt = createdAt;
+        this.password = password;
     }
-    
-    // Getters and setters
-    public String getId() {
-        return id;
-    }
-    
-    public void setId(String id) {
-        this.id = id;
-    }
-    
+
     public String getName() {
         return name;
     }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-}
 
+    public String getPassword() {
+        return password;
+    }
+
+}
