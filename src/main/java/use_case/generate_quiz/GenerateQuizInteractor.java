@@ -1,20 +1,16 @@
 package use_case.generate_quiz;
 
-import interface_adapter.repository.StudyQuizRepository;
 import frameworks_drivers.gemini.GeminiService;
 
 /**
  * Interactor for the Generate Quiz use case.
  */
 public class GenerateQuizInteractor implements GenerateQuizInputBoundary {
-	private final StudyQuizRepository quizRepository;
 	private final GeminiService geminiService;
 	private final GenerateQuizOutputBoundary outputBoundary;
 
-	public GenerateQuizInteractor(StudyQuizRepository quizRepository,
-			GeminiService geminiService,
+	public GenerateQuizInteractor(GeminiService geminiService,
 			GenerateQuizOutputBoundary outputBoundary) {
-		this.quizRepository = quizRepository;
 		this.geminiService = geminiService;
 		this.outputBoundary = outputBoundary;
 	}

@@ -4,7 +4,6 @@ import frameworks_drivers.firebase.*;
 import frameworks_drivers.gemini.GeminiService;
 import frameworks_drivers.google_calendar.GoogleCalendarService;
 import frameworks_drivers.google_calendar.OAuthService;
-import frameworks_drivers.storage.StorageService;
 import interface_adapter.controller.*;
 import interface_adapter.presenter.*;
 import interface_adapter.view_model.*;
@@ -23,20 +22,10 @@ import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 public class AppConfig {
 
 	// Services (Frameworks & Drivers layer)
-	private FirebaseAuthService authService;
-	private FirestoreDatabaseService firestoreService;
-	private StorageService storageService;
+	private FirebaseUserDataAccessObject authService;
 	private GeminiService geminiService;
 	private GoogleCalendarService calendarService;
 	private OAuthService oauthService;
-
-	// Repositories (Frameworks & Drivers layer - implements interfaces from
-	// Interface Adapter layer)
-	private FirebaseStorageService userRepository;
-	// TODO: Add other repository implementations
-	// private FirebaseStudySessionRepositoryImpl sessionRepository;
-	// private FirebaseStudyQuizRepositoryImpl quizRepository;
-	// etc.
 
 	// ViewModels (Interface Adapter layer)
 	private LoginViewModel loginViewModel;
@@ -71,30 +60,16 @@ public class AppConfig {
 
 	public AppConfig() {
 		initializeServices();
-		initializeRepositories();
 		initializeViewModels();
 		initializeUseCases();
 	}
 
 	private void initializeServices() {
 		// Initialize all framework services (outermost layer)
-		authService = new FirebaseAuthService();
-		firestoreService = new FirestoreDatabaseService();
-		storageService = new StorageService();
+		authService = new FirebaseUserDataAccessObject();
 		geminiService = new GeminiService();
 		calendarService = new GoogleCalendarService();
 		oauthService = new OAuthService();
-	}
-
-	private void initializeRepositories() {
-		// Initialize all repositories with service dependencies
-		userRepository = new FirebaseStorageService(firestoreService);
-		// TODO: Create and initialize other repository implementations
-		// sessionRepository = new FirebaseStudySessionRepositoryImpl(firestoreService);
-		// quizRepository = new FirebaseStudyQuizRepositoryImpl(firestoreService);
-		// materialRepository = new
-		// FirebaseReferenceMaterialRepositoryImpl(firestoreService, storageService);
-		// courseRepository = new FirebaseCourseRepositoryImpl(firestoreService);
 	}
 
 	private void initializeViewModels() {

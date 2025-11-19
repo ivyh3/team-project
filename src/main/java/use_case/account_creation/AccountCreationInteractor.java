@@ -1,7 +1,6 @@
 package use_case.account_creation;
 
 import entity.User;
-import interface_adapter.repository.UserRepository;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 
 import java.time.LocalDateTime;
@@ -11,15 +10,12 @@ import java.time.LocalDateTime;
  * Coordinates Firebase Authentication and Firestore data persistence.
  */
 public class AccountCreationInteractor implements AccountCreationInputBoundary {
-	private final UserRepository userRepository;
-	private final FirebaseUserDataAccessObject authService;
+	private final FirebaseUserDataAccessObject userDataAccess;
 	private final AccountCreationOutputBoundary outputBoundary;
 
-	public AccountCreationInteractor(UserRepository userRepository,
-			FirebaseUserDataAccessObject authService,
+	public AccountCreationInteractor(FirebaseUserDataAccessObject userDataAccess,
 			AccountCreationOutputBoundary outputBoundary) {
-		this.userRepository = userRepository;
-		this.authService = authService;
+		this.userDataAccess = userDataAccess;
 		this.outputBoundary = outputBoundary;
 	}
 
@@ -32,13 +28,13 @@ public class AccountCreationInteractor implements AccountCreationInputBoundary {
 		}
 
 		// 2. Check if email already exists in Firestore
-		if (userRepository.existsByEmail(inputData.getEmail())) {
+		if (userDataAccess.existsByEmail(inputData.getEmail())) {
 			outputBoundary.prepareFailView("Email already in use");
 			return;
 		}
 
 		// 3. Create Firebase Auth account
-		String userId = authService.createUserWithEmail(
+		String userId = userDataAccess.createUserWithEmail(
 				inputData.getEmail(),
 				inputData.getPassword());
 
@@ -54,7 +50,7 @@ public class AccountCreationInteractor implements AccountCreationInputBoundary {
 				inputData.getEmail(),
 				LocalDateTime.now());
 
-		userRepository.save(newUser);
+		userDataAccess.save(newUser);
 
 		// 5. Prepare success view
 		AccountCreationOutputData outputData = new AccountCreationOutputData(

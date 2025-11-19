@@ -12,7 +12,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import app.Config;
 import entity.User;
-import interface_adapter.repository.UserRepository;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -22,11 +21,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Firebase Data Access Object implementing UserRepository.
+ * Firebase Data Access Object for User entities.
  * Handles both Firebase Authentication and Firestore data persistence.
  * Combines authentication operations with CRUD operations for User entities.
  */
-public class FirebaseUserDataAccessObject implements UserRepository {
+public class FirebaseUserDataAccessObject {
 	private static final String USERS_COLLECTION = "users";
 	private final Firestore firestore;
 	private final FirebaseAuth firebaseAuth;
@@ -42,7 +41,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 		this.firebaseWebApiKey = Config.getFirebaseWebApiKey();
 	}
 
-	@Override
 	public User getById(String userId) {
 		try {
 			var docSnapshot = firestore.collection(USERS_COLLECTION)
@@ -73,7 +71,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 		}
 	}
 
-	@Override
 	public void save(User user) {
 		Map<String, Object> userData = new HashMap<>();
 		userData.put("name", user.getName());
@@ -91,7 +88,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 		}
 	}
 
-	@Override
 	public void update(User user) {
 		Map<String, Object> updates = new HashMap<>();
 		updates.put("name", user.getName());
@@ -108,7 +104,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 		}
 	}
 
-	@Override
 	public void delete(String userId) {
 		try {
 			firestore.collection(USERS_COLLECTION)
@@ -121,7 +116,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 		}
 	}
 
-	@Override
 	public boolean existsByEmail(String email) {
 		try {
 			var querySnapshot = firestore.collection(USERS_COLLECTION)
@@ -304,9 +298,6 @@ public class FirebaseUserDataAccessObject implements UserRepository {
 	 * Signs out the current user.
 	 */
 	public void signOut() {
-		// Clear session in SessionManager
-		SessionManager.getInstance().clearSession();
-		System.out.println("User signed out");
 	}
 
 	/**
