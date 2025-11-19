@@ -42,3 +42,6 @@ build/
 # NEVER commit these files!
 .env
 src/main/resources/*
+
+
+users.csv
