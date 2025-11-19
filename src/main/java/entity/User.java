@@ -1,36 +1,62 @@
 package entity;
 
+import java.time.LocalDateTime;
+
 /**
- * A simple entity representing a user. Users have a username and password..
+ * Represents a user in the AI Study Companion application.
  */
 public class User {
+    private String id;
+    private String name;
+    private String email;
+    private LocalDateTime createdAt;
 
-    private final String name;
-    private final String password;
+    public User(String id, String password) {
+        // TEMPORARY TO LET IT COMPILE
+    }
 
-    /**
-     * Creates a new user with the given non-empty name and non-empty password.
-     * @param name the username
-     * @param password the password
-     * @throws IllegalArgumentException if the password or name are empty
-     */
-    public User(String name, String password) {
-        if ("".equals(name)) {
-            throw new IllegalArgumentException("Username cannot be empty");
-        }
-        if ("".equals(password)) {
-            throw new IllegalArgumentException("Password cannot be empty");
-        }
+    public User(String id, String name, String email, LocalDateTime createdAt) {
+        this.id = id;
         this.name = name;
-        this.password = password;
+        this.email = email;
+        this.createdAt = createdAt;
+    }
+
+    // Getters and setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getPassword() {
-        return password;
+    public void setName(String name) {
+        this.name = name;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // TEMPORARY TO LET IT COMPILE
+    public String getPassword() {
+        return "no";
+    }
 }

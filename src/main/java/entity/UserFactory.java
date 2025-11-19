@@ -1,5 +1,7 @@
 package entity;
 
+import java.time.LocalDateTime;
+
 /**
  * Factory for creating CommonUser objects.
  */
