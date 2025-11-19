@@ -1,20 +1,5 @@
 # Team Contract
 
-**This is currently using the sample team contract. Delete the text in this section one done**
-
-**Your team is free to revise this contract as your team wishes; we have scaffolded it with a recommended structure
-similar to the provided sample on Quercus.**
-
-After you reflect on past teamwork experiences and brainstorm a list of actions required for a positive teamwork
-experience, answer these questions.
-
-Once you have all agreed on the contents of the team contract, make a PR to merge your team contract into the main
-branch of your team's repo on GitHub.
-
-**Please remember to remove any of the initial instruction text when your team finalizes your team contract; it should
-resemble the provided sample once complete, but with details specific to the expectations and norms agreed to by your
-entire team.**
-
 ---
 
 ## Purpose of this Contract
@@ -27,26 +12,43 @@ assurance tests, in-class activities, and our course project.
 
 ## Team Norms and Expectations
 
+### Preparation
+
+-   Each team member commits to reading assigned materials and completing individual readiness work before class.
+
+-   Members who come unprepared agree to accept reasonable consequences determined by the team (e.g., lower peer evaluation scores).
+
+---
+
 ### Communication
 
-- We will be using **Discord** as our primary communication channel.
-- Team members will respond to messages within **one day** on weekdays.
-- All communication will remain respectful, professional, and constructive.
+-   We will be using **Discord** as our primary communication channel.
+-   Team members will respond to messages within **one day** on weekdays.
+-   All communication will remain respectful, professional, and constructive.
 
 ---
 
 ### Attendance and Participation
 
-- Members will attend all scheduled classes and team meetings unless illness or emergencies occur.
-- If unable to attend, a member must notify the team in advance and provide input asynchronously.
-- During team activities, every member will contribute ideas and engage in the discussion.
+-   Members will attend team meetings unless illness or emergencies occur.
+-   If unable to attend, a member must notify the team in advance and provide input asynchronously.
 
 ---
 
 ## Decision Making
 
-- Decisions will be made by consensus when possible.
-- If consensus cannot be reached, a vote will be taken; majority rules.
+-   Decisions will be made by consensus when possible.
+-   If consensus cannot be reached, a vote will be taken; majority rules.
+
+---
+
+## Work Quality
+
+-   All deliverables should be completed on time, tested, and meet the agreed quality standard.
+
+-   Members are expected to work in their own branch called `{first name}` or `{first name}-usecase{use case number}` for a specific use case. Members should avoid pushing directly to the `main` branch and should use a Pull Request to push to the `main` branch.
+
+-   Members agree to review each other’s work constructively before submission. Each Pull Request will be reviewed by at least two team members.
 
 ---
 
@@ -61,8 +63,8 @@ If conflict arises:
 
 ## Accountability
 
-- Persistent non-participation or failure to meet expectations may result in lower peer evaluation scores.
-- All members agree to provide honest and fair peer evaluations.
+-   Persistent non-participation or failure to meet expectations may result in lower peer evaluation scores.
+-   All members agree to provide honest and fair peer evaluations.
 
 ---
 
@@ -73,4 +75,4 @@ contract is binding for the duration of the course and may be revised with the a
 
 Team Member Signatures:
 
-Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc, Tess Madison
+Freeman Wang, Ivy Huang, Mia Sung, David Daniliuc, Tess Madison, Sarah Hamdi
