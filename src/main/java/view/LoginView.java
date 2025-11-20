@@ -1,7 +1,7 @@
 package view;
 
-import interface_adapter.login.LoginController;
-import interface_adapter.login.LoginState;
+import interface_adapter.controller.LoginController;
+import interface_adapter.view_model.LoginState;
 import interface_adapter.login.LoginViewModel;
 
 import javax.swing.*;

@@ -1,6 +1,6 @@
 package view;
 
-import interface_adapter.login.InitialViewModel;
+import interface_adapter.view_model.InitialViewModel;
 
 import javax.swing.*;
 import java.awt.*;
