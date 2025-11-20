@@ -2,6 +2,8 @@ package interface_adapter.view_model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,12 +15,12 @@ public class MetricsViewModel {
 	private final PropertyChangeSupport support;
 	
 	private String averageWeeklyStudyTime;
-	private String averageQuizScore;
+	private String averageQuizScore; // TODO: change to a mapping
 	private String mostStudiedSubject;
-	private Map<String, String> dailyStudyDurations;
+	private Map<String, Duration> dailyStudyDurations;
 	private Map<String, String> courseScores;
 	private String selectedCourse;
-	private String selectedTimeFilter;
+	private LocalDateTime startDate;
 	private String errorMessage;
 	
 	public MetricsViewModel() {
@@ -29,7 +31,7 @@ public class MetricsViewModel {
 		this.dailyStudyDurations = new HashMap<>();
 		this.courseScores = new HashMap<>();
 		this.selectedCourse = "All Courses";
-		this.selectedTimeFilter = "This Week";
+		this.startDate = LocalDateTime.now(); // TODO: remove
 		this.errorMessage = "";
 	}
 	
@@ -71,12 +73,12 @@ public class MetricsViewModel {
 		support.firePropertyChange("mostStudiedSubject", oldValue, mostStudiedSubject);
 	}
 	
-	public Map<String, String> getDailyStudyDurations() {
+	public Map<String, Duration> getDailyStudyDurations() {
 		return new HashMap<>(dailyStudyDurations);
 	}
 	
-	public void setDailyStudyDurations(Map<String, String> dailyStudyDurations) {
-		Map<String, String> oldValue = this.dailyStudyDurations;
+	public void setDailyStudyDurations(Map<String, Duration> dailyStudyDurations) {
+		Map<String, Duration> oldValue = this.dailyStudyDurations;
 		this.dailyStudyDurations = new HashMap<>(dailyStudyDurations);
 		support.firePropertyChange("dailyStudyDurations", oldValue, this.dailyStudyDurations);
 	}
@@ -101,14 +103,14 @@ public class MetricsViewModel {
 		support.firePropertyChange("selectedCourse", oldValue, selectedCourse);
 	}
 	
-	public String getSelectedTimeFilter() {
-		return selectedTimeFilter;
+	public LocalDateTime getStartDate() { //TODO: remove
+		return startDate;
 	}
 	
-	public void setSelectedTimeFilter(String selectedTimeFilter) {
-		String oldValue = this.selectedTimeFilter;
-		this.selectedTimeFilter = selectedTimeFilter;
-		support.firePropertyChange("selectedTimeFilter", oldValue, selectedTimeFilter);
+	public void setStartDate(LocalDateTime startDate) { //TODO: remove
+		LocalDateTime oldValue = this.startDate;
+		this.startDate = startDate;
+		support.firePropertyChange("startDate", oldValue, startDate);
 	}
 	
 	public String getErrorMessage() {
