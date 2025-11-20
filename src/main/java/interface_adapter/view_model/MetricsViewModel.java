@@ -31,7 +31,7 @@ public class MetricsViewModel {
 		this.dailyStudyDurations = new HashMap<>();
 		this.courseScores = new HashMap<>();
 		this.selectedCourse = "All Courses";
-		this.startDate = LocalDateTime.now(); // TODO: what is this?
+		this.startDate = LocalDateTime.now(); // TODO: remove
 		this.errorMessage = "";
 	}
 	
@@ -103,11 +103,11 @@ public class MetricsViewModel {
 		support.firePropertyChange("selectedCourse", oldValue, selectedCourse);
 	}
 	
-	public LocalDateTime getStartDate() {
+	public LocalDateTime getStartDate() { //TODO: remove
 		return startDate;
 	}
 	
-	public void setStartDate(LocalDateTime startDate) {
+	public void setStartDate(LocalDateTime startDate) { //TODO: remove
 		LocalDateTime oldValue = this.startDate;
 		this.startDate = startDate;
 		support.firePropertyChange("startDate", oldValue, startDate);

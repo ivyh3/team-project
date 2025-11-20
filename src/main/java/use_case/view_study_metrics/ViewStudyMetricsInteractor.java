@@ -15,7 +15,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
     private final StudySessionRepository sessionRepository;
     private final StudyQuizRepository quizRepository;
     private final ViewStudyMetricsOutputBoundary outputBoundary;
-    
+
     public ViewStudyMetricsInteractor(StudySessionRepository sessionRepository,
                                      StudyQuizRepository quizRepository,
                                      ViewStudyMetricsOutputBoundary outputBoundary) {
@@ -23,15 +23,19 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         this.quizRepository = quizRepository;
         this.outputBoundary = outputBoundary;
     }
-    
+
     @Override
     public void execute(ViewStudyMetricsInputData inputData) {
         String userId = inputData.getUserId();
         String courseId = inputData.getCourseId();
-        String timeFilter = inputData.getTimeFilter();
+        String timeFilter = inputData.getTimeFilter(); // TODO: this should be the "startDate" thing, giving the
+                                                       // *sunday* for the preferred week
 
 //      List<StudySession> sessions = StudySessionRepository.findByUserAndCourse(userId, courseId);
+        // TODO: find a way to retrieve the dates and durations for each session (given the preferred time filter)
+
 //      List<StudyQuiz> quizzes = StudyQuizRepository.findByUserAndCourse(userId, courseId);
+
 
         // testing/dummy data
         Map<String, Duration> dailyStudyDurations = Map.of(
@@ -71,15 +75,15 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         );
 
         LocalDateTime startDate = LocalDateTime.of(
-                2025, 4, 6, 14, 33);
+                2025, 11, 19, 14, 33);
 
         ViewStudyMetricsOutputData outputData = new ViewStudyMetricsOutputData(
                 dailyStudyDurations,
                 averageQuizScores,
                 averageWeeklyStudyTime,
                 mostStudiedSubject,
-                subjectStrengths,
-                startDate
+                subjectStrengths, //TODO: probably remove this metric
+                startDate //TODO: remove and replace with timefilter
         );
 
         outputBoundary.prepareSuccessView(outputData);

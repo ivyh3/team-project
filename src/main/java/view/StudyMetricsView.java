@@ -27,6 +27,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
     private ChartPanel chartPanel;
     private JPanel main;
+    private int weekOffset = 0;
 
     public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller) {
         super("studyMetrics");
@@ -42,8 +43,18 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         JButton lastWeekButton = new JButton("< Last Week");
         JButton nextWeekButton = new JButton("Next Week >");
 
-        subheading.add(lastWeekButton, BorderLayout.WEST);
-        subheading.add(nextWeekButton, BorderLayout.EAST);
+        lastWeekButton.addActionListener(e -> {
+            weekOffset -= 1;
+            loadMetrics();
+        });
+
+        nextWeekButton.addActionListener(e -> {
+            weekOffset += 1;
+            loadMetrics();
+        });
+
+        subheading.add(lastWeekButton);
+        subheading.add(nextWeekButton);
         this.add(subheading, BorderLayout.CENTER);
 
         main = new JPanel();
@@ -70,9 +81,28 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         // Trigger the use case to load metrics
         String userId = "user123"; // TODO: Get from session
         String courseId = "all"; // TODO: Get from UI selection
-        String timeFilter = "week"; // TODO: Get from UI selection
+        String timeFilter = "week"; // TODO: fix time filter lol
 
         controller.execute(userId, courseId, timeFilter);
+    }
+
+    /**
+     * Calculates the start date (Sunday) for a given week offset.
+     */
+    private LocalDateTime getStartDateForOffset(int offset) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Find the start of the current week (Sunday)
+        int dayOfWeek = now.getDayOfWeek().getValue(); // 1 (Monday) to 7 (Sunday)
+        int daysToSubtract = (dayOfWeek == 7) ? 0 : dayOfWeek; // If Sunday, don't subtract
+
+        LocalDateTime startOfThisWeek = now.minusDays(daysToSubtract)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0);
+
+        // Apply the offset
+        return startOfThisWeek.plusWeeks(offset);
     }
 
     @Override
@@ -110,10 +140,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
             double hours = (double) duration.toMinutes() / 60;
             leftDataset.addValue(hours, "Study Duration", day);
         }
-
-        // Get start date for chart title
-        // TODO: You can get this from viewModel if you add a getter for startDate
-         LocalDateTime startDate = viewModel.getStartDate();
+        //TODO: update the date
+        LocalDateTime startDate = getStartDateForOffset(weekOffset);
          String dateRange = formatDateRange(startDate);
 
         JFreeChart chart = ChartFactory.createLineChart(

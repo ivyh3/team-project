@@ -96,7 +96,7 @@ public class AppBuilder {
         MetricsViewModel metricsViewModel = new MetricsViewModel();
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
-        // TODO: Replace these with your actual repository implementations
+        // TODO: Replace with actual DAO implementations
 //        StudySessionRepository sessionRepository = new StudySessionRepository();
 //        StudyQuizRepository quizRepository = new StudyQuizRepository();
 
