@@ -41,6 +41,14 @@ import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
 import use_case.end_study_session.EndStudySessionInteractor;
+import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.view_model.MetricsViewModel;
+import interface_adapter.presenter.ViewStudyMetricsPresenter;
+import use_case.view_study_metrics.ViewStudyMetricsInteractor;
+//import interface_adapter.repository.StudySessionRepository;
+//import interface_adapter.repository.StudyQuizRepository;
+import interface_adapter.view_model.SettingsViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import view.*;
 import view.SettingsView;
 
@@ -276,7 +284,24 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyMetricsView() {
-        StudyMetricsView studyMetricsView = new StudyMetricsView();
+        MetricsViewModel metricsViewModel = new MetricsViewModel();
+        ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
+
+        // TODO: Replace with actual DAO implementations
+//        StudySessionRepository sessionRepository = new StudySessionRepository();
+//        StudyQuizRepository quizRepository = new StudyQuizRepository();
+
+        // Create Interactor
+        ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
+                presenter
+        );
+
+        // Create Controller
+        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
+
+        // Create View with ViewModel and Controller
+        StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
+
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
         return this;
     }
