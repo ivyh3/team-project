@@ -34,6 +34,14 @@ build/
 
 ### VS Code ###
 .vscode/
-
 ### Mac OS ###
 .DS_Store
+
+
+### Environment Variables ###
+# NEVER commit these files!
+.env
+src/main/resources/*
+
+
+users.csv

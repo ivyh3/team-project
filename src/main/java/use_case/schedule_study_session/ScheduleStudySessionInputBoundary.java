@@ -1,0 +1,13 @@
+package use_case.schedule_study_session;
+
+/**
+ * Input boundary for the Schedule Study Session use case.
+ */
+public interface ScheduleStudySessionInputBoundary {
+    /**
+     * Executes the schedule study session use case.
+     * @param inputData the input data for scheduling a study session
+     */
+    void execute(ScheduleStudySessionInputData inputData);
+}
+

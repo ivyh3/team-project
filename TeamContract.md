@@ -14,39 +14,41 @@ assurance tests, in-class activities, and our course project.
 
 ### Preparation
 
-- Each team member commits to reading assigned materials and completing individual readiness work before class.
+-   Each team member commits to reading assigned materials and completing individual readiness work before class.
 
-- Members who come unprepared agree to accept reasonable consequences determined by the team (e.g., lower peer evaluation scores).
+-   Members who come unprepared agree to accept reasonable consequences determined by the team (e.g., lower peer evaluation scores).
 
 ---
 
 ### Communication
 
-- We will be using **Discord** as our primary communication channel.
-- Team members will respond to messages within **one day** on weekdays.
-- All communication will remain respectful, professional, and constructive.
+-   We will be using **Discord** as our primary communication channel.
+-   Team members will respond to messages within **one day** on weekdays.
+-   All communication will remain respectful, professional, and constructive.
 
 ---
 
 ### Attendance and Participation
 
-- Members will attend team meetings unless illness or emergencies occur.
-- If unable to attend, a member must notify the team in advance and provide input asynchronously.
+-   Members will attend team meetings unless illness or emergencies occur.
+-   If unable to attend, a member must notify the team in advance and provide input asynchronously.
 
 ---
 
 ## Decision Making
 
-- Decisions will be made by consensus when possible.
-- If consensus cannot be reached, a vote will be taken; majority rules.
+-   Decisions will be made by consensus when possible.
+-   If consensus cannot be reached, a vote will be taken; majority rules.
 
 ---
 
 ## Work Quality
 
-- All deliverables should be completed on time, tested, and meet the agreed quality standard.
+-   All deliverables should be completed on time, tested, and meet the agreed quality standard.
 
-- Members agree to review each other’s work constructively before submission. Each Pull Request will be reviewed by at least two team members.
+-   Members are expected to work in their own branch called `{first name}` or `{first name}-usecase{use case number}` for a specific use case. Members should avoid pushing directly to the `main` branch and should use a Pull Request to push to the `main` branch.
+
+-   Members agree to review each other’s work constructively before submission. Each Pull Request will be reviewed by at least two team members.
 
 ---
 
@@ -61,8 +63,8 @@ If conflict arises:
 
 ## Accountability
 
-- Persistent non-participation or failure to meet expectations may result in lower peer evaluation scores.
-- All members agree to provide honest and fair peer evaluations.
+-   Persistent non-participation or failure to meet expectations may result in lower peer evaluation scores.
+-   All members agree to provide honest and fair peer evaluations.
 
 ---
 
