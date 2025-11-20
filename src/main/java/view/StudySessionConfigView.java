@@ -1,94 +1,45 @@
 package view;
 
-import app.AppBuilder;
-import interface_adapter.controller.StudySessionConfigController;
+import interface_adapter.controller.StartStudySessionController;
 import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigState.SessionType;
 import interface_adapter.view_model.StudySessionConfigViewModel;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
-import java.util.Map;
 
-// TODO: Reset stateful components to initial state somehow when resetting state
 public class StudySessionConfigView extends StatefulView<StudySessionConfigState> {
-    private final JPanel viewHeader = new ViewHeader("Session Config");
-    private final JLabel currentStepLabel = new JLabel();
-    private final JPanel mainCardPanel = new JPanel();
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel chooseSessionTypePanel, chooseDurationPanel, chooseReferenceMaterialsPanel;
-
+    public static final String VARIABLE_SESSION = "Variable Session";
+    public static final String TIMED_SESSION = "Timed Session";
+    private final JPanel selectDurationPanel;
+    private final JPanel selectTypePanel;
+    private final JPanel selectReferencePanel;
+    private final JSpinner hoursSelector = new JSpinner();
+    private final JSpinner minutesSelector = new JSpinner();
+    private final JTextArea promptArea = new JTextArea(4, 40);
+    private final JComboBox<String> typeSelector = new JComboBox<>();
     private final JComboBox<String> fileSelector = new JComboBox<>();
 
-    private static final Map<StudySessionConfigState.ConfigStep, String> STEP_LABELS = Map.of(
-            StudySessionConfigState.ConfigStep.CHOOSE_TYPE, "Select Session Type",
-            StudySessionConfigState.ConfigStep.CHOOSE_DURATION, "Select Session Duration",
-            StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE, "Provide Session Context"
-    );
-    private static final Map<StudySessionConfigState.ConfigStep, String> VIEW_NAMES = Map.of(
-            StudySessionConfigState.ConfigStep.CHOOSE_TYPE, "chooseSessionType",
-            StudySessionConfigState.ConfigStep.CHOOSE_DURATION, "chooseDuration",
-            StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE, "chooseReferenceMaterials"
-    );
-
-    private StudySessionConfigController studySessionConfigController;
+    private StartStudySessionController startStudySessionController;
 
     public StudySessionConfigView(StudySessionConfigViewModel viewModel) {
         super("studySessionConfig", viewModel);
 
+        JPanel viewHeader = new ViewHeader("Session Config");
+        JPanel main = new JPanel();
+        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        mainCardPanel.setLayout(cardLayout);
-        chooseSessionTypePanel = buildChooseSessionTypePanel();
-        chooseDurationPanel = buildChooseDurationPanel();
-        chooseReferenceMaterialsPanel = buildChooseReferenceMaterialsPanel();
+        selectTypePanel = buildChooseTypePanel();
+        selectDurationPanel = buildChooseDurationPanel();
+        selectReferencePanel = buildChooseReferencePanel();
 
-        mainCardPanel.add(chooseSessionTypePanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_TYPE));
-        mainCardPanel.add(chooseDurationPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_DURATION));
-        mainCardPanel.add(chooseReferenceMaterialsPanel, VIEW_NAMES.get(StudySessionConfigState.ConfigStep.CHOOSE_REFERENCE));
-
-
-        updateFileSelector(viewModel.getState().getFileOptions());
-        updateViewStep(viewModel.getState().getStep());
-
-        currentStepLabel.setFont(new Font(null, Font.BOLD, 16));
-        viewHeader.add(currentStepLabel, BorderLayout.EAST);
-        this.add(viewHeader, BorderLayout.NORTH);
-        this.add(mainCardPanel, BorderLayout.CENTER);
-    }
-
-    private JPanel buildChooseDurationPanel() {
-        JPanel chooseDurationPanel = new JPanel();
-
-        chooseDurationPanel.setLayout(new BoxLayout(chooseDurationPanel, BoxLayout.Y_AXIS));
-
-        JPanel durationSelectionContainer = new JPanel();
-        durationSelectionContainer.setLayout(new BoxLayout(durationSelectionContainer, BoxLayout.X_AXIS));
-
-        JLabel hoursLabel = new JLabel("Hours");
-        hoursLabel.setFont(new Font(null, Font.BOLD, 24));
-        JSpinner hoursSelector = new JSpinner(new SpinnerNumberModel(1, 0, 23, 1));
-        hoursSelector.setEditor(new JSpinner.DefaultEditor(hoursSelector)); // Prevent manual edit of field
-//        ((JSpinner.DefaultEditor) hoursSelector.getEditor()).getTextField().setEditable(false); alternative way (right aligned text)
-
-        hoursSelector.setMaximumSize(new Dimension(100, 30));
-        hoursSelector.setFont(new Font(null, Font.PLAIN, 20));
-
-        JLabel minutesLabel = new JLabel("Minutes");
-        minutesLabel.setFont(new Font(null, Font.BOLD, 24));
-        JSpinner minutesSelector = new JSpinner(new SpinnerNumberModel(0, 0, 55, 5));
-        minutesSelector.setEditor(new JSpinner.DefaultEditor(minutesSelector)); // Prevent manual edit of field
-        minutesSelector.setMaximumSize(new Dimension(100, 30));
-        minutesSelector.setFont(new Font(null, Font.PLAIN, 20));
-
-
-        durationSelectionContainer.add(hoursLabel);
-        durationSelectionContainer.add(Box.createRigidArea(new Dimension(20, 0)));
-        durationSelectionContainer.add(hoursSelector);
-        durationSelectionContainer.add(Box.createRigidArea(new Dimension(80, 0)));
-        durationSelectionContainer.add(minutesLabel);
-        durationSelectionContainer.add(Box.createRigidArea(new Dimension(20, 0)));
-        durationSelectionContainer.add(minutesSelector);
+        typeSelector.addItem(VARIABLE_SESSION);
+        typeSelector.addItem(TIMED_SESSION);
+        typeSelector.setSelectedIndex(0);
 
         JPanel navigationContainer = new JPanel();
         navigationContainer.setLayout(new BoxLayout(navigationContainer, BoxLayout.X_AXIS));
@@ -96,192 +47,268 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         JButton nextButton = new JButton("Next");
 
         cancelButton.addActionListener(e -> {
-            // TODO: Remove back navigation or somehow add to CA
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(null);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_TYPE);
-            viewModel.firePropertyChange();
+            startStudySessionController.abortStudySessionConfig();
         });
         nextButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
-            state.setTargetDuration((Integer) hoursSelector.getValue() * 60 + (Integer) minutesSelector.getValue());
-            studySessionConfigController.execute(state);
+            StudySessionConfigState currentConfig = viewModel.getState().copy();
+            startStudySessionController.execute(currentConfig);
         });
 
         navigationContainer.add(cancelButton);
         navigationContainer.add(Box.createRigidArea(new Dimension(40, 0)));
         navigationContainer.add(nextButton);
 
-        chooseDurationPanel.add(Box.createVerticalGlue());
-        chooseDurationPanel.add(durationSelectionContainer);
-        chooseDurationPanel.add(Box.createVerticalGlue());
-        chooseDurationPanel.add(navigationContainer);
+        main.add(selectTypePanel);
+        main.add(selectDurationPanel);
+        main.add(selectReferencePanel);
+        main.add(navigationContainer);
+
+        updateDurationPanelVisibility(viewModel.getState().getSessionType());
+        updateFileSelector(viewModel.getState().getFileOptions());
+
+        this.add(viewHeader, BorderLayout.NORTH);
+        this.add(main, BorderLayout.CENTER);
+
+        attachListeners();
+        setFields(viewModel.getState());
+    }
+
+    private void updateDurationPanelVisibility(SessionType sessionType) {
+
+        selectDurationPanel.setVisible(sessionType == SessionType.FIXED);
+    }
+
+    private JPanel buildChooseDurationPanel() {
+        JPanel chooseDurationPanel = new JPanel();
+        // chooseDurationPanel.setLayout(new BoxLayout(chooseDurationPanel,
+        // BoxLayout.X_AXIS));
+        chooseDurationPanel.setLayout(new GridLayout(1, 2));
+        chooseDurationPanel.setBorder(BorderFactory.createTitledBorder("Session Duration"));
+
+        JPanel hoursContainer = new JPanel();
+        hoursContainer.setLayout(new BoxLayout(hoursContainer, BoxLayout.X_AXIS));
+        // hoursContainer.setBorder(BorderFactory.createTitledBorder("Hours"));
+        hoursContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel minutesContainer = new JPanel();
+        minutesContainer.setLayout(new BoxLayout(minutesContainer, BoxLayout.X_AXIS));
+        minutesContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // minutesContainer.setBorder(BorderFactory.createTitledBorder("Minutes"));
+
+        JLabel hoursLabel = new JLabel("Hours");
+        hoursLabel.setFont(new Font(null, Font.BOLD, 24));
+
+        hoursSelector.setModel(new SpinnerNumberModel(0, 0, 23, 1));
+        hoursSelector.setEditor(new JSpinner.DefaultEditor(hoursSelector)); // Prevent manual edit of field
+
+        hoursSelector.setMaximumSize(new Dimension(100, 30));
+        hoursSelector.setFont(new Font(null, Font.PLAIN, 20));
+
+        JLabel minutesLabel = new JLabel("Minutes");
+        minutesLabel.setFont(new Font(null, Font.BOLD, 24));
+        minutesSelector.setModel(new SpinnerNumberModel(0, 0, 55, 5));
+        minutesSelector.setEditor(new JSpinner.DefaultEditor(minutesSelector)); // Prevent manual edit of field
+        minutesSelector.setMaximumSize(new Dimension(100, 30));
+        minutesSelector.setFont(new Font(null, Font.PLAIN, 20));
+
+        hoursContainer.add(hoursLabel);
+        hoursContainer.add(Box.createRigidArea(new Dimension(10, 0)));
+        hoursContainer.add(hoursSelector);
+
+        minutesContainer.add(minutesLabel);
+        minutesContainer.add(Box.createRigidArea(new Dimension(10, 0)));
+        minutesContainer.add(minutesSelector);
+
+        // chooseDurationPanel.add(Box.createHorizontalGlue());
+        chooseDurationPanel.add(hoursContainer);
+        // chooseDurationPanel.add(Box.createHorizontalGlue());
+        chooseDurationPanel.add(minutesContainer);
+        // chooseDurationPanel.add(Box.createHorizontalGlue());
+        // chooseDurationPanel.add(hoursLabel);
+        // chooseDurationPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+        // chooseDurationPanel.add(hoursSelector);
+        // chooseDurationPanel.add(Box.createRigidArea(new Dimension(80, 0)));
+        // chooseDurationPanel.add(minutesLabel);
+        // chooseDurationPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+        // chooseDurationPanel.add(minutesSelector);
 
         return chooseDurationPanel;
     }
 
-    private JPanel buildChooseSessionTypePanel() {
-
+    private JPanel buildChooseTypePanel() {
 
         JPanel chooseSessionTypePanel = new JPanel();
-        chooseSessionTypePanel.setLayout(new BoxLayout(chooseSessionTypePanel, BoxLayout.Y_AXIS));
+        chooseSessionTypePanel.setBorder(BorderFactory.createTitledBorder("Session Type"));
 
+        chooseSessionTypePanel.setLayout(new GridLayout(1, 2));
 
-        JPanel buttonContainer = new JPanel();
-        buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.X_AXIS));
+        JPanel typeSelectorContainer = new JPanel();
+
+        typeSelector.setFont(new Font(null, Font.PLAIN, 20));
+        typeSelectorContainer.add(typeSelector);
 
         JPanel timedSessionContainer = new JPanel();
         timedSessionContainer.setLayout(new BoxLayout(timedSessionContainer, BoxLayout.Y_AXIS));
         JPanel variableSessionContainer = new JPanel();
         variableSessionContainer.setLayout(new BoxLayout(variableSessionContainer, BoxLayout.Y_AXIS));
 
-
-        buttonContainer.add(Box.createHorizontalGlue());
-        buttonContainer.add(timedSessionContainer);
-        buttonContainer.add(Box.createHorizontalGlue());
-        buttonContainer.add(variableSessionContainer);
-        buttonContainer.add(Box.createHorizontalGlue());
-
-
         JLabel timedSessionHeading = new JLabel("Timed Session");
-        timedSessionHeading.setFont(new Font(null, Font.BOLD, 28));
-        JLabel timedSessionLabel = new JLabel("Allocate a specified focus time for studying.");
-        timedSessionLabel.setFont(new Font(null, Font.ITALIC, 16));
-        JButton timedSessionButton = new JButton("I want a timed session!");
+        timedSessionHeading.setFont(new Font(null, Font.BOLD, 16));
+        JLabel timedSessionLabel = new JLabel("Specify a quantity of studying time.");
+        timedSessionLabel.setFont(new Font(null, Font.ITALIC, 12));
 
-        timedSessionButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(StudySessionConfigState.SessionType.FIXED);
-            studySessionConfigController.execute(state);
-        });
-
-        timedSessionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         timedSessionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timedSessionHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
-        timedSessionContainer.add(Box.createVerticalGlue());
         timedSessionContainer.add(timedSessionHeading);
         timedSessionContainer.add(timedSessionLabel);
-        timedSessionContainer.add(Box.createVerticalGlue());
-        timedSessionContainer.add(timedSessionButton);
 
         JLabel variableSessionHeading = new JLabel("Variable Session");
-        variableSessionHeading.setFont(new Font(null, Font.BOLD, 28));
-        JLabel variableSessionLabel = new JLabel("Study until you're ready.");
-        variableSessionLabel.setFont(new Font(null, Font.ITALIC, 16));
+        variableSessionHeading.setFont(new Font(null, Font.BOLD, 16));
+        JLabel variableSessionLabel = new JLabel("Study for as long as you want until you're ready.");
+        variableSessionLabel.setFont(new Font(null, Font.ITALIC, 12));
 
-
-        JButton variableSessionButton = new JButton("I want a variable session!");
-        variableSessionButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
-            studySessionConfigController.execute(state);
-        });
-
-        variableSessionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         variableSessionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         variableSessionHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
-        variableSessionContainer.add(Box.createVerticalGlue());
         variableSessionContainer.add(variableSessionHeading);
         variableSessionContainer.add(variableSessionLabel);
-        variableSessionContainer.add(Box.createVerticalGlue());
-        variableSessionContainer.add(variableSessionButton);
 
+        JPanel descriptionPanel = new JPanel();
+        descriptionPanel.setLayout(new BoxLayout(descriptionPanel, BoxLayout.Y_AXIS));
+        descriptionPanel.add(Box.createVerticalGlue());
+        descriptionPanel.add(timedSessionContainer);
+        descriptionPanel.add(Box.createVerticalGlue());
+        descriptionPanel.add(variableSessionContainer);
+        descriptionPanel.add(Box.createVerticalGlue());
 
-        final JButton returnButton = new JButton("Cancel");
-        returnButton.addActionListener(e -> {
-            if (e.getSource().equals(returnButton)) {
-                // TODO: Remove back navigation or somehow add to CA
-                viewModel.setState(new StudySessionConfigState());
-                AppBuilder.viewManagerModel.setView("dashboard");
-            }
-        });
-        returnButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        chooseSessionTypePanel.add(buttonContainer);
-        chooseSessionTypePanel.add(Box.createVerticalGlue());
-        chooseSessionTypePanel.add(returnButton);
+        chooseSessionTypePanel.add(typeSelectorContainer);
+        chooseSessionTypePanel.add(descriptionPanel);
 
         return chooseSessionTypePanel;
     }
 
-    private JPanel buildChooseReferenceMaterialsPanel() {
-        // TODO: Make this look better
+    private JPanel buildChooseReferencePanel() {
         JPanel chooseReferenceMaterialsPanel = new JPanel();
+        chooseReferenceMaterialsPanel.setLayout(new BoxLayout(chooseReferenceMaterialsPanel, BoxLayout.X_AXIS));
+        chooseReferenceMaterialsPanel.setBorder(BorderFactory.createTitledBorder("Study Session Context"));
 
         JPanel promptPanel = new JPanel();
-        promptPanel.setBorder(BorderFactory.createTitledBorder("Study Session Context"));
-        JTextArea promptTextArea = new JTextArea();
-        promptPanel.add(promptTextArea);
 
+        promptArea.setBorder(BorderFactory.createTitledBorder("What are you studying?"));
+        promptPanel.add(promptArea);
 
         JPanel selectorPanel = new JPanel();
-        selectorPanel.setBorder(BorderFactory.createTitledBorder("Study Session Textbook"));
+        selectorPanel.setBorder(BorderFactory.createTitledBorder("Textbook"));
         selectorPanel.add(fileSelector);
-
-
-        JButton cancelButton = new JButton("Cancel");
-        JButton nextButton = new JButton("Next");
-
-        cancelButton.addActionListener(e -> {
-            // TODO: Remove back navigation or somehow add to CA
-            StudySessionConfigState state = viewModel.getState();
-            state.setSessionType(null);
-            state.setTargetDuration(null);
-            state.setStep(StudySessionConfigState.ConfigStep.CHOOSE_TYPE);
-            viewModel.firePropertyChange();
-        });
-        nextButton.addActionListener(e -> {
-            StudySessionConfigState state = viewModel.getState();
-            state.setPrompt(promptTextArea.getText());
-            state.setReferenceFile((String) fileSelector.getSelectedItem());
-            studySessionConfigController.execute(state);
-        });
 
         chooseReferenceMaterialsPanel.add(promptPanel);
         chooseReferenceMaterialsPanel.add(selectorPanel);
-        chooseReferenceMaterialsPanel.add(cancelButton);
-        chooseReferenceMaterialsPanel.add(nextButton);
 
         return chooseReferenceMaterialsPanel;
     }
 
+    /**
+     * Attaches listeners to input elements to update the viewmodel on change.
+     */
+    private void attachListeners() {
+        typeSelector.addActionListener(e -> {
+            String choice = typeSelector.getSelectedItem().toString();
+            SessionType sessionType = choice.equals(VARIABLE_SESSION) ? SessionType.VARIABLE : SessionType.FIXED;
+            viewModel.getState().setSessionType(sessionType);
+
+            // Must make the presenter fire property changed so the view can react and
+            // show the duration selector if needed.
+            // TODO: Null check is temporary solution
+            // TODO: Stop this from running when setFields() is called...
+            if (startStudySessionController != null) {
+                startStudySessionController.setSessionType(sessionType);
+            }
+        });
+
+        fileSelector.addActionListener(e -> {
+            String choice = (String) fileSelector.getSelectedItem();
+            if (choice != null) {
+                viewModel.getState().setReferenceFile(choice);
+            }
+        });
+
+        hoursSelector.addChangeListener(e -> {
+            Integer hours = (Integer) hoursSelector.getValue();
+            System.out.println(hours);
+            viewModel.getState().setTargetDurationHours(hours);
+        });
+        minutesSelector.addChangeListener(e -> {
+
+            Integer minutes = (Integer) minutesSelector.getValue();
+            viewModel.getState().setTargetDurationMinutes(minutes);
+        });
+
+        promptArea.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void documentListenerHelper() {
+                System.out.println(promptArea.getText());
+                viewModel.getState().setPrompt(promptArea.getText());
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
+        });
+    }
+
+    private void setFields(StudySessionConfigState state) {
+        typeSelector.setSelectedItem(
+                state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION
+        );
+
+        hoursSelector.setValue(state.getTargetDurationHours());
+        minutesSelector.setValue(state.getTargetDurationMinutes());
+        promptArea.setText(state.getPrompt());
+
+        updateFileSelector(state.getFileOptions());
+        if (state.getReferenceFile() != null) {
+            fileSelector.setSelectedItem(state.getReferenceFile());
+        }
+
+        updateDurationPanelVisibility(state.getSessionType());
+    }
+
     private void updateFileSelector(List<String> fileNames) {
-        fileSelector.removeAllItems();
-        if (fileNames == null) return;
-        for (String fileName : fileNames) {
-            fileSelector.addItem(fileName);
+        fileSelector.removeAllItems(); 
+        if (fileNames != null) {
+            for (String fileName : fileNames) {
+                fileSelector.addItem(fileName); 
+            }
         }
     }
 
-    private void updateViewStep(StudySessionConfigState.ConfigStep step) {
-        cardLayout.show(mainCardPanel, VIEW_NAMES.get(step));
-        currentStepLabel.setText(STEP_LABELS.get(step));
-    }
-
-    public void setStudySessionConfigController(StudySessionConfigController studySessionConfigController) {
-        this.studySessionConfigController = studySessionConfigController;
+    public void setStartStudySessionController(StartStudySessionController startStudySessionController) {
+        this.startStudySessionController = startStudySessionController;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+
         if (evt.getPropertyName().equals("state")) {
             StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
             System.out.println(state);
-            updateViewStep(state.getStep());
-            updateFileSelector(state.getFileOptions());
-        }
-        else if (evt.getPropertyName().equals("errors")) {
+            setFields(state);
+        } else if (evt.getPropertyName().equals("error")) {
             StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
-            List<String> errors = state.getErrors();
-            if (errors != null && !errors.isEmpty()) {
-                String errorMessage = String.join("\n", errors);
-                JOptionPane.showMessageDialog(this, errorMessage, "Configuration Errors", JOptionPane.ERROR_MESSAGE);
-            }
+            String error = state.getError();
+            JOptionPane.showMessageDialog(this, error, "Configuration Error", JOptionPane.ERROR_MESSAGE);
         }
-
     }
 }

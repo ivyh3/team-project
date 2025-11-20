@@ -110,7 +110,7 @@ public class AppConfig {
 	private void initializeUseCases() {
 		// Initialize Presenters (Output Boundaries) with ViewModels
 		accountCreationPresenter = new AccountCreationPresenter(loginViewModel);
-		startStudySessionPresenter = new StartStudySessionPresenter(studySessionViewModel);
+//		startStudySessionPresenter = new StartStudySessionPresenter(studySessionViewModel);
 		generateQuizPresenter = new GenerateQuizPresenter(quizViewModel);
 		scheduleStudySessionPresenter = new ScheduleStudySessionPresenter(scheduleSessionViewModel);
 		viewStudyMetricsPresenter = new ViewStudyMetricsPresenter(metricsViewModel);
@@ -176,9 +176,9 @@ public class AppConfig {
 		return accountCreationController;
 	}
 
-	public StartStudySessionController getStartStudySessionController() {
-		return startStudySessionController;
-	}
+//	public StartStudySessionController getStartStudySessionController() {
+//		return startStudySessionController;
+//	}
 
 	// TODO: Add getters for other controllers
 }

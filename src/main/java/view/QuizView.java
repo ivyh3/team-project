@@ -28,7 +28,7 @@ public class QuizView extends JPanel {
     private void initializeComponents() {
         questionLabel = new JLabel();
         questionLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        
+
         answerGroup = new ButtonGroup();
         answerButtons = new JRadioButton[4];
         for (int i = 0; i < 4; i++) {
@@ -60,16 +60,7 @@ public class QuizView extends JPanel {
     }
     
     private void displayCurrentQuestion() {
-        if (questions != null && currentQuestionIndex < questions.size()) {
-            Question q = questions.get(currentQuestionIndex);
-            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getQuestion());
-            
-            List<String> options = q.getPossibleAnswers();
-            for (int i = 0; i < answerButtons.length && i < options.size(); i++) {
-                answerButtons[i].setText(options.get(i));
-                answerButtons[i].setSelected(false);
-            }
-        }
+        StudyQuizView.validQuestion(questions, currentQuestionIndex, questionLabel, answerButtons);
     }
     
     public int getSelectedAnswer() {
