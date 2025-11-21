@@ -9,7 +9,7 @@ import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
 import interface_adapter.controller.LoginController;
 import interface_adapter.presenter.LoginPresenter;
-import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.LoginViewModel2;
 import interface_adapter.controller.LogoutController;
 import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.controller.SignupController;
@@ -74,7 +74,7 @@ public class AppBuilder {
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
-    private LoginViewModel loginViewModel;
+    private LoginViewModel2 loginViewModel;
     private LoggedInViewModel loggedInViewModel;
     private LoggedInView loggedInView;
     private LoginView loginView;
@@ -120,7 +120,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addLoginView() {
-        loginViewModel = new LoginViewModel();
+        loginViewModel = new LoginViewModel2();
         loginView = new LoginView(loginViewModel);
         cardPanel.add(loginView, loginView.getViewName());
         return this;

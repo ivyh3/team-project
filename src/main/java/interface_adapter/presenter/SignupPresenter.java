@@ -4,7 +4,7 @@ import interface_adapter.view_model.SignupState;
 import interface_adapter.view_model.SignupViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import interface_adapter.view_model.LoginState;
-import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.LoginViewModel2;
 import use_case.signup.SignupOutputBoundary;
 import use_case.signup.SignupOutputData;
 
@@ -14,12 +14,12 @@ import use_case.signup.SignupOutputData;
 public class SignupPresenter implements SignupOutputBoundary {
 
     private final SignupViewModel signupViewModel;
-    private final LoginViewModel loginViewModel;
+    private final LoginViewModel2 loginViewModel;
     private final ViewManagerModel viewManagerModel;
 
     public SignupPresenter(ViewManagerModel viewManagerModel,
                            SignupViewModel signupViewModel,
-                           LoginViewModel loginViewModel) {
+                           LoginViewModel2 loginViewModel) {
         this.viewManagerModel = viewManagerModel;
         this.signupViewModel = signupViewModel;
         this.loginViewModel = loginViewModel;

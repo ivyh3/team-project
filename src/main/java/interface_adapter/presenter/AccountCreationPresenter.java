@@ -1,6 +1,6 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.LoginViewModel2;
 import use_case.account_creation.AccountCreationOutputBoundary;
 import use_case.account_creation.AccountCreationOutputData;
 
@@ -9,9 +9,9 @@ import use_case.account_creation.AccountCreationOutputData;
  * Formats output data and updates the LoginViewModel.
  */
 public class AccountCreationPresenter implements AccountCreationOutputBoundary {
-	private final LoginViewModel viewModel;
+	private final LoginViewModel2 viewModel;
 	
-	public AccountCreationPresenter(LoginViewModel viewModel) {
+	public AccountCreationPresenter(LoginViewModel2 viewModel) {
 		this.viewModel = viewModel;
 	}
 	
