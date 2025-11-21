@@ -1,7 +1,7 @@
 package interface_adapter.presenter;
 
 import interface_adapter.view_model.LoginState;
-import interface_adapter.login.LoginViewModel;
+import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import interface_adapter.view_model.LoggedInState;
 import interface_adapter.view_model.LoggedInViewModel;

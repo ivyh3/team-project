@@ -9,7 +9,7 @@ import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
 import interface_adapter.controller.LoginController;
 import interface_adapter.presenter.LoginPresenter;
-import interface_adapter.login.LoginViewModel;
+import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.controller.LogoutController;
 import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.controller.SignupController;
