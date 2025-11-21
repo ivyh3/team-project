@@ -1,6 +1,5 @@
 package app;
 
-
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import frameworks_drivers.TEMP.FileUserDataAccessObject;
 import entity.UserFactory;
@@ -64,7 +63,7 @@ public class AppBuilder {
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
 
-//    final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
+    // final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
 
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
@@ -74,7 +73,6 @@ public class AppBuilder {
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
-
 
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
@@ -167,8 +165,8 @@ public class AppBuilder {
         final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
                 loggedInViewModel);
 
-        final ChangePasswordInputBoundary changePasswordInteractor =
-                new ChangePasswordInteractor(userDataAccessObject, changePasswordOutputBoundary, userFactory);
+        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
+                changePasswordOutputBoundary, userFactory);
 
         ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
         loggedInView.setChangePasswordController(changePasswordController);
@@ -177,14 +175,14 @@ public class AppBuilder {
 
     /**
      * Adds the Logout Use Case to the application.
+     * 
      * @return this builder
      */
     public AppBuilder addLogoutUseCase() {
         final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
                 loggedInViewModel, loginViewModel);
 
-        final LogoutInputBoundary logoutInteractor =
-                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
         loggedInView.setLogoutController(logoutController);
@@ -224,9 +222,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addConfigStudySessionUseCase() {
-        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel);
-        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(startStudySessionPresenter);
-        StartStudySessionController studySessionConfigController = new StartStudySessionController(configStudySessionInteractor);
+        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
+                studySessionConfigViewModel, studySessionViewModel);
+        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
+                startStudySessionPresenter);
+        StartStudySessionController studySessionConfigController = new StartStudySessionController(
+                configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -234,6 +235,13 @@ public class AppBuilder {
     public AppBuilder addUploadSessionMaterialsView() {
         UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
         cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addUploadMaterialsView() {
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
+        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
 
         return this;
     }
@@ -252,7 +260,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addEndStudySessionUseCase() {
-        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel, studySessionEndViewModel);
+        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel,
+                studySessionEndViewModel);
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
@@ -288,13 +297,12 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         // TODO: Replace with actual DAO implementations
-//        StudySessionRepository sessionRepository = new StudySessionRepository();
-//        StudyQuizRepository quizRepository = new StudyQuizRepository();
+        // StudySessionRepository sessionRepository = new StudySessionRepository();
+        // StudyQuizRepository quizRepository = new StudyQuizRepository();
 
         // Create Interactor
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
-                presenter
-        );
+                presenter);
 
         // Create Controller
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);

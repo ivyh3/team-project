@@ -11,16 +11,15 @@ import java.beans.PropertyChangeEvent;
 import java.time.Duration;
 import java.util.Map;
 
-
 public class StudySessionView extends StatefulView<StudySessionState> {
-    // Todo: Seperate these into two different views? And then have different types of state???
+    // Todo: Seperate these into two different views? And then have different types
+    // of state???
     private EndStudySessionController endStudySessionController;
     private final JLabel durationLabel = new JLabel();
     private final JLabel headerLabel = new JLabel();
     private Map<StudySessionConfigState.SessionType, String> HEADER_LABEL = Map.of(
             StudySessionConfigState.SessionType.FIXED, "Time left:",
-            StudySessionConfigState.SessionType.VARIABLE, "Time studied:"
-    );
+            StudySessionConfigState.SessionType.VARIABLE, "Time studied:");
     private static int ONE_SECOND = 1000;
     private Timer uiTimer; // todo: find a better place for this
 
@@ -38,11 +37,11 @@ public class StudySessionView extends StatefulView<StudySessionState> {
         durationLabel.setFont(new Font(null, Font.BOLD, 52));
         durationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
         uiTimer = new Timer(ONE_SECOND, e -> {
             System.out.println("Timer update");
             updateDurationLabel();
-            // Todo: probably have this logic set in the viewmodel? or controller? I don't know since time is involved
+            // Todo: probably have this logic set in the viewmodel? or controller? I don't
+            // know since time is involved
             if (viewModel.getState().getSessionType() == StudySessionConfigState.SessionType.FIXED &&
                     viewModel.getState().getRemainingDuration().isZero()) {
                 StudySessionState state = viewModel.getState();
@@ -56,10 +55,12 @@ public class StudySessionView extends StatefulView<StudySessionState> {
             StudySessionState state = viewModel.getState();
             state.setActive(false);
             endStudySessionController.execute(state);
-            // Use case interactor will need to create an actual study session entity and save it
+            // Use case interactor will need to create an actual study session entity and
+            // save it
             // using the end time (the time when this button was pressed
             // Then hand off reference materials to create a quiz?????????
-            // Is it just me or is my use case cooked bro time shenanigans + config (many use cases in one ???) + multiple views
+            // Is it just me or is my use case cooked bro time shenanigans + config (many
+            // use cases in one ???) + multiple views
 
         });
         finalizeSession.setAlignmentX(Component.CENTER_ALIGNMENT);

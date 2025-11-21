@@ -21,5 +21,9 @@ public class DeleteReferenceMaterialInputData {
     public List<String> getMaterialIds() {
         return materialIds;
     }
+
+    public boolean isConfirmed() {
+        return false;
+    }
 }
 

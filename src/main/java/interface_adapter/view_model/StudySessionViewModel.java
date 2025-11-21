@@ -12,4 +12,3 @@ public class StudySessionViewModel extends ViewModel<StudySessionState> {
         super("studySession");
     }
 }
-

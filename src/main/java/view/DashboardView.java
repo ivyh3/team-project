@@ -9,30 +9,26 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-
 public class DashboardView extends View {
     private final JLabel stateLabel = new JLabel();
 
     public DashboardView() {
         super("dashboard");
 
-
-
         // Main will contain the main components of this view (buttons, insights).
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-
 
         // ======= HEADER =======
         JPanel header = new ViewHeader("Dashboard");
         // Include settings in the header
         final JButton settingsButton = new JButton("Settings");
         settingsButton.addActionListener(e -> {
-            // Should use a controller for this shit instead, but not going to do that for testing.
+            // Should use a controller for this shit instead, but not going to do that for
+            // testing.
             AppBuilder.viewManagerModel.setView("settings");
         });
         header.add(settingsButton, BorderLayout.EAST);
-
 
         // ====== BUTTONS =====
         JPanel buttonContainer = new JPanel();
@@ -65,14 +61,14 @@ public class DashboardView extends View {
         insightsContainer.setLayout(new BoxLayout(insightsContainer, BoxLayout.Y_AXIS));
 
         JLabel insightText = new JLabel("You did not study today yet. Start studying now!");
-//        stateLabel.setText(String.format("You have studied %.1f hours today.", viewModel.getState()));
+        // stateLabel.setText(String.format("You have studied %.1f hours today.",
+        // viewModel.getState()));
         stateLabel.setText("You have studied 2.7 hours today.");
 
         insightText.setAlignmentX(Component.CENTER_ALIGNMENT);
         stateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         insightText.setFont(new Font(null, Font.BOLD, 18));
         stateLabel.setFont(new Font(null, Font.BOLD, 16));
-
 
         insightsContainer.add(insightText);
         insightsContainer.add(stateLabel);
@@ -82,16 +78,16 @@ public class DashboardView extends View {
         main.add(Box.createVerticalGlue()); // Split them vertically further
         main.add(buttonContainer);
 
-
         this.add(header, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
     }
 
-//    @Override
-//    public void propertyChange(PropertyChangeEvent evt) {
-//        if (evt.getPropertyName().equals("state")) {
-//            System.out.println(this.viewModel.getState());
-//            this.stateLabel.setText(String.format("You have studied %f hours today.", viewModel.getState()));
-//        }
-//    }
+    // @Override
+    // public void propertyChange(PropertyChangeEvent evt) {
+    // if (evt.getPropertyName().equals("state")) {
+    // System.out.println(this.viewModel.getState());
+    // this.stateLabel.setText(String.format("You have studied %f hours today.",
+    // viewModel.getState()));
+    // }
+    // }
 }
