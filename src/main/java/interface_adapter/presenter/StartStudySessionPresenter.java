@@ -12,7 +12,8 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     StudySessionConfigViewModel studySessionConfigViewModel;
     StudySessionViewModel studySessionViewModel;
 
-    public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel, StudySessionViewModel studySessionViewModel) {
+    public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel,
+            StudySessionViewModel studySessionViewModel) {
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
     }

@@ -30,7 +30,8 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
 
     /**
      * Construct this DAO for saving to and reading from a local file.
-     * @param csvPath the path of the file to save to
+     * 
+     * @param csvPath     the path of the file to save to
      * @param userFactory factory for creating user objects
      * @throws RuntimeException if there is an IOException when accessing the file
      */
@@ -42,8 +43,7 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
 
         if (csvFile.length() == 0) {
             save();
-        }
-        else {
+        } else {
 
             try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
                 final String header = reader.readLine();
@@ -60,8 +60,7 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
                     final User user = userFactory.create(username, password);
                     accounts.put(username, user);
                 }
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -83,8 +82,7 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
 
             writer.close();
 
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }

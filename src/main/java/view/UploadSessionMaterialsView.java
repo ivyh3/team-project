@@ -5,7 +5,7 @@ import app.AppBuilder;
 import javax.swing.*;
 import java.awt.*;
 
-public class UploadSessionMaterialsView extends View{
+public class UploadSessionMaterialsView extends View {
     public UploadSessionMaterialsView() {
         super("uploadSessionMaterials");
         JPanel header = new ViewHeader("Study Materials");

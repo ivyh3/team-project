@@ -7,13 +7,12 @@ import entity.StudyQuiz;
  */
 public class GenerateQuizOutputData {
     private final StudyQuiz quiz;
-    
+
     public GenerateQuizOutputData(StudyQuiz quiz) {
         this.quiz = quiz;
     }
-    
+
     public StudyQuiz getQuiz() {
         return quiz;
     }
 }
-

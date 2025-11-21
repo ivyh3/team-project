@@ -134,22 +134,21 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         Map<String, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        String[] daysOrder = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        String[] daysOrder = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
         for (String day : daysOrder) {
             Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
             double hours = (double) duration.toMinutes() / 60;
             leftDataset.addValue(hours, "Study Duration", day);
         }
-        //TODO: update the date
+        // TODO: update the date
         LocalDateTime startDate = getStartDateForOffset(weekOffset);
-         String dateRange = formatDateRange(startDate);
+        String dateRange = formatDateRange(startDate);
 
         JFreeChart chart = ChartFactory.createLineChart(
                 dateRange,
                 "",
                 "Hours Studied",
-                leftDataset
-        );
+                leftDataset);
 
         CategoryPlot plot = chart.getCategoryPlot();
 

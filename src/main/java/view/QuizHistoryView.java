@@ -23,7 +23,6 @@ public class QuizHistoryView extends View {
         main.add(returnButton);
         main.add(reviewQuizButton);
 
-
         this.add(header, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
     }

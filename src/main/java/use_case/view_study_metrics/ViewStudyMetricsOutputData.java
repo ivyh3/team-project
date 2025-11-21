@@ -14,13 +14,13 @@ public class ViewStudyMetricsOutputData {
     private final String mostStudiedSubject;
     private final Map<String, String> subjectStrengths;
     private final LocalDateTime startDate;
-    
+
     public ViewStudyMetricsOutputData(Map<String, Duration> dailyStudyDurations,
-                                      Map<String, Float> averageQuizScores,
-                                      Duration averageWeeklyStudyTime,
-                                      String mostStudiedSubject,
-                                      Map<String, String> subjectStrengths,
-                                      LocalDateTime startDate) {
+            Map<String, Float> averageQuizScores,
+            Duration averageWeeklyStudyTime,
+            String mostStudiedSubject,
+            Map<String, String> subjectStrengths,
+            LocalDateTime startDate) {
         this.dailyStudyDurations = dailyStudyDurations;
         this.averageQuizScores = averageQuizScores;
         this.averageWeeklyStudyTime = averageWeeklyStudyTime;
@@ -28,27 +28,28 @@ public class ViewStudyMetricsOutputData {
         this.subjectStrengths = subjectStrengths;
         this.startDate = startDate;
     }
-    
+
     public Map<String, Duration> getDailyStudyDurations() {
         return dailyStudyDurations;
     }
-    
+
     public Map<String, Float> getAverageQuizScores() {
         return averageQuizScores;
     }
-    
+
     public Duration getAverageWeeklyStudyTime() {
         return averageWeeklyStudyTime;
     }
-    
+
     public String getMostStudiedSubject() {
         return mostStudiedSubject;
     }
-    
+
     public Map<String, String> getSubjectStrengths() {
         return subjectStrengths;
     }
 
-    public LocalDateTime getStartDate() {return startDate; }
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
 }
-
