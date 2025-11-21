@@ -2,17 +2,14 @@ package use_case.start_study_session;
 
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
-import interface_adapter.view_model.StudySessionState;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
+/**
+ * The interactor for the start study session use case.
+ */
 public class StartStudySessionInteractor implements StartStudySessionInputBoundary {
     private final StartStudySessionOutputBoundary presenter;
     // private ReferenceFilesDataAccessInterface referenceFilesDataAccessObject
-    private final List<String> files = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf", "pdf.pdf");
 
     public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter) {
         this.presenter = presenter;
@@ -46,7 +43,6 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
                 LocalDateTime.now()
         );
 
-        // TODO: Have two seperate views for study sessions, and I guess would need two view model state classes then
         presenter.startStudySession(outputData);
     }
 
@@ -60,6 +56,11 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         presenter.setSessionType(sessionType);
     }
 
+    /**
+     * Check if the given file resource exists in storage.
+     * @param file The file to check.
+     * @return whether the file exists.
+     */
     private boolean checkIfFileExists(String file) {
         return true; // Temporary.
     }

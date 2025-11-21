@@ -2,23 +2,32 @@ package app;
 
 
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
-import frameworks_drivers.TEMP.FileUserDataAccessObject;
+
 import entity.UserFactory;
+import frameworks_drivers.TEMP.FileUserDataAccessObject;
+import interface_adapter.controller.EndStudySessionController;
+import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.login.InitialViewModel;
 import interface_adapter.login.LoginController;
 import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.presenter.EndStudySessionPresenter;
+import interface_adapter.presenter.StartStudySessionPresenter;
+import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
-import interface_adapter.login.InitialViewModel;
+import interface_adapter.view_model.*;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -28,57 +37,31 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import view.LoggedInView;
-import view.LoginView;
-import view.SignupView;
-import view.ViewManager;
-import view.InitialView;
-
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.presenter.StartStudySessionPresenter;
-import interface_adapter.presenter.EndStudySessionPresenter;
-import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
-import use_case.end_study_session.EndStudySessionInteractor;
-import interface_adapter.controller.ViewStudyMetricsController;
-import interface_adapter.view_model.MetricsViewModel;
-import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
-//import interface_adapter.repository.StudySessionRepository;
-//import interface_adapter.repository.StudyQuizRepository;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.ViewManagerModel;
 import view.*;
-import view.SettingsView;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class AppBuilder {
-    private final String appTitle = "My title";
-
-    private final JPanel cardPanel = new JPanel();
-    private final CardLayout cardLayout = new CardLayout();
-
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
+    // TODO: Sort things out.
+    final UserFactory userFactory = new UserFactory();
+    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    private final String appTitle = "My title";
+    private final JPanel cardPanel = new JPanel();
+
+    //    final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
+    private final CardLayout cardLayout = new CardLayout();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
-
-//    final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
-
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
-
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
-
-
-    // TODO: Sort things out.
-    final UserFactory userFactory = new UserFactory();
-    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -177,6 +160,7 @@ public class AppBuilder {
 
     /**
      * Adds the Logout Use Case to the application.
+     *
      * @return this builder
      */
     public AppBuilder addLogoutUseCase() {
@@ -224,7 +208,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addConfigStudySessionUseCase() {
-        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel);
+        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
+                studySessionConfigViewModel,
+                studySessionViewModel,
+                viewManagerModel,
+                dashboardView.getViewName()
+        );
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(startStudySessionPresenter);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
@@ -252,7 +241,11 @@ public class AppBuilder {
     }
 
     public AppBuilder addEndStudySessionUseCase() {
-        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel, studySessionEndViewModel);
+        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(
+                studySessionViewModel,
+                studySessionEndViewModel,
+                viewManagerModel
+        );
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
