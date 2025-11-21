@@ -7,7 +7,7 @@ import java.beans.PropertyChangeSupport;
  * ViewModel for the Login view.
  * Stores the state and data that the login view needs to display.
  */
-public class LoginViewModel {
+public class LoginViewModel extends ViewModel<LoginState> {
     private final PropertyChangeSupport support;
 
     private String errorMessage;
@@ -15,12 +15,16 @@ public class LoginViewModel {
     private String lastAttemptedEmail;
 
     public LoginViewModel() {
+        super("log in");
+        setState(new LoginState());
+
         this.support = new PropertyChangeSupport(this);
         this.errorMessage = "";
         this.loginInProgress = false;
         this.lastAttemptedEmail = "";
     }
 
+    @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
     }
@@ -59,3 +63,4 @@ public class LoginViewModel {
         support.firePropertyChange("lastAttemptedEmail", oldValue, lastAttemptedEmail);
     }
 }
+
