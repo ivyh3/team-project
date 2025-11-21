@@ -6,8 +6,8 @@ package use_case.schedule_study_session;
 public interface ScheduleStudySessionInputBoundary {
     /**
      * Executes the schedule study session use case.
+     * 
      * @param inputData the input data for scheduling a study session
      */
     void execute(ScheduleStudySessionInputData inputData);
 }
-

@@ -10,10 +10,10 @@ import java.awt.*;
  */
 public class UploadMaterialsView extends View {
     private final JButton uploadButton;
-	private final JButton deleteButton;
-	private final JList<String> materialsList;
-	private final JTextArea promptArea;
-	private final DefaultListModel<String> listModel;
+    private final JButton deleteButton;
+    private final JList<String> materialsList;
+    private final JTextArea promptArea;
+    private final DefaultListModel<String> listModel;
 
     public UploadMaterialsView() {
         super("uploadMaterials");
@@ -69,28 +69,27 @@ public class UploadMaterialsView extends View {
         this.add(dashboard, BorderLayout.SOUTH);
     }
 
+    public void addMaterial(String materialName) {
+        listModel.addElement(materialName);
+    }
 
-	public void addMaterial(String materialName) {
-		listModel.addElement(materialName);
-	}
+    public void removeMaterial(String materialName) {
+        listModel.removeElement(materialName);
+    }
 
-	public void removeMaterial(String materialName) {
-		listModel.removeElement(materialName);
-	}
+    public String[] getSelectedMaterials() {
+        return materialsList.getSelectedValuesList().toArray(new String[0]);
+    }
 
-	public String[] getSelectedMaterials() {
-		return materialsList.getSelectedValuesList().toArray(new String[0]);
-	}
+    public String getPrompt() {
+        return promptArea.getText();
+    }
 
-	public String getPrompt() {
-		return promptArea.getText();
-	}
+    public void setUploadButtonListener(java.awt.event.ActionListener listener) {
+        uploadButton.addActionListener(listener);
+    }
 
-	public void setUploadButtonListener(java.awt.event.ActionListener listener) {
-		uploadButton.addActionListener(listener);
-	}
-
-	public void setDeleteButtonListener(java.awt.event.ActionListener listener) {
-		deleteButton.addActionListener(listener);
-	}
+    public void setDeleteButtonListener(java.awt.event.ActionListener listener) {
+        deleteButton.addActionListener(listener);
+    }
 }
