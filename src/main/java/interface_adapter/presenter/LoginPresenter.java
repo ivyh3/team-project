@@ -1,7 +1,7 @@
 package interface_adapter.presenter;
 
 import interface_adapter.view_model.LoginState;
-import interface_adapter.view_model.LoginViewModel2;
+import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import interface_adapter.view_model.LoggedInState;
 import interface_adapter.view_model.LoggedInViewModel;
@@ -13,13 +13,13 @@ import use_case.login.LoginOutputData;
  */
 public class LoginPresenter implements LoginOutputBoundary {
 
-    private final LoginViewModel2 loginViewModel;
+    private final LoginViewModel loginViewModel;
     private final LoggedInViewModel loggedInViewModel;
     private final ViewManagerModel viewManagerModel;
 
     public LoginPresenter(ViewManagerModel viewManagerModel,
                           LoggedInViewModel loggedInViewModel,
-                          LoginViewModel2 loginViewModel) {
+                          LoginViewModel loginViewModel) {
         this.viewManagerModel = viewManagerModel;
         this.loggedInViewModel = loggedInViewModel;
         this.loginViewModel = loginViewModel;

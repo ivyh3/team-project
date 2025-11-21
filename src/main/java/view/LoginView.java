@@ -16,7 +16,7 @@ import java.beans.PropertyChangeListener;
 /**
  * The View for when the user is logging into the program.
  */
-public class LoginView2 extends JPanel implements ActionListener, PropertyChangeListener {
+public class LoginView extends JPanel implements ActionListener, PropertyChangeListener {
 
     private final String viewName = "log in";
     private final LoginViewModel loginViewModel;
@@ -31,7 +31,7 @@ public class LoginView2 extends JPanel implements ActionListener, PropertyChange
     private final JButton cancel;
     private LoginController loginController = null;
 
-    public LoginView(LoginViewModel2 loginViewModel) {
+    public LoginView(LoginViewModel loginViewModel) {
 
         this.loginViewModel = loginViewModel;
         this.loginViewModel.addPropertyChangeListener(this);
