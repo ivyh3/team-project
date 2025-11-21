@@ -14,37 +14,36 @@ import java.util.stream.Collectors;
  * Formats output data and updates the QuizViewModel.
  */
 public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
-	private final QuizViewModel viewModel;
-	
-	public GenerateQuizPresenter(QuizViewModel viewModel) {
-		this.viewModel = viewModel;
-	}
-	
-	@Override
-	public void prepareSuccessView(GenerateQuizOutputData outputData) {
-		StudyQuiz quiz = outputData.getQuiz();
-		List<Question> questions = quiz.getQuestions();
-		
-		if (questions != null && !questions.isEmpty()) {
-			// Update view model with first question
-			Question firstQuestion = questions.get(0);
-			viewModel.setCurrentQuestion(firstQuestion.getQuestion());
-			viewModel.setCurrentOptions(firstQuestion.getPossibleAnswers());
-			viewModel.setCurrentQuestionNumber(1);
-			viewModel.setTotalQuestions(questions.size());
-			viewModel.setScoreDisplay("0/" + questions.size());
-			viewModel.setQuizComplete(false);
-			viewModel.setShowingExplanation(false);
-			viewModel.setErrorMessage("");
-		} else {
-			prepareFailView("No questions were generated.");
-		}
-	}
-	
-	@Override
-	public void prepareFailView(String error) {
-		viewModel.setErrorMessage(error);
-		viewModel.setQuizComplete(false);
-	}
-}
+    private final QuizViewModel viewModel;
 
+    public GenerateQuizPresenter(QuizViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
+
+    @Override
+    public void prepareSuccessView(GenerateQuizOutputData outputData) {
+        StudyQuiz quiz = outputData.getQuiz();
+        List<Question> questions = quiz.getQuestions();
+
+        if (questions != null && !questions.isEmpty()) {
+            // Update view model with first question
+            Question firstQuestion = questions.get(0);
+            viewModel.setCurrentQuestion(firstQuestion.getQuestion());
+            viewModel.setCurrentOptions(firstQuestion.getPossibleAnswers());
+            viewModel.setCurrentQuestionNumber(1);
+            viewModel.setTotalQuestions(questions.size());
+            viewModel.setScoreDisplay("0/" + questions.size());
+            viewModel.setQuizComplete(false);
+            viewModel.setShowingExplanation(false);
+            viewModel.setErrorMessage("");
+        } else {
+            prepareFailView("No questions were generated.");
+        }
+    }
+
+    @Override
+    public void prepareFailView(String error) {
+        viewModel.setErrorMessage(error);
+        viewModel.setQuizComplete(false);
+    }
+}

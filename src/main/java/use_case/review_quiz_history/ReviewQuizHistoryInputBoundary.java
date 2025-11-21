@@ -6,8 +6,8 @@ package use_case.review_quiz_history;
 public interface ReviewQuizHistoryInputBoundary {
     /**
      * Executes the review quiz history use case.
+     * 
      * @param inputData the input data for reviewing quiz history
      */
     void execute(ReviewQuizHistoryInputData inputData);
 }
-

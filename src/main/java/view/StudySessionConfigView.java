@@ -270,8 +270,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
 
     private void setFields(StudySessionConfigState state) {
         typeSelector.setSelectedItem(
-                state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION
-        );
+                state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION);
 
         hoursSelector.setValue(state.getTargetDurationHours());
         minutesSelector.setValue(state.getTargetDurationMinutes());
@@ -286,10 +285,10 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     }
 
     private void updateFileSelector(List<String> fileNames) {
-        fileSelector.removeAllItems(); 
+        fileSelector.removeAllItems();
         if (fileNames != null) {
             for (String fileName : fileNames) {
-                fileSelector.addItem(fileName); 
+                fileSelector.addItem(fileName);
             }
         }
     }
