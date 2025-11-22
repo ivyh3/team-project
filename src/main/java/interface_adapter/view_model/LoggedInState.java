@@ -1,4 +1,4 @@
-package interface_adapter.logged_in;
+package interface_adapter.view_model;
 
 /**
  * The State information representing the logged-in user.
@@ -14,7 +14,8 @@ public class LoggedInState {
         passwordError = copy.passwordError;
     }
 
-    // Because of the previous copy constructor, the default constructor must be explicit.
+    // Because of the previous copy constructor, the default constructor must be
+    // explicit.
     public LoggedInState() {
 
     }

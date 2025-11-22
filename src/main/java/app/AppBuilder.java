@@ -1,33 +1,23 @@
 package app;
 
-
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
-
-import entity.UserFactory;
 import frameworks_drivers.TEMP.FileUserDataAccessObject;
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.controller.ViewStudyMetricsController;
-import interface_adapter.logged_in.ChangePasswordController;
-import interface_adapter.logged_in.ChangePasswordPresenter;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.login.InitialViewModel;
-import interface_adapter.login.LoginController;
-import interface_adapter.login.LoginPresenter;
-import interface_adapter.login.LoginViewModel;
-import interface_adapter.logout.LogoutController;
-import interface_adapter.logout.LogoutPresenter;
-import interface_adapter.presenter.EndStudySessionPresenter;
-import interface_adapter.presenter.StartStudySessionPresenter;
-import interface_adapter.presenter.ViewStudyMetricsPresenter;
-import interface_adapter.signup.SignupController;
-import interface_adapter.signup.SignupPresenter;
-import interface_adapter.signup.SignupViewModel;
-import interface_adapter.view_model.*;
+import entity.UserFactory;
+import interface_adapter.controller.ChangePasswordController;
+import interface_adapter.presenter.ChangePasswordPresenter;
+import interface_adapter.view_model.LoggedInViewModel;
+import interface_adapter.controller.LoginController;
+import interface_adapter.presenter.LoginPresenter;
+import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.controller.LogoutController;
+import interface_adapter.presenter.LogoutPresenter;
+import interface_adapter.controller.SignupController;
+import interface_adapter.presenter.SignupPresenter;
+import interface_adapter.view_model.SignupViewModel;
+import interface_adapter.view_model.InitialViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
-import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -37,31 +27,56 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+import view.LoggedInView;
+import view.LoginView;
+import view.SignupView;
+import view.ViewManager;
+import view.InitialView;
+
+import interface_adapter.controller.EndStudySessionController;
+import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.presenter.StartStudySessionPresenter;
+import interface_adapter.presenter.EndStudySessionPresenter;
+import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
+import use_case.end_study_session.EndStudySessionInteractor;
+import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.view_model.MetricsViewModel;
+import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
+//import interface_adapter.repository.StudySessionRepository;
+//import interface_adapter.repository.StudyQuizRepository;
+import interface_adapter.view_model.SettingsViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import view.*;
+import view.SettingsView;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class AppBuilder {
-    public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
-    // TODO: Sort things out.
-    final UserFactory userFactory = new UserFactory();
-    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     private final String appTitle = "My title";
-    private final JPanel cardPanel = new JPanel();
 
-    //    final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
+    private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
+
+    public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
+
+    // final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
+
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
+
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
+
+    // TODO: Sort things out.
+    final UserFactory userFactory = new UserFactory();
+    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -150,8 +165,8 @@ public class AppBuilder {
         final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
                 loggedInViewModel);
 
-        final ChangePasswordInputBoundary changePasswordInteractor =
-                new ChangePasswordInteractor(userDataAccessObject, changePasswordOutputBoundary, userFactory);
+        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
+                changePasswordOutputBoundary, userFactory);
 
         ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
         loggedInView.setChangePasswordController(changePasswordController);
@@ -167,8 +182,7 @@ public class AppBuilder {
         final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
                 loggedInViewModel, loginViewModel);
 
-        final LogoutInputBoundary logoutInteractor =
-                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
         loggedInView.setLogoutController(logoutController);
@@ -214,8 +228,10 @@ public class AppBuilder {
                 viewManagerModel,
                 dashboardView.getViewName()
         );
-        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(startStudySessionPresenter);
-        StartStudySessionController studySessionConfigController = new StartStudySessionController(configStudySessionInteractor);
+        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
+                startStudySessionPresenter);
+        StartStudySessionController studySessionConfigController = new StartStudySessionController(
+                configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -223,6 +239,13 @@ public class AppBuilder {
     public AppBuilder addUploadSessionMaterialsView() {
         UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
         cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addUploadMaterialsView() {
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
+        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
 
         return this;
     }
@@ -281,13 +304,12 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         // TODO: Replace with actual DAO implementations
-//        StudySessionRepository sessionRepository = new StudySessionRepository();
-//        StudyQuizRepository quizRepository = new StudyQuizRepository();
+        // StudySessionRepository sessionRepository = new StudySessionRepository();
+        // StudyQuizRepository quizRepository = new StudyQuizRepository();
 
         // Create Interactor
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
-                presenter
-        );
+                presenter);
 
         // Create Controller
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);

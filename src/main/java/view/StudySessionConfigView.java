@@ -271,7 +271,8 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
      * @param state The state for the view to sync with.
      */
     private void setFields(StudySessionConfigState state) {
-        typeSelector.setSelectedItem(state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION);
+        typeSelector.setSelectedItem(
+                state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION);
 
         hoursSelector.setValue(state.getTargetDurationHours());
         minutesSelector.setValue(state.getTargetDurationMinutes());

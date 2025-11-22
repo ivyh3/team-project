@@ -13,7 +13,10 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     private final ViewManagerModel viewManagerModel;
     private final String dashboardViewName;
 
-    public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel, StudySessionViewModel studySessionViewModel, ViewManagerModel viewManagerModel, String dashboardViewName) {
+    public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel,
+                                      StudySessionViewModel studySessionViewModel,
+                                      ViewManagerModel viewManagerModel,
+                                      String dashboardViewName) {
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
         this.viewManagerModel = viewManagerModel;

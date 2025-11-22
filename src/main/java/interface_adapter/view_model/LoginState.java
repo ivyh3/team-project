@@ -1,4 +1,4 @@
-package interface_adapter.login;
+package interface_adapter.view_model;
 
 /**
  * The state for the Login View Model.

@@ -7,6 +7,7 @@ import interface_adapter.view_model.StudySessionConfigState;
  */
 public class StartStudySessionInputData {
     private final StudySessionConfigState config;
+
     public StartStudySessionInputData(StudySessionConfigState config) {
         this.config = config;
     }

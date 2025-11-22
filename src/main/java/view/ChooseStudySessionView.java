@@ -1,7 +1,5 @@
 package view;
 
-
-
 import app.AppBuilder;
 
 import javax.swing.*;
@@ -16,7 +14,6 @@ public class ChooseStudySessionView extends View {
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
         JPanel header = new ViewHeader("Start Study Session");
-
 
         JPanel buttonContainer = new JPanel();
         buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.X_AXIS));
@@ -67,7 +64,6 @@ public class ChooseStudySessionView extends View {
         variableSessionContainer.add(Box.createVerticalGlue());
         variableSessionContainer.add(variableSessionButton);
 
-
         final JButton returnButton = new JButton("Return");
         returnButton.addActionListener(e -> {
             if (e.getSource().equals(returnButton)) {
@@ -83,7 +79,5 @@ public class ChooseStudySessionView extends View {
         this.add(header, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
     }
-
-
 
 }

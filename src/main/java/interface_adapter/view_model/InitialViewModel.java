@@ -1,6 +1,4 @@
-package interface_adapter.login;
-
-import interface_adapter.view_model.ViewModel;
+package interface_adapter.view_model;
 
 /**
  * The View Model for the Login View.

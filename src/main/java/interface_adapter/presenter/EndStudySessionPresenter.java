@@ -1,7 +1,10 @@
 package interface_adapter.presenter;
 
-import app.AppBuilder;
-import interface_adapter.view_model.*;
+import interface_adapter.view_model.ViewManagerModel;
+import interface_adapter.view_model.StudySessionEndState;
+import interface_adapter.view_model.StudySessionEndViewModel;
+import interface_adapter.view_model.StudySessionState;
+import interface_adapter.view_model.StudySessionViewModel;
 import use_case.end_study_session.EndStudySessionOutputBoundary;
 import use_case.end_study_session.EndStudySessionOutputData;
 
@@ -12,7 +15,8 @@ public class EndStudySessionPresenter implements EndStudySessionOutputBoundary {
     private final StudySessionEndViewModel studySessionEndViewModel;
     private final ViewManagerModel viewManagerModel;
 
-    public EndStudySessionPresenter(StudySessionViewModel studySessionViewModel, StudySessionEndViewModel studySessionEndViewModel, ViewManagerModel viewManagerModel) {
+    public EndStudySessionPresenter(StudySessionViewModel studySessionViewModel,
+            StudySessionEndViewModel studySessionEndViewModel, ViewManagerModel viewManagerModel) {
         this.studySessionViewModel = studySessionViewModel;
         this.studySessionEndViewModel = studySessionEndViewModel;
         this.viewManagerModel = viewManagerModel;
@@ -23,7 +27,8 @@ public class EndStudySessionPresenter implements EndStudySessionOutputBoundary {
         StudySessionState finalizedSession = outputData.getStudySessionState();
         StudySessionEndState endState = new StudySessionEndState(finalizedSession, LocalDateTime.now());
 
-        // Todo: somehow think of a way to reset state for StudySessionView (although it should work fine rn)
+        // Todo: somehow think of a way to reset state for StudySessionView (although it
+        // should work fine rn)
         // Set states for the views
         studySessionViewModel.setState(finalizedSession);
         studySessionEndViewModel.setState(endState);

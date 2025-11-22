@@ -1,6 +1,5 @@
 package interface_adapter.view_model;
 
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +8,8 @@ import java.util.List;
  */
 public class StudySessionConfigState {
     // Todo: need this to be brought from somewhere.
-    private List<String> fileOptions = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf", "pdf.pdf");
+    private List<String> fileOptions = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf",
+            "pdf.pdf");
     private SessionType sessionType;
     private Integer targetDurationHours;
     private Integer targetDurationMinutes;

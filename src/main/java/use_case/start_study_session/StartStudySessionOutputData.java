@@ -20,6 +20,7 @@ public class StartStudySessionOutputData {
     public StudySessionConfigState getConfig() {
         return config;
     }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }

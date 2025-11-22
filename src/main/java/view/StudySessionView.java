@@ -43,7 +43,6 @@ public class StudySessionView extends StatefulView<StudySessionState> {
         durationLabel.setFont(new Font(null, Font.BOLD, 52));
         durationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
         uiTimer = new Timer(ONE_SECOND, e -> {
             // Every second, update the timer label.
             System.out.println("Timer update");

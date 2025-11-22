@@ -23,7 +23,8 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         if (config.getSessionType() == null) {
             presenter.prepareErrorView("You need a session type selected.");
             return;
-        } else if (config.getSessionType() == SessionType.FIXED && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
+        } else if (config.getSessionType() == SessionType.FIXED
+                && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
             presenter.prepareErrorView("Please study a bit more seriously (time can't be zero)!");
             return;
         } else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
@@ -40,9 +41,10 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         // Passed all validation checks. Start the study session.
         StartStudySessionOutputData outputData = new StartStudySessionOutputData(
                 config,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
+        // TODO: Have two seperate views for study sessions, and I guess would need two
+        // view model state classes then
         presenter.startStudySession(outputData);
     }
 
