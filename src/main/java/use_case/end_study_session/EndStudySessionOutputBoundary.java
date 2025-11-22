@@ -1,7 +1,13 @@
 package use_case.end_study_session;
 
-import interface_adapter.view_model.StudySessionState;
-
+/**
+ * The output boundary for ending a study session.
+ */
 public interface EndStudySessionOutputBoundary {
-    void prepareEndView(StudySessionState state);
+    /**
+     * Prepares the study session end view.
+     *
+     * @param outputData
+     */
+    void prepareEndView(EndStudySessionOutputData outputData);
 }

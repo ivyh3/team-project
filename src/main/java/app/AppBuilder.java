@@ -175,7 +175,7 @@ public class AppBuilder {
 
     /**
      * Adds the Logout Use Case to the application.
-     * 
+     *
      * @return this builder
      */
     public AppBuilder addLogoutUseCase() {
@@ -223,7 +223,11 @@ public class AppBuilder {
 
     public AppBuilder addConfigStudySessionUseCase() {
         StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
-                studySessionConfigViewModel, studySessionViewModel);
+                studySessionConfigViewModel,
+                studySessionViewModel,
+                viewManagerModel,
+                dashboardView.getViewName()
+        );
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
                 startStudySessionPresenter);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
@@ -260,8 +264,11 @@ public class AppBuilder {
     }
 
     public AppBuilder addEndStudySessionUseCase() {
-        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel,
-                studySessionEndViewModel);
+        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(
+                studySessionViewModel,
+                studySessionEndViewModel,
+                viewManagerModel
+        );
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
