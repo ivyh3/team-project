@@ -129,13 +129,13 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
             main.remove(chartPanel);
         }
 
-        // DATASET 1 — Study duration (left axis)
+        // DATASET 1: Study duration (left axis)
         DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
 
         Map<String, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        String[] daysOrder = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-        for (String day : daysOrder) {
+        String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        for (String day : days) {
             Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
             double hours = (double) duration.toMinutes() / 60;
             leftDataset.addValue(hours, "Study Duration", day);
@@ -159,12 +159,12 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         leftRenderer.setSeriesPaint(0, Color.RED);
         plot.setRenderer(0, leftRenderer);
 
-        // DATASET 2 — Quiz score (right axis)
+        // DATASET 2: Quiz score (right axis)
         DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
 
         // Get quiz scores from viewModel
         Map<String, String> courseScores = viewModel.getCourseScores();
-        for (String day : daysOrder) {
+        for (String day : days) {
             String scoreStr = courseScores.getOrDefault(day, "0%");
             // Parse the percentage string (e.g., "80.0%")
             double score = parseScore(scoreStr);

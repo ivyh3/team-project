@@ -2,6 +2,8 @@ package interface_adapter.controller;
 
 import use_case.view_study_metrics.ViewStudyMetricsInputBoundary;
 import use_case.view_study_metrics.ViewStudyMetricsInputData;
+import entity.User;
+import java.time.LocalDateTime;
 
 /**
  * Controller for the View Study Metrics use case.
@@ -15,13 +17,13 @@ public class ViewStudyMetricsController {
     
     /**
      * Executes the view study metrics use case.
-     * @param userId the user ID
-     * @param courseId the course ID (optional, can be null for all courses)
-     * @param timeFilter the time filter (e.g., "week", "month", "all")
+     * @param user the user
+     * @param courseId the course ID, or "all" for all courses
+     * @param week the time filter (e.g., "week", "month", "all")
      */
-    public void execute(String userId, String courseId, String timeFilter) {
+    public void execute(User user, String courseId, LocalDateTime week) {
         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(
-            userId, courseId, timeFilter
+            user, courseId, week
         );
         interactor.execute(inputData);
     }

@@ -21,10 +21,8 @@ public class ViewStudyMetricsPresenter implements ViewStudyMetricsOutputBoundary
 	
 	@Override
 	public void prepareSuccessView(ViewStudyMetricsOutputData outputData) {
-		// Format average weekly study time
-		Duration avgWeekly = outputData.getAverageWeeklyStudyTime();
-		String formattedWeeklyTime = formatDuration(avgWeekly);
-		viewModel.setAverageWeeklyStudyTime(formattedWeeklyTime);
+		// Set average weekly study time
+		viewModel.setAverageWeeklyStudyTime(outputData.getAverageWeeklyStudyTime());
 		
 		// Set daily study durations
 		viewModel.setDailyStudyDurations(outputData.getDailyStudyDurations());
@@ -32,14 +30,14 @@ public class ViewStudyMetricsPresenter implements ViewStudyMetricsOutputBoundary
 		// Set start date (date filtering)
 		viewModel.setStartDate(outputData.getStartDate());
 
-		// Format course scores
+		// Set course scores
 		Map<String, String> formattedScores = new HashMap<>();
 		outputData.getAverageQuizScores().forEach((course, score) ->
 				formattedScores.put(course, String.format("%.1f%%", score)));
-		viewModel.setCourseScores(formattedScores);
+		viewModel.setCourseScores();
 		
 		// Set most studied subject
-		viewModel.setMostStudiedSubject(outputData.getMostStudiedSubject());
+//		viewModel.setMostStudiedSubject(outputData.getMostStudiedSubject());
 		
 		// Calculate overall average score
 		if (!outputData.getAverageQuizScores().isEmpty()) {

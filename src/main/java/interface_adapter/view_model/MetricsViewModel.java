@@ -2,6 +2,7 @@ package interface_adapter.view_model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -14,23 +15,24 @@ import java.util.Map;
 public class MetricsViewModel {
 	private final PropertyChangeSupport support;
 	
-	private String averageWeeklyStudyTime;
-	private String averageQuizScore; // TODO: change to a mapping
+	private Duration averageWeeklyStudyTime;
+	private String averageQuizScore;
 	private String mostStudiedSubject;
-	private Map<String, Duration> dailyStudyDurations;
-	private Map<String, String> courseScores;
+	private Map<DayOfWeek, Duration> dailyStudyDurations;
+	private Map<DayOfWeek, Duration> courseScores;
+
 	private String selectedCourse;
 	private LocalDateTime startDate;
 	private String errorMessage;
 	
 	public MetricsViewModel() {
 		this.support = new PropertyChangeSupport(this);
-		this.averageWeeklyStudyTime = "--";
+		this.averageWeeklyStudyTime = Duration.ZERO;
 		this.averageQuizScore = "--";
 		this.mostStudiedSubject = "--";
 		this.dailyStudyDurations = new HashMap<>();
 		this.courseScores = new HashMap<>();
-		this.selectedCourse = "All Courses";
+		this.selectedCourse = "All";
 		this.startDate = LocalDateTime.now(); // TODO: remove
 		this.errorMessage = "";
 	}
@@ -43,11 +45,11 @@ public class MetricsViewModel {
 		support.removePropertyChangeListener(listener);
 	}
 	
-	public String getAverageWeeklyStudyTime() {
+	public Duration getAverageWeeklyStudyTime() {
 		return averageWeeklyStudyTime;
 	}
 	
-	public void setAverageWeeklyStudyTime(String averageWeeklyStudyTime) {
+	public void setAverageWeeklyStudyTime(Duration averageWeeklyStudyTime) {
 		String oldValue = this.averageWeeklyStudyTime;
 		this.averageWeeklyStudyTime = averageWeeklyStudyTime;
 		support.firePropertyChange("averageWeeklyStudyTime", oldValue, averageWeeklyStudyTime);
@@ -73,12 +75,12 @@ public class MetricsViewModel {
 		support.firePropertyChange("mostStudiedSubject", oldValue, mostStudiedSubject);
 	}
 	
-	public Map<String, Duration> getDailyStudyDurations() {
+	public Map<DayOfWeek, Duration> getDailyStudyDurations() {
 		return new HashMap<>(dailyStudyDurations);
 	}
 	
-	public void setDailyStudyDurations(Map<String, Duration> dailyStudyDurations) {
-		Map<String, Duration> oldValue = this.dailyStudyDurations;
+	public void setDailyStudyDurations(Map<DayOfWeek, Duration> dailyStudyDurations) {
+		Map<DayOfWeek, Duration> oldValue = this.dailyStudyDurations;
 		this.dailyStudyDurations = new HashMap<>(dailyStudyDurations);
 		support.firePropertyChange("dailyStudyDurations", oldValue, this.dailyStudyDurations);
 	}
