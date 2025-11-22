@@ -9,6 +9,7 @@ import java.awt.*;
 public abstract class View extends JPanel {
     protected String viewName;
     private static final int PADDING = 20;
+
     public View(String viewName) {
         this.viewName = viewName;
 

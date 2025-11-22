@@ -20,7 +20,6 @@ public class SettingsView extends StatefulView<Boolean> implements PropertyChang
     public SettingsView(SettingsViewModel settingsViewModel) {
         super("settings", settingsViewModel);
 
-
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
@@ -36,7 +35,8 @@ public class SettingsView extends StatefulView<Boolean> implements PropertyChang
 
         JButton manageUploadedFilesButton = new JButton("Manage Uploaded Files");
         manageUploadedFilesButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("fileManager");
+            // AppBuilder.viewManagerModel.setView("fileManager");
+            AppBuilder.viewManagerModel.setView("uploadMaterials");
         });
 
         JButton linkGoogleCalendarButton = new JButton("Link Google Calendar");

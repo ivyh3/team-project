@@ -13,13 +13,14 @@ public class StartStudySessionController {
 
     public void execute(StudySessionConfigState state) {
         StartStudySessionInputData inputData = new StartStudySessionInputData(
-            state.copy()
-        );
+                state.copy());
         interactor.execute(inputData);
     }
+
     public void abortStudySessionConfig() {
         interactor.abortStudySessionConfig();
     }
+
     public void setSessionType(StudySessionConfigState.SessionType sessionType) {
         interactor.setSessionType(sessionType);
     }

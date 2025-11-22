@@ -10,29 +10,28 @@ public class ScheduleStudySessionOutputData {
     private final LocalDateTime startTime;
     private final LocalDateTime endTime;
     private final String calendarEventId;
-    
-    public ScheduleStudySessionOutputData(String sessionId, LocalDateTime startTime, 
-                                         LocalDateTime endTime, String calendarEventId) {
+
+    public ScheduleStudySessionOutputData(String sessionId, LocalDateTime startTime,
+            LocalDateTime endTime, String calendarEventId) {
         this.sessionId = sessionId;
         this.startTime = startTime;
         this.endTime = endTime;
         this.calendarEventId = calendarEventId;
     }
-    
+
     public String getSessionId() {
         return sessionId;
     }
-    
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
-    
+
     public LocalDateTime getEndTime() {
         return endTime;
     }
-    
+
     public String getCalendarEventId() {
         return calendarEventId;
     }
 }
-

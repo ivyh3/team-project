@@ -1,20 +1,23 @@
 package interface_adapter.view_model;
 
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+/**
+ * State for an active study session.
+ */
 public class StudySessionState {
+    private final Integer targetDurationMinutes;
     private StudySessionConfigState.SessionType sessionType;
     private LocalDateTime startTime;
     private boolean isActive;
     private String prompt;
     private String referenceFile;
-    private Integer targetDurationMinutes; // TODO: Find a better way to work with this
 
     public StudySessionState(StudySessionConfigState config, LocalDateTime startTime) {
         this.sessionType = config.getSessionType();
-        this.targetDurationMinutes = config.getTotalTargetDurationMinutes();
+        this.targetDurationMinutes = sessionType == StudySessionConfigState.SessionType.FIXED ?
+                config.getTotalTargetDurationMinutes() : 0;
         this.startTime = startTime;
         this.prompt = config.getPrompt();
         this.referenceFile = config.getReferenceFile();
@@ -26,11 +29,23 @@ public class StudySessionState {
         return startTime;
     }
 
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
     public Duration getDurationElapsed() {
         return Duration.between(startTime, LocalDateTime.now());
     }
 
+    /**
+     * Return the remaining duration of the study session for a fixed session.
+     * If this is a variable session, return Duration.ZERO.
+     *
+     * @return The remaining duration (if fixed session), or Duration.ZERO (if variable session).
+     */
     public Duration getRemainingDuration() {
+        if (sessionType == StudySessionConfigState.SessionType.VARIABLE) return Duration.ZERO;
+
         LocalDateTime targetEndTime = startTime.plusMinutes(targetDurationMinutes);
 
         Duration remaining = Duration.between(LocalDateTime.now(), targetEndTime);
@@ -42,6 +57,11 @@ public class StudySessionState {
         return remaining;
     }
 
+    /**
+     * Gets the set target duration, in minutes. If this session is a variable session, return 0.
+     *
+     * @return The target duration, in minutes
+     */
     public Integer getTargetDurationMinutes() {
         return targetDurationMinutes;
     }

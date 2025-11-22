@@ -1,4 +1,4 @@
-package interface_adapter.logged_in;
+package interface_adapter.controller;
 
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInputData;
@@ -15,6 +15,7 @@ public class ChangePasswordController {
 
     /**
      * Executes the Change Password Use Case.
+     * 
      * @param password the new password
      * @param username the user whose password to change
      */

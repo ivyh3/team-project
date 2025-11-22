@@ -1,13 +1,11 @@
-package interface_adapter.signup;
-
-import interface_adapter.view_model.ViewModel;
+package interface_adapter.view_model;
 
 /**
  * The ViewModel for the Signup View.
  */
 public class SignupViewModel extends ViewModel<SignupState> {
 
-    //public static final String TITLE_LABEL = "Sign Up View";
+    // public static final String TITLE_LABEL = "Sign Up View";
     public static final String USERNAME_LABEL = "Enter email";
     public static final String PASSWORD_LABEL = "Choose password";
     public static final String REPEAT_PASSWORD_LABEL = "Enter password again";

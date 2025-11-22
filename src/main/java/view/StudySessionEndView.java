@@ -9,6 +9,9 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.time.Duration;
 
+/**
+ * The view to display the summary (duration elapsed) for a study session.
+ */
 public class StudySessionEndView extends StatefulView<StudySessionEndState> {
     private final JLabel resultLabel = new JLabel();
 
@@ -21,11 +24,12 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
         JLabel studySessionEndLabel = new JLabel("Study Session End");
         studySessionEndLabel.setFont(new Font(null, Font.BOLD, 52));
         studySessionEndLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         resultLabel.setFont(new Font(null, Font.BOLD, 28));
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JButton quizMeButton = new JButton("Quiz Me");
         quizMeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         quizMeButton.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("studyQuiz");
         });
@@ -40,6 +44,12 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
         this.add(main, BorderLayout.CENTER);
     }
 
+    /**
+     * Return a String representation of a given duration in HHh MMm SSs format.
+     *
+     * @param duration The duration to format.
+     * @return The formatted duration in HHh MMm SSs format.
+     */
     private String formatDuration(Duration duration) {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;

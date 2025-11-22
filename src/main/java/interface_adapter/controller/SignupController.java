@@ -1,4 +1,4 @@
-package interface_adapter.signup;
+package interface_adapter.controller;
 
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInputData;
@@ -16,7 +16,8 @@ public class SignupController {
 
     /**
      * Executes the Signup Use Case.
-     * @param username the username to sign up
+     * 
+     * @param username  the username to sign up
      * @param password1 the password
      * @param password2 the password repeated
      */

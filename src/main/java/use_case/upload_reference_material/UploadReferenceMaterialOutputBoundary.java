@@ -6,14 +6,15 @@ package use_case.upload_reference_material;
 public interface UploadReferenceMaterialOutputBoundary {
     /**
      * Prepares the success view.
+     * 
      * @param outputData the output data
      */
     void prepareSuccessView(UploadReferenceMaterialOutputData outputData);
-    
+
     /**
      * Prepares the failure view.
+     * 
      * @param error the error message
      */
     void prepareFailView(String error);
 }
-
