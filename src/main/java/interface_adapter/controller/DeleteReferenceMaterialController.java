@@ -10,21 +10,20 @@ import java.util.List;
  */
 public class DeleteReferenceMaterialController {
     private final DeleteReferenceMaterialInputBoundary interactor;
-    
+
     public DeleteReferenceMaterialController(DeleteReferenceMaterialInputBoundary interactor) {
         this.interactor = interactor;
     }
-    
+
     /**
      * Executes the delete reference material use case.
-     * @param userId the user ID
+     * 
+     * @param userId      the user ID
      * @param materialIds the material IDs to delete
      */
     public void execute(String userId, List<String> materialIds) {
         DeleteReferenceMaterialInputData inputData = new DeleteReferenceMaterialInputData(
-            userId, materialIds
-        );
+                userId, materialIds);
         interactor.execute(inputData);
     }
 }
-

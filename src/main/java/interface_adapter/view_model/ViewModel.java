@@ -53,6 +53,7 @@ public class ViewModel<T> {
      * <p/>
      * For example, the LoggedInView listens for two kinds of property changes;
      * it can use the property name to distinguish which property has changed.
+     * 
      * @param propertyName the label for the property that was changed
      */
     public void firePropertyChange(String propertyName) {
@@ -61,6 +62,7 @@ public class ViewModel<T> {
 
     /**
      * Adds a PropertyChangeListener to this ViewModel.
+     * 
      * @param listener The PropertyChangeListener to be added
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {

@@ -12,8 +12,8 @@ import java.util.List;
  * Interactor for the View Study Metrics use case.
  */
 public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary {
-//    private final StudySessionRepository sessionRepository;
-//    private final StudyQuizRepository quizRepository;
+    // private final StudySessionRepository sessionRepository;
+    // private final StudyQuizRepository quizRepository;
     private final ViewStudyMetricsOutputBoundary outputBoundary;
 
     public ViewStudyMetricsInteractor(ViewStudyMetricsOutputBoundary outputBoundary) {
@@ -27,11 +27,13 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         String timeFilter = inputData.getTimeFilter(); // TODO: this should be the "startDate" thing, giving the
                                                        // *sunday* for the preferred week
 
-//      List<StudySession> sessions = StudySessionRepository.findByUserAndCourse(userId, courseId);
-        // TODO: find a way to retrieve the dates and durations for each session (given the preferred time filter)
+        // List<StudySession> sessions =
+        // StudySessionRepository.findByUserAndCourse(userId, courseId);
+        // TODO: find a way to retrieve the dates and durations for each session (given
+        // the preferred time filter)
 
-//      List<StudyQuiz> quizzes = StudyQuizRepository.findByUserAndCourse(userId, courseId);
-
+        // List<StudyQuiz> quizzes = StudyQuizRepository.findByUserAndCourse(userId,
+        // courseId);
 
         // testing/dummy data
         Map<String, Duration> dailyStudyDurations = Map.of(
@@ -41,8 +43,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
                 "Wed", Duration.ofMinutes(120),
                 "Thu", Duration.ofMinutes(120),
                 "Fri", Duration.ofMinutes(0),
-                "Sat", Duration.ofMinutes(90)
-        );
+                "Sat", Duration.ofMinutes(90));
 
         // Average quiz scores per day
         Map<String, Float> averageQuizScores = Map.of(
@@ -52,12 +53,11 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
                 "Wed", 90f,
                 "Thu", 75f,
                 "Fri", 0f,
-                "Sat", 98f
-        );
+                "Sat", 98f);
 
         // Weekly average study time (dummy)
         long times = 0;
-        for (Duration value: dailyStudyDurations.values()) {
+        for (Duration value : dailyStudyDurations.values()) {
             times += value.toMinutes();
         }
         Duration averageWeeklyStudyTime = Duration.ofMinutes(times / 7);
@@ -67,8 +67,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         Map<String, String> subjectStrengths = Map.of(
                 "Calculus with Proofs", "Strong",
                 "Literature and the Sciences", "Moderate",
-                "Linear Algebra 1", "Weak"
-        );
+                "Linear Algebra 1", "Weak");
 
         LocalDateTime startDate = LocalDateTime.of(
                 2025, 11, 19, 14, 33);
@@ -78,8 +77,8 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
                 averageQuizScores,
                 averageWeeklyStudyTime,
                 mostStudiedSubject,
-                subjectStrengths, //TODO: probably remove this metric
-                startDate //TODO: remove and replace with timefilter
+                subjectStrengths, // TODO: probably remove this metric
+                startDate // TODO: remove and replace with timefilter
         );
 
         outputBoundary.prepareSuccessView(outputData);
@@ -91,4 +90,3 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         // 4. Prepare success or failure view
     }
 }
-

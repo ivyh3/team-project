@@ -6,8 +6,8 @@ package use_case.sync_google_calendar;
 public interface SyncGoogleCalendarInputBoundary {
     /**
      * Executes the sync Google calendar use case.
+     * 
      * @param inputData the input data for syncing with Google Calendar
      */
     void execute(SyncGoogleCalendarInputData inputData);
 }
-
