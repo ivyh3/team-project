@@ -2,6 +2,7 @@ package frameworks_drivers.database;
 
 import entity.StudyQuiz;
 import entity.StudySession;
+import use_case.end_study_session.EndStudySessionDataAccessInterface;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.Map;
  * <p>
  * No multiuser functionality, assumes there's one logged in already.
  */
-public class InMemoryDatabase implements StartStudySessionDataAccessInterface {
+public class InMemoryDatabase implements StartStudySessionDataAccessInterface, EndStudySessionDataAccessInterface {
 
     private final Map<Integer, StudySession> sessionTable;
     private final Map<Integer, StudyQuiz> scoreTable;
@@ -26,8 +27,17 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface {
     public InMemoryDatabase() {
         sessionTable = new HashMap<>();
         scoreTable = new HashMap<>();
-        fileStore = new HashMap<>();
+
+        // Temporary removal until dummy file data in the application can be removed.
+        // fileStore = new HashMap<>();
+        fileStore = Map.of(
+                "mat223.pdf", "mat223.pdf",
+                "longer_textbook_name_adfasdf.pdf", "longer_textbook_name_adfasdf.pdf",
+                "csc222.pdf", "csc222.pdf",
+                "pdf.pdf", "pdf.pdf"
+        );
     }
+
     public InMemoryDatabase(Map<String, String> initialFiles) {
         sessionTable = new HashMap<>();
         scoreTable = new HashMap<>();

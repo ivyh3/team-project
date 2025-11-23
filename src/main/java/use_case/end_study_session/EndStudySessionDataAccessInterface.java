@@ -9,5 +9,12 @@ public interface EndStudySessionDataAccessInterface {
      * @param session The study session to save.
      * @return The saved study session object.
      */
-    public StudySession saveStudySession(StudySession session);
+    public StudySession addStudySession(StudySession session);
+
+    /**
+     * Gets a study session with the provided session id. Return null if none found.
+     * @param sessionId The session id to look for
+     * @return The session associated with the id, null if not found.
+     */
+    public StudySession getStudySession(int sessionId);
 }

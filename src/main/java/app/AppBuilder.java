@@ -229,6 +229,7 @@ public class AppBuilder {
                 viewManagerModel,
                 dashboardView.getViewName()
         );
+        // TODO: Make this actually use a data access object
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
                 startStudySessionPresenter, new InMemoryDatabase());
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
@@ -270,7 +271,8 @@ public class AppBuilder {
                 studySessionEndViewModel,
                 viewManagerModel
         );
-        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
+        // TODO: Make this use an actual data access object
+        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter, new InMemoryDatabase());
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
