@@ -1,8 +1,8 @@
 package app;
 
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
-import frameworks_drivers.TEMP.FileUserDataAccessObject;
 import entity.UserFactory;
+import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
@@ -76,7 +76,7 @@ public class AppBuilder {
 
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
-    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(userFactory);
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -226,8 +226,7 @@ public class AppBuilder {
                 studySessionConfigViewModel,
                 studySessionViewModel,
                 viewManagerModel,
-                dashboardView.getViewName()
-        );
+                dashboardView.getViewName());
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
                 startStudySessionPresenter);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
@@ -267,8 +266,7 @@ public class AppBuilder {
         EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(
                 studySessionViewModel,
                 studySessionEndViewModel,
-                viewManagerModel
-        );
+                viewManagerModel);
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
@@ -337,7 +335,8 @@ public class AppBuilder {
         app.add(cardPanel, BorderLayout.CENTER);
 
         // Default view to dashboard view
-        viewManagerModel.setView(dashboardView.getViewName());
+//         viewManagerModel.setView(dashboardView.getViewName());
+        viewManagerModel.setView(initialView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         app.setVisible(true);

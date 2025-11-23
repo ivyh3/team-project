@@ -3,7 +3,7 @@ package interface_adapter.presenter;
 import interface_adapter.view_model.LoginState;
 import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.view_model.ViewManagerModel;
-import interface_adapter.view_model.LoggedInState;
+import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.LoggedInViewModel;
 import use_case.login.LoginOutputBoundary;
 import use_case.login.LoginOutputData;
@@ -28,8 +28,8 @@ public class LoginPresenter implements LoginOutputBoundary {
     @Override
     public void prepareSuccessView(LoginOutputData response) {
         // On success, update the loggedInViewModel's state
-        final LoggedInState loggedInState = loggedInViewModel.getState();
-        loggedInState.setUsername(response.getUsername());
+        final DashboardState dashboardState = loggedInViewModel.getState();
+        dashboardState.setUsername(response.getEmail());
         this.loggedInViewModel.firePropertyChange();
 
         // and clear everything from the LoginViewModel's state

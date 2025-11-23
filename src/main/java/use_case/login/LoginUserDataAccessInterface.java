@@ -8,29 +8,26 @@ import entity.User;
 public interface LoginUserDataAccessInterface {
 
     /**
-     * Checks if the given username exists.
+     * Checks if a user with the given email exists.
      * 
-     * @param username the username to look for
-     * @return true if a user with the given username exists; false otherwise
+     * @param email the email to look for
+     * @return true if a user with the given email exists; false otherwise
      */
-    boolean existsByName(String username);
+    boolean existsByEmail(String email);
 
     /**
-     * Saves the user.
-     * 
-     * @param user the user to save
+     * Verifies if the given password matches the password of a user with the given email.
+     *
+     * @param email the email to look for
+     * @return true if given password matches the password of a user with the given email; false otherwise
      */
-    void save(User user);
+    boolean verifyPassword(String email, String password);
 
     /**
-     * Returns the user with the given username.
+     * Returns the user with the given email.
      * 
-     * @param username the username to look up
-     * @return the user with the given username
+     * @param email the email to look up
+     * @return the user with the given email
      */
-    User get(String username);
-
-    void setCurrentUsername(String name);
-
-    String getCurrentUsername();
+    User getUser(String email);
 }

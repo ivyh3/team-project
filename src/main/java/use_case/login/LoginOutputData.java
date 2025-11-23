@@ -5,14 +5,14 @@ package use_case.login;
  */
 public class LoginOutputData {
 
-    private final String username;
+    private final String email;
 
-    public LoginOutputData(String username) {
-        this.username = username;
+    public LoginOutputData(String email) {
+        this.email = email;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
 }

@@ -8,17 +8,26 @@ import entity.User;
 public interface SignupUserDataAccessInterface {
 
     /**
-     * Checks if the given username exists.
-     * 
-     * @param username the username to look for
-     * @return true if a user with the given username exists; false otherwise
+     * Checks if a user with the given email exists.
+     *
+     * @param email the email to look for
+     * @return true if a user with the given email exists; false otherwise
      */
-    boolean existsByName(String username);
+    boolean existsByEmail(String email);
 
     /**
-     * Saves the user.
-     * 
-     * @param user the user to save
+     * Returns the user with the given email.
+     *
+     * @param email the email to look up
+     * @return the user with the given email
      */
-    void save(User user);
+    User getUser(String email);
+
+    /**
+     * Creates a new user with the given email and password.
+     *
+     * @param email the email of the new user
+     * @param password the password of the new user
+     */
+    void createUser(String email, String password);
 }

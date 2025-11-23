@@ -1,7 +1,7 @@
 package view;
 
 import interface_adapter.controller.ChangePasswordController;
-import interface_adapter.view_model.LoggedInState;
+import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.LoggedInViewModel;
 import interface_adapter.controller.LogoutController;
 
@@ -59,7 +59,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         passwordInputField.getDocument().addDocumentListener(new DocumentListener() {
 
             private void documentListenerHelper() {
-                final LoggedInState currentState = loggedInViewModel.getState();
+                final DashboardState currentState = loggedInViewModel.getState();
                 currentState.setPassword(passwordInputField.getText());
                 loggedInViewModel.setState(currentState);
             }
@@ -84,7 +84,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
                 // This creates an anonymous subclass of ActionListener and instantiates it.
                 evt -> {
                     if (evt.getSource().equals(changePassword)) {
-                        final LoggedInState currentState = loggedInViewModel.getState();
+                        final DashboardState currentState = loggedInViewModel.getState();
 
                         this.changePasswordController.execute(
                                 currentState.getUsername(),
@@ -119,10 +119,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
-            final LoggedInState state = (LoggedInState) evt.getNewValue();
+            final DashboardState state = (DashboardState) evt.getNewValue();
             username.setText(state.getUsername());
         } else if (evt.getPropertyName().equals("password")) {
-            final LoggedInState state = (LoggedInState) evt.getNewValue();
+            final DashboardState state = (DashboardState) evt.getNewValue();
             if (state.getPasswordError() == null) {
                 JOptionPane.showMessageDialog(this, "password updated for " + state.getUsername());
                 passwordInputField.setText("");

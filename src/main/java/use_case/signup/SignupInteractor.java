@@ -1,5 +1,7 @@
 package use_case.signup;
 
+import utils.ValidationUtils;
+
 import entity.User;
 import entity.UserFactory;
 
@@ -21,19 +23,25 @@ public class SignupInteractor implements SignupInputBoundary {
 
     @Override
     public void execute(SignupInputData signupInputData) {
-        if (userDataAccessObject.existsByName(signupInputData.getUsername())) {
-            userPresenter.prepareFailView("User already exists.");
-        } else if (!signupInputData.getPassword().equals(signupInputData.getRepeatPassword())) {
-            userPresenter.prepareFailView("Passwords don't match.");
-        } else if ("".equals(signupInputData.getPassword())) {
-            userPresenter.prepareFailView("New password cannot be empty");
-        } else if ("".equals(signupInputData.getUsername())) {
-            userPresenter.prepareFailView("Username cannot be empty");
-        } else {
-            final User user = userFactory.create(signupInputData.getUsername(), signupInputData.getPassword());
-            userDataAccessObject.save(user);
+        final String email = signupInputData.getEmail();
+        final String password = signupInputData.getPassword();
 
-            final SignupOutputData signupOutputData = new SignupOutputData(user.getName());
+        if ("".equals(email)) {
+            userPresenter.prepareFailView("Email cannot be empty");
+        } else if (ValidationUtils.isValidEmail(email)) {
+            userPresenter.prepareFailView("A valid email is required");
+        } else if ("".equals(password)) {
+            userPresenter.prepareFailView("Password cannot be empty");
+        } else if (password.length() < 6) {
+            userPresenter.prepareFailView("Password must be at least 6 characters");
+        } else if (userDataAccessObject.existsByEmail(email)) {
+            userPresenter.prepareFailView("User already exists");
+        } else if (!password.equals(signupInputData.getRepeatPassword())) {
+            userPresenter.prepareFailView("Passwords don't match");
+        } else {
+            userDataAccessObject.createUser(email, password);
+
+            final SignupOutputData signupOutputData = new SignupOutputData(email);
             userPresenter.prepareSuccessView(signupOutputData);
         }
     }

@@ -3,12 +3,12 @@ package interface_adapter.view_model;
 /**
  * The State information representing the logged-in user.
  */
-public class LoggedInState {
+public class DashboardState {
     private String username = "";
     private String password = "";
     private String passwordError;
 
-    public LoggedInState(LoggedInState copy) {
+    public DashboardState(DashboardState copy) {
         username = copy.username;
         password = copy.password;
         passwordError = copy.passwordError;
@@ -16,7 +16,7 @@ public class LoggedInState {
 
     // Because of the previous copy constructor, the default constructor must be
     // explicit.
-    public LoggedInState() {
+    public DashboardState() {
 
     }
 
