@@ -1,20 +1,20 @@
 package use_case.start_study_session;
 
-import java.util.Map;
+import java.util.List;
 
 public interface StartStudySessionDataAccessInterface {
     /**
-     * Return whether the file exists within persistent storage based on the given id.
+     * Return whether the file exists within persistent storage based on the given name.
      *
-     * @param id The id of the file
+     * @param fileName The name of the file
      * @return whether the file exists.
      */
-    public boolean fileExistsById(int id);
+    public boolean fileExistsByName(String fileName);
 
     /**
-     * Return a map of filenames to file ids from persistent storage.
+     * Return a list of filenames to file ids from persistent storage.
      *
-     * @return A map with filename keys and id values
+     * @return A list with filename keys and name values
      */
-    public Map<String, Integer> getReferenceFileOptions();
+    public List<String> getReferenceFileOptions();
 }

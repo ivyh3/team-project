@@ -3,6 +3,7 @@ package app;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import frameworks_drivers.TEMP.FileUserDataAccessObject;
 import entity.UserFactory;
+import frameworks_drivers.database.InMemoryDatabase;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
@@ -229,7 +230,7 @@ public class AppBuilder {
                 dashboardView.getViewName()
         );
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                startStudySessionPresenter);
+                startStudySessionPresenter, new InMemoryDatabase());
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
                 configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);

@@ -2,6 +2,7 @@ package frameworks_drivers.database;
 
 import entity.StudyQuiz;
 import entity.StudySession;
+import use_case.start_study_session.StartStudySessionDataAccessInterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,19 +11,41 @@ import java.util.Map;
 
 /**
  * In memory database for study sessions and quizzes.
- *
+ * <p>
  * No multiuser functionality, assumes there's one logged in already.
  */
-public class InMemoryDatabase {
+public class InMemoryDatabase implements StartStudySessionDataAccessInterface {
 
     private final Map<Integer, StudySession> sessionTable;
     private final Map<Integer, StudyQuiz> scoreTable;
     private int sessionIdKey = 0; // Primary key for sessions
     private int quizIdKey = 0; // Primary key for quizzes.
 
+    private Map<String, String> fileStore;
+
     public InMemoryDatabase() {
         sessionTable = new HashMap<>();
         scoreTable = new HashMap<>();
+        fileStore = new HashMap<>();
+    }
+    public InMemoryDatabase(Map<String, String> initialFiles) {
+        sessionTable = new HashMap<>();
+        scoreTable = new HashMap<>();
+        fileStore = initialFiles;
+    }
+
+    // TODO: detemrine how we are using files/file entity class
+    public String uploadFile(String fileName, String file) {
+        fileStore.put(fileName, file);
+        return file;
+    }
+
+    public String getFile(String fileName) {
+        return fileStore.get(fileName);
+    }
+
+    public String deleteFile(String fileName) {
+        return fileStore.remove(fileName);
     }
 
     public Map<Integer, StudySession> getSessionTable() {
@@ -81,5 +104,15 @@ public class InMemoryDatabase {
 
     public StudyQuiz removeStudyQuiz(int quizId) {
         return scoreTable.remove(quizId);
+    }
+
+    @Override
+    public boolean fileExistsByName(String fileName) {
+        return fileStore.containsKey(fileName);
+    }
+
+    @Override
+    public List<String> getReferenceFileOptions() {
+        return new ArrayList<>(fileStore.keySet());
     }
 }
