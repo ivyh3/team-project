@@ -18,7 +18,7 @@ import java.util.Map;
 public class InMemoryDatabase implements StartStudySessionDataAccessInterface, EndStudySessionDataAccessInterface {
 
     private final Map<Integer, StudySession> sessionTable;
-    private final Map<Integer, StudyQuiz> scoreTable;
+    private final Map<Integer, StudyQuiz> quizTable;
     private int sessionIdKey = 0; // Primary key for sessions
     private int quizIdKey = 0; // Primary key for quizzes.
 
@@ -26,7 +26,7 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
 
     public InMemoryDatabase() {
         sessionTable = new HashMap<>();
-        scoreTable = new HashMap<>();
+        quizTable = new HashMap<>();
 
         // Temporary removal until dummy file data in the application can be removed.
         // fileStore = new HashMap<>();
@@ -40,7 +40,7 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
 
     public InMemoryDatabase(Map<String, String> initialFiles) {
         sessionTable = new HashMap<>();
-        scoreTable = new HashMap<>();
+        quizTable = new HashMap<>();
         fileStore = initialFiles;
     }
 
@@ -62,8 +62,8 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
         return sessionTable;
     }
 
-    public Map<Integer, StudyQuiz> getScoreTable() {
-        return scoreTable;
+    public Map<Integer, StudyQuiz> getQuizTable() {
+        return quizTable;
     }
 
     public StudySession addStudySession(StudySession studySession) {
@@ -98,22 +98,22 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
 
     public StudyQuiz addStudyQuiz(StudyQuiz studyQuiz) {
         studyQuiz.setId(String.valueOf(quizIdKey));
-        scoreTable.put(quizIdKey, studyQuiz);
+        quizTable.put(quizIdKey, studyQuiz);
         quizIdKey++;
         return studyQuiz;
     }
 
     public StudyQuiz getStudyQuiz(int quizId) {
-        return scoreTable.get(quizId);
+        return quizTable.get(quizId);
     }
 
     public StudyQuiz updateStudyQuiz(int quizId, StudyQuiz studyQuiz) {
-        scoreTable.put(quizId, studyQuiz);
+        quizTable.put(quizId, studyQuiz);
         return studyQuiz;
     }
 
     public StudyQuiz removeStudyQuiz(int quizId) {
-        return scoreTable.remove(quizId);
+        return quizTable.remove(quizId);
     }
 
     @Override
