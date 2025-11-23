@@ -11,7 +11,7 @@ public class ViewStudyMetricsInputData {
     
     public ViewStudyMetricsInputData(User user, String courseId, LocalDateTime week) {
         this.user = user;
-        this.courseId = courseId; // "all" should be an option to see average scores across all courses
+        this.courseId = courseId; // "all" should be an option to see averages across all courses
         this.week = week;
     }
     

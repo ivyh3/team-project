@@ -3,6 +3,7 @@ package app;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import frameworks_drivers.TEMP.FileUserDataAccessObject;
 import entity.UserFactory;
+import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
@@ -27,6 +28,7 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import view.LoggedInView;
 import view.LoginView;
 import view.SignupView;
@@ -44,6 +46,7 @@ import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
 import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
+
 //import interface_adapter.repository.StudySessionRepository;
 //import interface_adapter.repository.StudyQuizRepository;
 import interface_adapter.view_model.SettingsViewModel;
@@ -304,17 +307,12 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         // TODO: Replace with actual DAO implementations
-        // StudySessionRepository sessionRepository = new StudySessionRepository();
-        // StudyQuizRepository quizRepository = new StudyQuizRepository();
-
+        ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject();
         // Create Interactor
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
-                presenter);
+                metricsDAO, presenter);
 
-        // Create Controller
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
-
-        // Create View with ViewModel and Controller
         StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
 
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
