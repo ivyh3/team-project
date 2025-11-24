@@ -121,7 +121,7 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
     }
 
     @Override
-    public List<String> getReferenceFileOptions() {
+    public List<String> getAllUserFiles(String userId) {
         return new ArrayList<>(fileStore.keySet());
     }
 }

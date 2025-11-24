@@ -13,9 +13,9 @@ public interface StartStudySessionDataAccessInterface {
     public boolean fileExistsByName(String userId, String fileName);
 
     /**
-    * Return a list of filenames to file ids from persistent storage.
-    *
-    * @return A list with filename keys and name values
-    */
-    public List<String> getReferenceFileOptions();
+     * Return a list of filenames to file ids from persistent storage.
+     *
+     * @return A list of filenames for files that the user has uploaded.
+     */
+    public List<String> getAllUserFiles(String userId);
 }
