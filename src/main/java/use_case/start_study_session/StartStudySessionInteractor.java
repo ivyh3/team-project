@@ -2,6 +2,7 @@ package use_case.start_study_session;
 
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
+
 import java.time.LocalDateTime;
 
 /**
@@ -9,10 +10,11 @@ import java.time.LocalDateTime;
  */
 public class StartStudySessionInteractor implements StartStudySessionInputBoundary {
     private final StartStudySessionOutputBoundary presenter;
-    // private ReferenceFilesDataAccessInterface referenceFilesDataAccessObject
+    private final StartStudySessionDataAccessInterface fileDataAccessObject;
 
-    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter) {
+    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter, StartStudySessionDataAccessInterface fileRepository) {
         this.presenter = presenter;
+        this.fileDataAccessObject = fileRepository;
     }
 
     @Override
@@ -60,11 +62,12 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
 
     /**
      * Check if the given file resource exists in storage.
+     *
      * @param file The file to check.
      * @return whether the file exists.
      */
     private boolean checkIfFileExists(String file) {
-        return true; // Temporary.
+        return fileDataAccessObject.fileExistsByName(file);
     }
 
 }

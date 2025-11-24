@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  * State for an active study session.
  */
 public class StudySessionState {
-    private final Integer targetDurationMinutes;
+    private Integer targetDurationMinutes;
     private StudySessionConfigState.SessionType sessionType;
     private LocalDateTime startTime;
     private boolean isActive;
@@ -23,6 +23,13 @@ public class StudySessionState {
         this.referenceFile = config.getReferenceFile();
 
         isActive = true;
+    }
+
+    /**
+     * Empty state.
+     */
+    public StudySessionState() {
+
     }
 
     public LocalDateTime getStartTime() {

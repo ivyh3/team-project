@@ -2,6 +2,7 @@ package app;
 
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
+import frameworks_drivers.database.InMemoryDatabase;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import interface_adapter.controller.ChangePasswordController;
@@ -209,7 +210,7 @@ public class AppBuilder {
                 viewManagerModel,
                 dashboardView.getViewName());
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                startStudySessionPresenter);
+                startStudySessionPresenter, new InMemoryDatabase());
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
                 configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
@@ -248,7 +249,7 @@ public class AppBuilder {
                 studySessionViewModel,
                 studySessionEndViewModel,
                 viewManagerModel);
-        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
+        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter, new InMemoryDatabase());
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
