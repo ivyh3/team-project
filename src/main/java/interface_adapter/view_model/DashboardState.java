@@ -1,17 +1,15 @@
 package interface_adapter.view_model;
 
 /**
- * The State information representing the logged-in user.
+ * The State information representing the logged-in user and dashboard data.
  */
 public class DashboardState {
-    private String username = "";
-    private String password = "";
-    private String passwordError;
+    private String userId = "";
+    private String email = "";
 
     public DashboardState(DashboardState copy) {
-        username = copy.username;
-        password = copy.password;
-        passwordError = copy.passwordError;
+        userId = copy.userId;
+        email = copy.email;
     }
 
     // Because of the previous copy constructor, the default constructor must be
@@ -20,27 +18,19 @@ public class DashboardState {
 
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public String getEmail() {
+        return email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPasswordError(String passwordError) {
-        this.passwordError = passwordError;
-    }
-
-    public String getPasswordError() {
-        return passwordError;
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

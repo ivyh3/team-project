@@ -26,7 +26,7 @@ public interface SignupUserDataAccessInterface {
     /**
      * Creates a new user with the given email and password.
      *
-     * @param email the email of the new user
+     * @param email    the email of the new user
      * @param password the password of the new user
      */
     void createUser(String email, String password);

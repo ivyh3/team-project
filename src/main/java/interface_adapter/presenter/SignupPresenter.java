@@ -3,8 +3,8 @@ package interface_adapter.presenter;
 import interface_adapter.view_model.SignupState;
 import interface_adapter.view_model.SignupViewModel;
 import interface_adapter.view_model.ViewManagerModel;
-import interface_adapter.view_model.LoginState;
-import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.DashboardViewModel;
 import use_case.signup.SignupOutputBoundary;
 import use_case.signup.SignupOutputData;
 
@@ -14,38 +14,36 @@ import use_case.signup.SignupOutputData;
 public class SignupPresenter implements SignupOutputBoundary {
 
     private final SignupViewModel signupViewModel;
-    private final LoginViewModel loginViewModel;
+    private final DashboardViewModel dashboardViewModel;
     private final ViewManagerModel viewManagerModel;
 
     public SignupPresenter(ViewManagerModel viewManagerModel,
             SignupViewModel signupViewModel,
-            LoginViewModel loginViewModel) {
+            DashboardViewModel dashboardViewModel) {
         this.viewManagerModel = viewManagerModel;
         this.signupViewModel = signupViewModel;
-        this.loginViewModel = loginViewModel;
+        this.dashboardViewModel = dashboardViewModel;
     }
 
     @Override
     public void prepareSuccessView(SignupOutputData response) {
-        // On success, switch to the login view.
-        final LoginState loginState = loginViewModel.getState();
-        loginState.setUsername(response.getUsername());
-        loginViewModel.firePropertyChange();
+        // On success, automatically log in the user and go to dashboard
+        final DashboardState dashboardState = dashboardViewModel.getState();
+        dashboardState.setUserId(response.getUserId());
+        dashboardState.setEmail(response.getEmail());
+        dashboardViewModel.setState(dashboardState);
+        dashboardViewModel.firePropertyChange();
 
-        viewManagerModel.setState(loginViewModel.getViewName());
+        // Switch to the dashboard view
+        viewManagerModel.setState(dashboardViewModel.getViewName());
         viewManagerModel.firePropertyChange();
     }
 
     @Override
     public void prepareFailView(String error) {
         final SignupState signupState = signupViewModel.getState();
-        signupState.setUsernameError(error);
+        signupState.setEmailError(error);
+        signupViewModel.setState(signupState);
         signupViewModel.firePropertyChange();
-    }
-
-    @Override
-    public void switchToLoginView() {
-        viewManagerModel.setState(loginViewModel.getViewName());
-        viewManagerModel.firePropertyChange();
     }
 }

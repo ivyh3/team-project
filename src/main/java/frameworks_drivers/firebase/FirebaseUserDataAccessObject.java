@@ -39,8 +39,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     private final FirebaseAuth firebaseAuth;
     private final OkHttpClient client;
     private final String firebaseWebApiKey;
-    private static final String FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword";
-    private static final String FIREBASE_TOKEN_URL = "https://securetoken.googleapis.com/v1/token";
+    private static final String FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts";
 
     public FirebaseUserDataAccessObject(UserFactory userFactory) {
         this.userFactory = userFactory;
@@ -64,8 +63,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
             long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp(); // in milliseconds
             LocalDateTime createdAt = LocalDateTime.ofInstant(
                     Instant.ofEpochMilli(createdTimestamp),
-                    ZoneId.systemDefault()
-            );
+                    ZoneId.systemDefault());
 
             return userFactory.create(userRecord.getUid(), email, createdAt);
         } catch (FirebaseAuthException e) {
@@ -107,11 +105,13 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
-     * Verifies if the given password matches the password of a user with the given email.
+     * Verifies if the given password matches the password of a user with the given
+     * email.
      *
      * @param email    the email to look for
      * @param password
-     * @return true if given password matches the password of a user with the given email; false otherwise
+     * @return true if given password matches the password of a user with the given
+     *         email; false otherwise
      */
     @Override
     public boolean verifyPassword(String email, String password) {
@@ -121,7 +121,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         requestBody.addProperty("password", password);
         requestBody.addProperty("returnSecureToken", true);
 
-        String url = FIREBASE_AUTH_URL + "?key=" + firebaseWebApiKey;
+        String url = FIREBASE_AUTH_URL + ":signInWithPassword?key=" + firebaseWebApiKey;
 
         RequestBody body = RequestBody.create(
                 requestBody.toString(),

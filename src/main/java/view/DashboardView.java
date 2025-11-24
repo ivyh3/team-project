@@ -4,31 +4,29 @@ import javax.swing.*;
 import java.awt.*;
 
 import app.AppBuilder;
+import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.DashboardViewModel;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-public class DashboardView extends View {
+public class DashboardView extends StatefulView<DashboardState> {
     private final JLabel stateLabel = new JLabel();
 
-    public DashboardView() {
-        super("dashboard");
+    public DashboardView(DashboardViewModel dashboardViewModel) {
+        super("dashboard", dashboardViewModel);
 
-        // Main will contain the main components of this view (buttons, insights).
+        JPanel viewHeader = new ViewHeader("Dashboard");
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        // ======= HEADER =======
-        JPanel header = new ViewHeader("Dashboard");
-        // Include settings in the header
         final JButton settingsButton = new JButton("Settings");
         settingsButton.addActionListener(e -> {
             // Should use a controller for this shit instead, but not going to do that for
             // testing.
             AppBuilder.viewManagerModel.setView("settings");
         });
-        header.add(settingsButton, BorderLayout.EAST);
+        viewHeader.add(settingsButton, BorderLayout.EAST);
 
         // ====== BUTTONS =====
         JPanel buttonContainer = new JPanel();
@@ -78,7 +76,7 @@ public class DashboardView extends View {
         main.add(Box.createVerticalGlue()); // Split them vertically further
         main.add(buttonContainer);
 
-        this.add(header, BorderLayout.NORTH);
+        this.add(viewHeader, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
     }
 

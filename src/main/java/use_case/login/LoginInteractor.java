@@ -23,8 +23,8 @@ public class LoginInteractor implements LoginInputBoundary {
 
         if ("".equals(email)) {
             loginPresenter.prepareFailView("Email cannot be empty");
-        } else if (ValidationUtils.isValidEmail(email)) {
-            loginPresenter.prepareFailView("A valid email is required");
+            // } else if (!ValidationUtils.isValidEmail(email)) {
+            // loginPresenter.prepareFailView("Invalid email format");
         } else if ("".equals(password)) {
             loginPresenter.prepareFailView("Password cannot be empty");
         } else if (!userDataAccessObject.existsByEmail(email)) {
@@ -32,7 +32,9 @@ public class LoginInteractor implements LoginInputBoundary {
         } else if (!userDataAccessObject.verifyPassword(email, password)) {
             loginPresenter.prepareFailView("Incorrect password for \"" + email + "\".");
         } else {
-            final LoginOutputData loginOutputData = new LoginOutputData(email);
+            final User user = userDataAccessObject.getUser(email);
+
+            final LoginOutputData loginOutputData = new LoginOutputData(user.getUserId(), user.getEmail());
             loginPresenter.prepareSuccessView(loginOutputData);
         }
     }

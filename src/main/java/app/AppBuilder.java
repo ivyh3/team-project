@@ -5,7 +5,7 @@ import entity.UserFactory;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.ChangePasswordPresenter;
-import interface_adapter.view_model.LoggedInViewModel;
+import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.controller.LoginController;
 import interface_adapter.presenter.LoginPresenter;
 import interface_adapter.view_model.LoginViewModel;
@@ -14,7 +14,6 @@ import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.controller.SignupController;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.view_model.SignupViewModel;
-import interface_adapter.view_model.InitialViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
@@ -27,7 +26,6 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import view.LoggedInView;
 import view.LoginView;
 import view.SignupView;
 import view.ViewManager;
@@ -55,7 +53,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class AppBuilder {
-    private final String appTitle = "My title";
+    private final String APP_TITLE = "AI Study Companion";
 
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
@@ -81,39 +79,19 @@ public class AppBuilder {
     private SignupView signupView;
     private SignupViewModel signupViewModel;
     private LoginViewModel loginViewModel;
-    private LoggedInViewModel loggedInViewModel;
-    private LoggedInView loggedInView;
+    private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
-    private InitialViewModel initialViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
     }
 
     public AppBuilder addInitialView() {
-        // Create the InitialViewModel and InitialView
-        initialViewModel = new InitialViewModel();
-        initialView = new InitialView(initialViewModel);
+        // Create the InitialView (no ViewModel needed - it has no state)
+        initialView = new InitialView();
 
         // Add the InitialView to the CardLayout
         cardPanel.add(initialView, initialView.getViewName());
-
-        // Attach ActionListeners for the buttons
-        initialView.addLoginButtonListener(e -> {
-            // Switch to LoginView
-            if (loginView != null) {
-                viewManagerModel.setState(loginView.getViewName());
-                viewManagerModel.firePropertyChange();
-            }
-        });
-
-        initialView.addSignupButtonListener(e -> {
-            // Switch to SignupView
-            if (signupView != null) {
-                viewManagerModel.setState(signupView.getViewName());
-                viewManagerModel.firePropertyChange();
-            }
-        });
 
         return this;
     }
@@ -132,18 +110,11 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addLoggedInView() {
-        loggedInViewModel = new LoggedInViewModel();
-        loggedInView = new LoggedInView(loggedInViewModel);
-        cardPanel.add(loggedInView, loggedInView.getViewName());
-        return this;
-    }
-
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
-                signupViewModel, loginViewModel);
+                signupViewModel, dashboardViewModel);
         final SignupInputBoundary userSignupInteractor = new SignupInteractor(
-                userDataAccessObject, signupOutputBoundary, userFactory);
+                userDataAccessObject, signupOutputBoundary);
 
         SignupController controller = new SignupController(userSignupInteractor);
         signupView.setSignupController(controller);
@@ -152,7 +123,7 @@ public class AppBuilder {
 
     public AppBuilder addLoginUseCase() {
         final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+                dashboardViewModel, loginViewModel);
         final LoginInputBoundary loginInteractor = new LoginInteractor(
                 userDataAccessObject, loginOutputBoundary);
 
@@ -161,36 +132,43 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addChangePasswordUseCase() {
-        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
-                loggedInViewModel);
+    // public AppBuilder addChangePasswordUseCase() {
+    // final ChangePasswordOutputBoundary changePasswordOutputBoundary = new
+    // ChangePasswordPresenter(viewManagerModel,
+    // dashboardViewModel);
 
-        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
-                changePasswordOutputBoundary, userFactory);
+    // final ChangePasswordInputBoundary changePasswordInteractor = new
+    // ChangePasswordInteractor(userDataAccessObject,
+    // changePasswordOutputBoundary, userFactory);
 
-        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
-        loggedInView.setChangePasswordController(changePasswordController);
-        return this;
-    }
+    // ChangePasswordController changePasswordController = new
+    // ChangePasswordController(changePasswordInteractor);
+    // dashboardView.setChangePasswordController(changePasswordController);
+    // return this;
+    // }
 
     /**
      * Adds the Logout Use Case to the application.
      *
      * @return this builder
      */
-    public AppBuilder addLogoutUseCase() {
-        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+    // public AppBuilder addLogoutUseCase() {
+    // final LogoutOutputBoundary logoutOutputBoundary = new
+    // LogoutPresenter(viewManagerModel,
+    // dashboardViewModel, loginViewModel);
 
-        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+    // final LogoutInputBoundary logoutInteractor = new
+    // LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
 
-        final LogoutController logoutController = new LogoutController(logoutInteractor);
-        loggedInView.setLogoutController(logoutController);
-        return this;
-    }
+    // final LogoutController logoutController = new
+    // LogoutController(logoutInteractor);
+    // dashboardView.setLogoutController(logoutController);
+    // return this;
+    // }
 
     public AppBuilder addDashboardView() {
-        dashboardView = new DashboardView();
+        dashboardViewModel = new DashboardViewModel();
+        dashboardView = new DashboardView(dashboardViewModel);
 
         cardPanel.add(dashboardView, dashboardView.getViewName());
 
@@ -326,7 +304,7 @@ public class AppBuilder {
     }
 
     public JFrame build() {
-        final JFrame app = new JFrame(appTitle);
+        final JFrame app = new JFrame(APP_TITLE);
         app.setSize(800, 600);
         app.setLayout(new BorderLayout());
 
@@ -335,7 +313,7 @@ public class AppBuilder {
         app.add(cardPanel, BorderLayout.CENTER);
 
         // Default view to dashboard view
-//         viewManagerModel.setView(dashboardView.getViewName());
+        // viewManagerModel.setView(dashboardView.getViewName());
         viewManagerModel.setView(initialView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

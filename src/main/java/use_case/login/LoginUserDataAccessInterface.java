@@ -16,10 +16,12 @@ public interface LoginUserDataAccessInterface {
     boolean existsByEmail(String email);
 
     /**
-     * Verifies if the given password matches the password of a user with the given email.
+     * Verifies if the given password matches the password of a user with the given
+     * email.
      *
      * @param email the email to look for
-     * @return true if given password matches the password of a user with the given email; false otherwise
+     * @return true if given password matches the password of a user with the given
+     *         email; false otherwise
      */
     boolean verifyPassword(String email, String password);
 
