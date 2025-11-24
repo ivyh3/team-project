@@ -5,6 +5,7 @@ import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * The interactor for the start study session use case.
@@ -69,6 +70,22 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     private boolean checkIfFileExists(String file) {
         // TODO: MMake User ID handling, well, real
         return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
+    }
+
+    // TODO: Either remove this and move this to navigation from dashboard to config
+    // view, or
+    // make sure this is called when the config view is opened somehow.
+    @Override
+    public void refreshFileOptions() {
+
+        // TODO: Use real user ID
+        List<String> fileOptions = fileDataAccessObject.getAllUserFiles(DashboardState.userId);
+        if (fileOptions == null || fileOptions.isEmpty()) {
+            presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
+            presenter.abortStudySessionConfig();
+        } else {
+            presenter.refreshFileOptions(fileOptions);
+        }
     }
 
 }

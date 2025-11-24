@@ -8,8 +8,7 @@ import java.util.List;
  */
 public class StudySessionConfigState {
     // Todo: need this to be brought from somewhere.
-    private List<String> fileOptions = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf",
-            "pdf.pdf");
+    private List<String> fileOptions;
     private SessionType sessionType;
     private Integer targetDurationHours;
     private Integer targetDurationMinutes;
@@ -23,7 +22,7 @@ public class StudySessionConfigState {
         this.targetDurationHours = 0;
 
         this.prompt = "";
-        this.referenceFile = !fileOptions.isEmpty() ? fileOptions.get(0) : "";
+        this.referenceFile = "";
     }
 
     public SessionType getSessionType() {

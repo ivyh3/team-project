@@ -4,6 +4,7 @@ import frameworks_drivers.database.InMemoryDatabase;
 import interface_adapter.view_model.StudySessionConfigState;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,6 +55,11 @@ class StartStudySessionTest {
             public void setSessionType(StudySessionConfigState.SessionType sessionType) {
                 fail("Changing the session type is unexpected.");
             }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
         };
 
         StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter, database);
@@ -102,6 +108,11 @@ class StartStudySessionTest {
             public void setSessionType(StudySessionConfigState.SessionType sessionType) {
                 fail("Changing the session type is unexpected.");
             }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
         };
 
         StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter, database);
@@ -133,6 +144,11 @@ class StartStudySessionTest {
                 // Assert that the correct session type will be set
                 assertEquals(StudySessionConfigState.SessionType.VARIABLE, sessionType);
             }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
         };
 
         StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter,
@@ -162,6 +178,11 @@ class StartStudySessionTest {
             @Override
             public void setSessionType(StudySessionConfigState.SessionType sessionType) {
                 fail("Changing the session type is unexpected.");
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
             }
         };
 
@@ -203,6 +224,11 @@ class StartStudySessionTest {
             @Override
             public void setSessionType(StudySessionConfigState.SessionType sessionType) {
                 fail("Changing the session type is unexpected.");
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
             }
         };
 
@@ -248,10 +274,17 @@ class StartStudySessionTest {
             public void setSessionType(StudySessionConfigState.SessionType sessionType) {
                 fail("Changing the session type is unexpected.");
             }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
         };
 
         StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter,
                 database);
         interactor.execute(inputData);
     }
+
+    // TODO: Add a test for refreshing file options.
 }

@@ -40,6 +40,7 @@ public class FirebaseStudyQuizDataAccessObject {
 		Map<String, Object> data = new HashMap<>();
 
 		// Store times as ISO strings and as epoch millis for range queries.
+		// no timezones because I want to sleep.
 		data.put("start_time", quiz.getStartTime().toString());
 		data.put("end_time", quiz.getEndTime().toString());
 		data.put("duration_seconds", quiz.getDuration().toSeconds());
@@ -122,14 +123,14 @@ public class FirebaseStudyQuizDataAccessObject {
 		}
 	}
 
-	public List<StudyQuiz> getStudyQuizzesBetweenDays(String userId, LocalDateTime startDay, LocalDateTime endDay) {
+	public List<StudyQuiz> getStudyQuizzesInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
 
 		CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
 				.document(userId)
 				.collection(QUIZZES_COLLECTION);
 
-		long startTimeStamp = startDay.toInstant(ZoneOffset.UTC).toEpochMilli();
-		long endTimeStamp = endDay.toInstant(ZoneOffset.UTC).toEpochMilli();
+		long startTimeStamp = startTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+		long endTimeStamp = endTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 
 		Query query = quizzesRef
 				.whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)

@@ -14,7 +14,6 @@ import java.util.*;
 
 //TODO: replace fake data and implement the getSessionsPerWeek and getQuizzesPerWeek methods from the DAI
 
-
 /**
  * Temporary mock implementation of ViewStudyMetricsDataAccessInterface.
  * Returns dummy data for testing.
@@ -34,9 +33,9 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     public List<StudySession> getSessionsPerWeek(User user, LocalDateTime currentTime, String courseId) {
         // Get date range between today and a week ago.
         LocalDateTime weekAgo = currentTime.minusWeeks(1).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
-        List<StudySession> sessions = sessionDAO.getStudySessionsBetweenDays(DashboardState.userId, weekAgo, today);
+        List<StudySession> sessions = sessionDAO.getStudySessionsInRange(DashboardState.userId, weekAgo, today);
 
         return sessions;
     }
@@ -45,9 +44,9 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     public List<StudyQuiz> getQuizzesPerWeek(User user, LocalDateTime currentTime, String courseId) {
         // Get date range between today and a week ago.
         LocalDateTime weekAgo = currentTime.minusWeeks(1).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
-        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesBetweenDays(DashboardState.userId, weekAgo, today);
+        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(DashboardState.userId, weekAgo, today);
 
         return quizzes;
     }

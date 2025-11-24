@@ -116,14 +116,14 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
         }
     }
 
-    public List<StudySession> getStudySessionsBetweenDays(String userId, LocalDateTime startDay, LocalDateTime endDay) {
+    public List<StudySession> getStudySessionsInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
 
         CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
                 .document(userId)
                 .collection(STUDY_SESSIONS_COLLECTION);
 
-        long startTimeStamp = startDay.toInstant(ZoneOffset.UTC).toEpochMilli();
-        long endTimeStamp = endDay.toInstant(ZoneOffset.UTC).toEpochMilli();
+        long startTimeStamp = startTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+        long endTimeStamp = endTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 
         Query query = studySessionRef
                 .whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)

@@ -118,6 +118,12 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
         try {
             bucket.list(Storage.BlobListOption.prefix(prefix)).iterateAll().forEach(blob -> {
                 String filePath = blob.getName();
+
+                // Skip the prefix itself or empty file paths
+                if (filePath.equals(prefix) || filePath.isEmpty()) {
+                    return;
+                }
+
                 String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
                 fileNames.add(fileName);
             });

@@ -6,6 +6,7 @@ import entity.StudySessionFactory;
 import entity.UserFactory;
 import frameworks_drivers.database.InMemoryDatabase;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
+import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
@@ -87,7 +88,9 @@ public class AppBuilder {
             studySessionFactory);
     final FirebaseStudyQuizDataAccessObject quizDataAccessObject = new FirebaseStudyQuizDataAccessObject(
             studyQuizFactory);
-    final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(userFactory);
+    final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(
+            userFactory);
+    final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
 
     private InitialView initialView;
     private SignupView signupView;
@@ -220,7 +223,7 @@ public class AppBuilder {
                 viewManagerModel,
                 dashboardView.getViewName());
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                startStudySessionPresenter, new InMemoryDatabase());
+                startStudySessionPresenter, fileDataAccessObject);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
                 configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
