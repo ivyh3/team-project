@@ -1,5 +1,6 @@
 package interface_adapter.view_model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class StudySessionConfigState {
         this.sessionType = SessionType.VARIABLE;
         this.targetDurationMinutes = 0;
         this.targetDurationHours = 0;
-
+        this.fileOptions = new ArrayList<>();
         this.prompt = "";
         this.referenceFile = "";
     }
