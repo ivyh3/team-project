@@ -1,10 +1,14 @@
 package app;
 
+import entity.StudyQuizFactory;
+import entity.StudySessionFactory;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
 import frameworks_drivers.database.InMemoryDatabase;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
+import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
+import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.DashboardViewModel;
@@ -65,8 +69,6 @@ public class AppBuilder {
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
 
-    // final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
-
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
@@ -78,7 +80,15 @@ public class AppBuilder {
 
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
+    final StudySessionFactory studySessionFactory = new StudySessionFactory();
+    final StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
+
+    final FirebaseStudySessionDataAccessObject studySessionDataAccessObject = new FirebaseStudySessionDataAccessObject(
+            studySessionFactory);
+    final FirebaseStudyQuizDataAccessObject quizDataAccessObject = new FirebaseStudyQuizDataAccessObject(
+            studyQuizFactory);
     final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(userFactory);
+
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -249,7 +259,9 @@ public class AppBuilder {
                 studySessionViewModel,
                 studySessionEndViewModel,
                 viewManagerModel);
-        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter, new InMemoryDatabase());
+        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter,
+                studySessionDataAccessObject,
+                studySessionFactory);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
@@ -284,7 +296,8 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         // TODO: Replace with actual DAO implementations
-        ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject();
+        ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
+                studySessionDataAccessObject, quizDataAccessObject);
         // Create Interactor
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
                 metricsDAO, presenter);

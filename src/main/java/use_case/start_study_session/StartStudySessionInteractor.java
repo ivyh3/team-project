@@ -1,5 +1,6 @@
 package use_case.start_study_session;
 
+import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
 
@@ -12,7 +13,8 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     private final StartStudySessionOutputBoundary presenter;
     private final StartStudySessionDataAccessInterface fileDataAccessObject;
 
-    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter, StartStudySessionDataAccessInterface fileRepository) {
+    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter,
+            StartStudySessionDataAccessInterface fileRepository) {
         this.presenter = presenter;
         this.fileDataAccessObject = fileRepository;
     }
@@ -45,8 +47,6 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
                 config,
                 LocalDateTime.now());
 
-        // TODO: Have two seperate views for study sessions, and I guess would need two
-        // view model state classes then
         presenter.startStudySession(outputData);
     }
 
@@ -67,7 +67,8 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
      * @return whether the file exists.
      */
     private boolean checkIfFileExists(String file) {
-        return fileDataAccessObject.fileExistsByName(file);
+        // TODO: MMake User ID handling, well, real
+        return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
     }
 
 }

@@ -53,7 +53,7 @@ public class Main {
                     .addSignupUseCase()
                     .addLoginUseCase()
                     // TODO: Sort out later.
-                    // .addSettingsView()
+                    .addSettingsView()
                     // .addChangePasswordUseCase()
                     // .addLogoutUseCase()
                     // .addChooseStudySessionView()

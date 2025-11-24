@@ -5,6 +5,8 @@ import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionState;
 import org.junit.jupiter.api.Test;
 
+import entity.StudySessionFactory;
+
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,8 +28,7 @@ class EndStudySessionTest {
         EndStudySessionDataAccessInterface sessionRepository = new InMemoryDatabase();
 
         EndStudySessionInputData inputData = new EndStudySessionInputData(
-                sessionState
-        );
+                sessionState);
 
         EndStudySessionOutputBoundary presenter = new EndStudySessionOutputBoundary() {
             @Override
@@ -39,11 +40,13 @@ class EndStudySessionTest {
                 assertNotNull(outputData.getEndTime());
 
                 // Assert the session was saved
-                assertNotNull(sessionRepository.getStudySession(outputData.getSessionId()));
+                assertNotNull(sessionRepository.getStudySessionById("test_user", outputData.getSessionId()));
             }
         };
 
-        EndStudySessionInteractor interactor = new EndStudySessionInteractor(presenter, sessionRepository);
+        EndStudySessionInteractor interactor = new EndStudySessionInteractor(presenter,
+                sessionRepository,
+                new StudySessionFactory());
         interactor.execute(inputData);
     }
 }

@@ -13,12 +13,12 @@ import java.util.Map;
 /**
  * In memory database for study sessions and quizzes.
  * <p>
- * No multiuser functionality, assumes there's one logged in already.
+ * No multiuser functionality, assumes there's only one user.
  */
 public class InMemoryDatabase implements StartStudySessionDataAccessInterface, EndStudySessionDataAccessInterface {
 
-    private final Map<Integer, StudySession> sessionTable;
-    private final Map<Integer, StudyQuiz> quizTable;
+    private final Map<String, StudySession> sessionTable;
+    private final Map<String, StudyQuiz> quizTable;
     private int sessionIdKey = 0; // Primary key for sessions
     private int quizIdKey = 0; // Primary key for quizzes.
 
@@ -34,8 +34,7 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
                 "mat223.pdf", "mat223.pdf",
                 "longer_textbook_name_adfasdf.pdf", "longer_textbook_name_adfasdf.pdf",
                 "csc222.pdf", "csc222.pdf",
-                "pdf.pdf", "pdf.pdf"
-        );
+                "pdf.pdf", "pdf.pdf");
     }
 
     public InMemoryDatabase(Map<String, String> initialFiles) {
@@ -58,17 +57,17 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
         return fileStore.remove(fileName);
     }
 
-    public Map<Integer, StudySession> getSessionTable() {
+    public Map<String, StudySession> getSessionTable() {
         return sessionTable;
     }
 
-    public Map<Integer, StudyQuiz> getQuizTable() {
+    public Map<String, StudyQuiz> getQuizTable() {
         return quizTable;
     }
 
-    public StudySession addStudySession(StudySession studySession) {
+    public StudySession addStudySession(String userId, StudySession studySession) {
         studySession.setId(String.valueOf(sessionIdKey));
-        sessionTable.put(sessionIdKey, studySession);
+        sessionTable.put(String.valueOf(sessionIdKey), studySession);
         sessionIdKey++;
 
         return studySession;
@@ -78,17 +77,17 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
         return new ArrayList<>(sessionTable.values());
     }
 
-    public StudySession getStudySession(int sessionId) {
+    public StudySession getStudySessionById(String userId, String sessionId) {
         return sessionTable.get(sessionId);
     }
 
-    public StudySession updateStudySession(int sessionId, StudySession studySession) {
+    public StudySession updateStudySession(String sessionId, StudySession studySession) {
         sessionTable.put(sessionId, studySession);
 
         return studySession;
     }
 
-    public StudySession deleteStudySession(int sessionId) {
+    public StudySession deleteStudySession(String sessionId) {
         return sessionTable.remove(sessionId);
     }
 
@@ -98,26 +97,26 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
 
     public StudyQuiz addStudyQuiz(StudyQuiz studyQuiz) {
         studyQuiz.setId(String.valueOf(quizIdKey));
-        quizTable.put(quizIdKey, studyQuiz);
+        quizTable.put(String.valueOf(quizIdKey), studyQuiz);
         quizIdKey++;
         return studyQuiz;
     }
 
-    public StudyQuiz getStudyQuiz(int quizId) {
+    public StudyQuiz getStudyQuiz(String quizId) {
         return quizTable.get(quizId);
     }
 
-    public StudyQuiz updateStudyQuiz(int quizId, StudyQuiz studyQuiz) {
+    public StudyQuiz updateStudyQuiz(String quizId, StudyQuiz studyQuiz) {
         quizTable.put(quizId, studyQuiz);
         return studyQuiz;
     }
 
-    public StudyQuiz removeStudyQuiz(int quizId) {
+    public StudyQuiz removeStudyQuiz(String quizId) {
         return quizTable.remove(quizId);
     }
 
     @Override
-    public boolean fileExistsByName(String fileName) {
+    public boolean fileExistsByName(String userId, String fileName) {
         return fileStore.containsKey(fileName);
     }
 
