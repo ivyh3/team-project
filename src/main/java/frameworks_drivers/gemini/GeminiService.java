@@ -13,6 +13,7 @@ import okhttp3.Response;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Headers;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,13 +25,14 @@ import java.util.concurrent.TimeUnit;
  * Service for Gemini API operations.
  * Handles AI-powered quiz generation using Google's Gemini API.
  */
-public class GeminiService {
-    private final OkHttpClient client;
+public class GeminiService implements GeminiDataAccess {
     private final String apiKey;
     private final String apiUrl;
     private final Gson gson;
     private static final int MAX_RETRIES = 3;
     private static final int RETRY_DELAY_MS = 1000;
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private final OkHttpClient client;
 
     public GeminiService() {
         this.apiKey = Config.getGeminiApiKey();
@@ -93,13 +95,12 @@ public class GeminiService {
      * @throws GeminiApiException if all retries fail
      */
     private String callGeminiApiWithRetry(String prompt, List<String> fileUris) throws GeminiApiException {
-        Exception lastException = null;
-
+        IOException lastIo = null;
         for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
             try {
                 return callGeminiApi(prompt, fileUris);
             } catch (IOException e) {
-                lastException = e;
+                lastIo = e;
                 if (attempt < MAX_RETRIES - 1) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS * (attempt + 1));
@@ -110,8 +111,7 @@ public class GeminiService {
                 }
             }
         }
-
-        throw new GeminiApiException("Failed after " + MAX_RETRIES + " attempts", lastException);
+        throw new GeminiApiException("Failed after " + MAX_RETRIES + " attempts", lastIo);
     }
 
     /**
@@ -124,23 +124,21 @@ public class GeminiService {
      * @throws GeminiApiException if the API returns an error
      */
     private String callGeminiApi(String prompt, List<String> fileUris) throws IOException, GeminiApiException {
-        // Build request body
         JsonObject requestBody = buildRequestBody(prompt, fileUris);
         String jsonRequest = gson.toJson(requestBody);
 
-        // Build request
-        RequestBody body = RequestBody.create(jsonRequest, MediaType.parse("application/json"));
+        RequestBody body = RequestBody.create(jsonRequest, JSON);
         Request request = new Request.Builder()
                 .url(apiUrl + "?key=" + apiKey)
                 .post(body)
                 .build();
 
-        // Execute request
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new GeminiApiException("API returned error " + response.code() + ": " + response.message());
             }
 
+            assert response.body() != null;
             String responseBody = response.body().string();
             return extractTextFromResponse(responseBody);
         }
@@ -154,42 +152,50 @@ public class GeminiService {
      * @return JSON object representing the request
      */
     private JsonObject buildRequestBody(String prompt, List<String> fileUris) {
-        JsonObject requestBody = new JsonObject();
+        JsonObject root = new JsonObject();
 
-        // Add contents array
+        // contents -> array of content objects -> parts array with text (and optional file references)
+        JsonArray contents = createContentJsonArray(prompt, fileUris);
+        root.add("contents", contents);
+
+        JsonObject generationConfig = new JsonObject();
+        generationConfig.addProperty("temperature", 0.7);
+        generationConfig.addProperty("topK", 40);
+        generationConfig.addProperty("topP", 0.95);
+        generationConfig.addProperty("maxOutputTokens", 1024);
+        root.add("generationConfig", generationConfig);
+
+        return root;
+    }
+
+    private static JsonArray createContentJsonArray(String prompt, List<String> fileUris) {
         JsonArray contents = new JsonArray();
         JsonObject content = new JsonObject();
         JsonArray parts = new JsonArray();
 
-        // Add file references if provided
         if (fileUris != null && !fileUris.isEmpty()) {
-            for (String fileUri : fileUris) {
+            for (String uri : fileUris) {
                 JsonObject filePart = new JsonObject();
                 JsonObject fileData = new JsonObject();
-                fileData.addProperty("file_uri", fileUri);
+                fileData.addProperty("file_uri", uri);
                 filePart.add("file_data", fileData);
                 parts.add(filePart);
             }
         }
 
-        // Add text prompt
-        JsonObject part = new JsonObject();
-        part.addProperty("text", prompt);
-        parts.add(part);
+        JsonObject textPart = new JsonObject();
+        textPart.addProperty("text", prompt);
+        parts.add(textPart);
 
         content.add("parts", parts);
         contents.add(content);
-        requestBody.add("contents", contents);
+        return contents;
+    }
 
-        // Add generation config for JSON output
-        JsonObject generationConfig = new JsonObject();
-        generationConfig.addProperty("temperature", 0.7);
-        generationConfig.addProperty("topK", 40);
-        generationConfig.addProperty("topP", 0.95);
-        generationConfig.addProperty("maxOutputTokens", 2048);
-        requestBody.add("generationConfig", generationConfig);
-
-        return requestBody;
+    @NotNull
+    private static JsonArray getJsonElements(String prompt, List<String> fileUris) {
+        // Delegate to the creator; never returns null
+        return createContentJsonArray(prompt, fileUris);
     }
 
     /**
@@ -208,7 +214,7 @@ public class GeminiService {
             }
 
             JsonArray candidates = jsonResponse.getAsJsonArray("candidates");
-            if (candidates.size() == 0) {
+            if (candidates.isEmpty()) {
                 throw new GeminiApiException("No candidates in response");
             }
 
@@ -216,7 +222,7 @@ public class GeminiService {
             JsonObject content = candidate.getAsJsonObject("content");
             JsonArray parts = content.getAsJsonArray("parts");
 
-            if (parts.size() == 0) {
+            if (parts.isEmpty()) {
                 throw new GeminiApiException("No parts in response");
             }
 
@@ -248,38 +254,32 @@ public class GeminiService {
                 String questionText = questionObj.get("question").getAsString();
                 JsonArray optionsArray = questionObj.getAsJsonArray("options");
                 int correctIndex = questionObj.get("correctIndex").getAsInt();
-                String explanation = questionObj.has("explanation") ? questionObj.get("explanation").getAsString()
-                        : "";
+                String explanation = questionObj.has("explanation") ? questionObj.get("explanation").getAsString() : "";
 
-                // Convert options to List<String>
                 List<String> options = new ArrayList<>();
                 for (int j = 0; j < optionsArray.size(); j++) {
                     options.add(optionsArray.get(j).getAsString());
                 }
 
-                // Create Question entity
-                Question question = new Question(UUID.randomUUID().toString(), questionText, options, correctIndex,
-                        explanation);
-
+                Question question = new Question(UUID.randomUUID().toString(), questionText, options, correctIndex, explanation);
                 questions.add(question);
             }
 
             return questions;
 
         } catch (Exception e) {
-            throw new GeminiApiException(
-                    "Failed to parse questions: " + e.getMessage() + "\nResponse: " + responseText, e);
+            throw new GeminiApiException("Failed to parse questions: " + e.getMessage() + "\nResponse: " + responseText, e);
         }
     }
 
     /**
-     * Extracts JSON array from text that might contain markdown formatting.
+     * Extracts JSON array from text that might contain Markdown formatting.
      * 
      * @param text the text containing JSON
      * @return the JSON string
      */
     private String extractJsonFromText(String text) {
-        // Remove markdown code blocks if present
+        // Remove Markdown code blocks if present
         text = text.trim();
         if (text.startsWith("```json")) {
             text = text.substring(7);
@@ -321,18 +321,32 @@ public class GeminiService {
      */
     private String buildPrompt(String userPrompt, String contextText) {
         return String.format(
-                "You are an AI tutor helping students study. Based on the study material provided below, "
-                        + "generate a quiz with 5 multiple choice questions.\n\n" + "Study Material:\n%s\n\n"
-                        + "User's Focus: %s\n\n"
-                        + "IMPORTANT: Return ONLY a valid JSON array with this exact format:\n" + "[\n" + "  {\n"
-                        + "    \"question\": \"Question text here?\",\n"
-                        + "    \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n"
-                        + "    \"correctIndex\": 0,\n"
-                        + "    \"explanation\": \"Explanation of why this is correct\"\n" + "  }\n" + "]\n\n"
-                        + "Rules:\n" + "- Generate exactly 5 questions\n" + "- Each question must have 4 options\n"
-                        + "- correctIndex is 0-based (0, 1, 2, or 3)\n" + "- Provide clear explanations\n"
-                        + "- Focus on the user's specified topic\n"
-                        + "- Return ONLY the JSON array, no other text",
+                """
+                        You are an AI tutor helping students study. Based on the study material provided below, \
+                        generate a quiz with 5 multiple choice questions.
+                        
+                        Study Material:
+                        %s
+                        
+                        User's Focus: %s
+                        
+                        IMPORTANT: Return ONLY a valid JSON array with this exact format:
+                        [
+                          {
+                            "question": "Question text here?",
+                            "options": ["Option A", "Option B", "Option C", "Option D"],
+                            "correctIndex": 0,
+                            "explanation": "Explanation of why this is correct"
+                          }
+                        ]
+                        
+                        Rules:
+                        - Generate exactly 5 questions
+                        - Each question must have 4 options
+                        - correctIndex is 0-based (0, 1, 2, or 3)
+                        - Provide clear explanations
+                        - Focus on the user's specified topic
+                        - Return ONLY the JSON array, no other text""",
                 contextText, userPrompt);
     }
 
@@ -344,17 +358,29 @@ public class GeminiService {
      */
     private String buildPromptForFiles(String userPrompt) {
         return String.format(
-                "You are an AI tutor helping students study. Based on the uploaded files, "
-                        + "generate a quiz with 5 multiple choice questions.\n\n" + "User's Focus: %s\n\n"
-                        + "IMPORTANT: Return ONLY a valid JSON array with this exact format:\n" + "[\n" + "  {\n"
-                        + "    \"question\": \"Question text here?\",\n"
-                        + "    \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n"
-                        + "    \"correctIndex\": 0,\n"
-                        + "    \"explanation\": \"Explanation of why this is correct\"\n" + "  }\n" + "]\n\n"
-                        + "Rules:\n" + "- Generate exactly 5 questions\n" + "- Each question must have 4 options\n"
-                        + "- correctIndex is 0-based (0, 1, 2, or 3)\n" + "- Provide clear explanations\n"
-                        + "- Focus on the user's specified topic\n"
-                        + "- Return ONLY the JSON array, no other text",
+                """
+                        You are an AI tutor helping students study. Based on the uploaded files, \
+                        generate a quiz with 5 multiple choice questions.
+                        
+                        User's Focus: %s
+                        
+                        IMPORTANT: Return ONLY a valid JSON array with this exact format:
+                        [
+                          {
+                            "question": "Question text here?",
+                            "options": ["Option A", "Option B", "Option C", "Option D"],
+                            "correctIndex": 0,
+                            "explanation": "Explanation of why this is correct"
+                          }
+                        ]
+                        
+                        Rules:
+                        - Generate exactly 5 questions
+                        - Each question must have 4 options
+                        - correctIndex is 0-based (0, 1, 2, or 3)
+                        - Provide clear explanations
+                        - Focus on the user's specified topic
+                        - Return ONLY the JSON array, no other text""",
                 userPrompt);
     }
 
@@ -405,13 +431,14 @@ public class GeminiService {
                     throw new GeminiApiException("File upload failed: " + response.code() + " " + response.message());
                 }
 
+                assert response.body() != null;
                 String responseBody = response.body().string();
                 JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
                 JsonObject fileObj = jsonResponse.getAsJsonObject("file");
                 String fileUri = fileObj.get("uri").getAsString();
 
                 // Schedule deletion after 1 hour
-                scheduleFileDeletion(fileUri, 3600);
+                scheduleFileDeletion(fileUri);
 
                 return fileUri;
             }
@@ -423,14 +450,13 @@ public class GeminiService {
 
     /**
      * Schedules a file for deletion after a delay.
-     * 
-     * @param fileUri      the file URI to delete
-     * @param delaySeconds the delay in seconds before deletion
+     *
+     * @param fileUri the file URI to delete
      */
-    private void scheduleFileDeletion(String fileUri, int delaySeconds) {
+    private void scheduleFileDeletion(String fileUri) {
         Thread deletionThread = new Thread(() -> {
             try {
-                Thread.sleep(delaySeconds * 1000L);
+                Thread.sleep(3600 * 1000L);
                 deleteFileFromGemini(fileUri);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -482,5 +508,10 @@ public class GeminiService {
         public GeminiApiException(String message, Throwable cause) {
             super(message, cause);
         }
+    }
+
+    @Override
+    public String generateText(String prompt) throws Exception {
+        return callGeminiApiWithRetry(prompt, null);
     }
 }

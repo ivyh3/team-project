@@ -3,21 +3,23 @@ package app;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import frameworks_drivers.TEMP.FileUserDataAccessObject;
 import entity.UserFactory;
-import interface_adapter.controller.ChangePasswordController;
+import frameworks_drivers.gemini.GeminiDataAccess;
+import frameworks_drivers.gemini.GeminiService;
+import interface_adapter.controller.*;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.view_model.LoggedInViewModel;
-import interface_adapter.controller.LoginController;
 import interface_adapter.presenter.LoginPresenter;
 import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.controller.LogoutController;
 import interface_adapter.presenter.LogoutPresenter;
-import interface_adapter.controller.SignupController;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.view_model.SignupViewModel;
 import interface_adapter.view_model.InitialViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.generate_quiz.GenerateQuizInputBoundary;
+import use_case.generate_quiz.GenerateQuizInteractor;
+import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -33,19 +35,18 @@ import view.SignupView;
 import view.ViewManager;
 import view.InitialView;
 
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StartStudySessionController;
 import interface_adapter.presenter.StartStudySessionPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
 import use_case.end_study_session.EndStudySessionInteractor;
-import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
 import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 //import interface_adapter.repository.StudySessionRepository;
 //import interface_adapter.repository.StudyQuizRepository;
+import repository.QuestionDataAccess;
+import repository.InMemoryQuestionRepository;
 import interface_adapter.view_model.SettingsViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import view.*;
@@ -55,7 +56,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class AppBuilder {
-    private final String appTitle = "My title";
 
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
@@ -68,7 +68,6 @@ public class AppBuilder {
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
-    private StudySessionEndView studySessionEndView;
 
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
@@ -77,14 +76,12 @@ public class AppBuilder {
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
-    private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
     private LoginViewModel loginViewModel;
     private LoggedInViewModel loggedInViewModel;
     private LoggedInView loggedInView;
     private LoginView loginView;
-    private InitialViewModel initialViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -92,8 +89,8 @@ public class AppBuilder {
 
     public AppBuilder addInitialView() {
         // Create the InitialViewModel and InitialView
-        initialViewModel = new InitialViewModel();
-        initialView = new InitialView(initialViewModel);
+        InitialViewModel initialViewModel = new InitialViewModel();
+        InitialView initialView = new InitialView(initialViewModel);
 
         // Add the InitialView to the CardLayout
         cardPanel.add(initialView, initialView.getViewName());
@@ -258,7 +255,7 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionEndView() {
         studySessionEndViewModel = new StudySessionEndViewModel();
-        studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
+        StudySessionEndView studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
         cardPanel.add(studySessionEndView, studySessionEndView.getViewName());
         return this;
     }
@@ -328,6 +325,7 @@ public class AppBuilder {
     }
 
     public JFrame build() {
+        String appTitle = "My title";
         final JFrame app = new JFrame(appTitle);
         app.setSize(800, 600);
         app.setLayout(new BorderLayout());
@@ -343,5 +341,13 @@ public class AppBuilder {
         app.setVisible(true);
 
         return app;
+    }
+
+    public GeminiDataAccess buildGeminiDataAccess() {
+        return new GeminiService();
+    }
+
+    public QuestionDataAccess buildQuestionDataAccess() {
+        return new InMemoryQuestionRepository();
     }
 }

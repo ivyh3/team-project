@@ -5,7 +5,7 @@ import entity.Question;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class InMemoryQuestionRepository implements QuestionRepository {
+public class InMemoryQuestionRepository implements QuestionDataAccess {
     private final Map<String, Question> map = new ConcurrentHashMap<>();
 
     @Override
@@ -34,6 +34,11 @@ public class InMemoryQuestionRepository implements QuestionRepository {
         }
         map.put(id, entity);
         return entity;
+    }
+
+    @Override
+    public void saveAll(List<Question> questions) {
+
     }
 
     @Override
