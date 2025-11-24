@@ -11,7 +11,6 @@ public class StudySession {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Duration duration;
-    private String referenceMaterialFilePath;
 
     // private String calendarEventId;
     // private boolean syncCalendar;
@@ -61,12 +60,14 @@ public class StudySession {
         this.duration = duration;
     }
 
-    public String getReferenceMaterialFilePath() {
-        return referenceMaterialFilePath;
-    }
-
-    public void setReferenceMaterialFilePath(String referenceMaterialFilePath) {
-        this.referenceMaterialFilePath = referenceMaterialFilePath;
+    @Override
+    public String toString() {
+        return "StudySession{" +
+                "id='" + id + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", duration=" + duration +
+                '}';
     }
 
     // public String getCalendarEventId() {

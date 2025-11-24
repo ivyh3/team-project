@@ -44,6 +44,8 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
         data.put("start_time", session.getStartTime().toString());
         data.put("end_time", session.getEndTime().toString());
         data.put("duration_seconds", session.getDuration().toSeconds());
+        data.put("start_time_timestamp", session.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli());
+        data.put("end_time_timestamp", session.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli());
 
         try {
             ApiFuture<DocumentReference> result = studySessionRef.add(data);

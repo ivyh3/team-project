@@ -72,6 +72,18 @@ public class StudyQuiz {
         this.duration = duration;
     }
 
+    @Override
+    public String toString() {
+        return "StudyQuiz{" +
+                "id='" + id + '\'' +
+                ", questions=" + questions +
+                ", score=" + score +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", duration=" + duration +
+                '}';
+    }
+
     // public void calculateScore() {
     // if (questions == null || questions.isEmpty()) {
     // this.score = 0.0f;
