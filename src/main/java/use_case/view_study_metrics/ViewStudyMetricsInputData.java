@@ -1,31 +1,30 @@
 package use_case.view_study_metrics;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
-
+import entity.User;
 /**
  * Input data for the View Study Metrics use case.
  */
 public class ViewStudyMetricsInputData {
-    private final String userId;
-    private final String courseId;
-    private final String timeFilter; // TODO: change to LocalDateTime
-
-    public ViewStudyMetricsInputData(String userId, String courseId, String timeFilter) {
-        this.userId = userId;
-        this.courseId = courseId;
-        this.timeFilter = timeFilter;
+    private final User user;
+    private final String courseId; //TODO: use for filtering courses or remove?
+    private final LocalDateTime week;
+    
+    public ViewStudyMetricsInputData(User user, String courseId, LocalDateTime week) {
+        this.user = user;
+        this.courseId = courseId; // "all" should be an option to see averages across all courses
+        this.week = week;
     }
-
-    public String getUserId() {
-        return userId;
+    
+    public User getUser() {
+        return user;
     }
-
+    
     public String getCourseId() {
         return courseId;
     }
-
-    public String getTimeFilter() {
-        return timeFilter;
+    
+    public LocalDateTime getWeek() {
+        return week;
     }
 }
+
