@@ -1,7 +1,7 @@
 package use_case.delete_reference_material;
 
-// import interface_adapter.repository.ReferenceMaterialRepository;
-// import frameworks_drivers.storage.StorageService;
+import repository.ReferenceMaterialRepository;
+import frameworks_drivers.storage.StorageService;
 
 import java.util.List;
 
@@ -9,78 +9,66 @@ import java.util.List;
  * Interactor for the Delete Reference Material use case.
  */
 public class DeleteReferenceMaterialInteractor implements DeleteReferenceMaterialInputBoundary {
-    // private final ReferenceMaterialRepository materialRepository;
-    // private final StorageService storageService;
+    private final ReferenceMaterialRepository materialRepository;
+    private final StorageService storageService;
     private final DeleteReferenceMaterialOutputBoundary outputBoundary;
 
     public DeleteReferenceMaterialInteractor(
-            // ReferenceMaterialRepository materialRepository,
-            // StorageService storageService,
+            ReferenceMaterialRepository materialRepository,
+            StorageService storageService,
             DeleteReferenceMaterialOutputBoundary outputBoundary) {
-        // this.materialRepository = materialRepository;
-        // this.storageService = storageService;
+        this.materialRepository = materialRepository;
+        this.storageService = storageService;
         this.outputBoundary = outputBoundary;
     }
-
+    
     @Override
     public void execute(DeleteReferenceMaterialInputData inputData) {
-        // // TODO: Implement the business logic for deleting reference material
-        // // 1. Confirm deletion with user
-        // // 2. Delete files from Firebase Storage
-        // // 3. Delete metadata from repository
-        // // 4. Prepare success or failure view
+        if (inputData == null) {
+            outputBoundary.prepareFailView("Invalid input");
+            return;
+        }
 
-        // // Implemented business logic (hard-coded storage paths)
-        // // 1. Confirm deletion with user
-        // // 2. Delete files from Firebase Storage (hard-coded paths)
-        // // 3. Delete metadata from repository
-        // // 4. Prepare success or failure view
-        // if (inputData == null) {
-        // outputBoundary.prepareFailView("Invalid input");
-        // return;
-        // }
+        if (!inputData.isConfirmed()) {
+            outputBoundary.prepareFailView("Deletion not confirmed by user");
+            return;
+        }
 
-        // // 1. Confirm deletion with user
-        // if (!inputData.isConfirmed()) {
-        // outputBoundary.prepareFailView("Deletion not confirmed by user");
-        // return;
-        // }
+        List<String> materialIds = inputData.getMaterialIds();
+        if (materialIds == null || materialIds.isEmpty()) {
+            outputBoundary.prepareFailView("No materials specified for deletion");
+            return;
+        }
 
-        // List<String> materialIds = inputData.getMaterialIds();
+        String userId = inputData.getUserId();
 
-        // try {
-        // // Ensure material exists
-        // for (String materialId : materialIds) {
-        // var material = materialRepository.getById(inputData.getUserId(), materialId);
-        // if (material == null) {
-        // outputBoundary.prepareFailView(materialId);
-        // return;
-        // }
+        try {
+            // Ensure each material exists
+            for (String materialId : materialIds) {
+                var material = materialRepository.getById(userId, materialId);
+                if (material == null) {
+                    outputBoundary.prepareFailView("Material not found: " + materialId);
+                    return;
+                }
+            }
 
-        // }
+            // Delete files from storage and then delete metadata
+            for (String materialId : materialIds) {
+                String filePath = "reference_materials/" + materialId + ".pdf";
+                String thumbnailPath = "reference_materials/thumbnails/" + materialId + ".png";
 
-        // // 2. Delete files from Firebase Storage (hard-coded paths)
-        // for (String materialId : materialIds) {
-        // String filePath = "reference_materials/" + materialId + ".pdf";
-        // String thumbnailPath = "reference_materials/thumbnails/" + materialId +
-        // ".png";
+                // StorageService may throw; let it be handled by catch below
+                storageService.deleteFile(filePath);
+                storageService.deleteFile(thumbnailPath);
 
-        // storageService.deleteFile(filePath);
-        // storageService.deleteFile(thumbnailPath);
-        // }
+                // Remove metadata (adapter may return boolean or void; assume void or may throw)
+                materialRepository.delete(userId, materialId);
+            }
 
-        // // 3. Delete metadata from repository
-        // for (String materialId : materialIds) {
-        // materialRepository.delete(inputData.getUserId(), materialId);
-        // }
-
-        // // 4. Prepare success view
-        // DeleteReferenceMaterialOutputData outputData = new
-        // DeleteReferenceMaterialOutputData(materialIds);
-        // outputBoundary.prepareSuccessView(outputData);
-        // } catch (Exception e) {
-        // outputBoundary.prepareFailView("Failed to delete material: " +
-        // e.getMessage());
-        // }
+            DeleteReferenceMaterialOutputData outputData = new DeleteReferenceMaterialOutputData(materialIds);
+            outputBoundary.prepareSuccessView(outputData);
+        } catch (Exception e) {
+            outputBoundary.prepareFailView("Failed to delete material: " + e.getMessage());
+        }
     }
 }

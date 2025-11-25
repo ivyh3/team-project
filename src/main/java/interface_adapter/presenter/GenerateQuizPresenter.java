@@ -7,7 +7,6 @@ import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.generate_quiz.GenerateQuizOutputData;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Presenter for the Generate Quiz use case.
@@ -27,9 +26,9 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
 
         if (questions != null && !questions.isEmpty()) {
             // Update view model with first question
-            Question firstQuestion = questions.get(0);
-            viewModel.setCurrentQuestion(firstQuestion.getQuestion());
-            viewModel.setCurrentOptions(firstQuestion.getPossibleAnswers());
+            Question firstQuestion = questions.getFirst();
+            viewModel.setCurrentQuestion(firstQuestion.getText());
+            viewModel.setCurrentOptions(firstQuestion.getOptions());
             viewModel.setCurrentQuestionNumber(1);
             viewModel.setTotalQuestions(questions.size());
             viewModel.setScoreDisplay("0/" + questions.size());
@@ -39,6 +38,12 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
         } else {
             prepareFailView("No questions were generated.");
         }
+    }
+
+    // Implement the interface method required by GenerateQuizOutputBoundary
+    @Override
+    public void GenerateQuiz(GenerateQuizOutputData outputData) {
+        prepareSuccessView(outputData);
     }
 
     @Override

@@ -3,6 +3,7 @@ package entity;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a quiz taken after a study session.
@@ -21,8 +22,8 @@ public class StudyQuiz {
     private Duration duration;
 
     public StudyQuiz(String id, String ownerUid, String studySessionId,
-            List<Question> questions, String courseId, String prompt,
-            List<String> referenceMaterialIds) {
+                     List<Question> questions, String courseId, String prompt,
+                     List<String> referenceMaterialIds) {
         this.id = id;
         this.ownerUid = ownerUid;
         this.studySessionId = studySessionId;
@@ -128,7 +129,10 @@ public class StudyQuiz {
             return;
         }
 
-        long correctCount = questions.stream().filter(Question::isWasCorrect).count();
+        // Use an explicit lambda instead of a method reference to avoid the compiler error
+        long correctCount = questions.stream()
+                .filter(q -> Objects.equals(q.getCorrectAnswer(), "true"))
+                .count();
         this.score = (float) correctCount / questions.size() * 100;
     }
 }

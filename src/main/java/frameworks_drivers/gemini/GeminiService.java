@@ -44,56 +44,20 @@ public class GeminiService implements GeminiDataAccess {
                 .build();
     }
 
-    /**
-     * Generates a quiz based on the prompt and reference materials.
-     * 
-     * @param prompt                 the user's prompt describing what to study
-     * @param referenceMaterialTexts the text content of reference materials
-     * @return list of generated questions
-     * @throws GeminiApiException if the API call fails
-     */
     public List<Question> generateQuiz(String prompt, List<String> referenceMaterialTexts)
             throws GeminiApiException {
-        // Build context from reference materials
         String contextText = buildContext(referenceMaterialTexts);
-
-        // Build the complete prompt
         String fullPrompt = buildPrompt(prompt, contextText);
-
-        // Make API call with retries
         String response = callGeminiApiWithRetry(fullPrompt, null);
-
-        // Parse and return questions
         return parseQuestions(response);
     }
 
-    /**
-     * Generates a quiz using uploaded file URIs from Gemini File API.
-     * 
-     * @param prompt   the user's prompt describing what to study
-     * @param fileUris list of file URIs from uploadFileToGemini()
-     * @return list of generated questions
-     * @throws GeminiApiException if the API call fails
-     */
     public List<Question> generateQuizWithFiles(String prompt, List<String> fileUris) throws GeminiApiException {
-        // Build enhanced prompt for files
         String fullPrompt = buildPromptForFiles(prompt);
-
-        // Make API call with file references
         String response = callGeminiApiWithRetry(fullPrompt, fileUris);
-
-        // Parse and return questions
         return parseQuestions(response);
     }
 
-    /**
-     * Makes a call to the Gemini API with retry logic.
-     * 
-     * @param prompt   the prompt to send
-     * @param fileUris optional list of file URIs to include
-     * @return the API response text
-     * @throws GeminiApiException if all retries fail
-     */
     private String callGeminiApiWithRetry(String prompt, List<String> fileUris) throws GeminiApiException {
         IOException lastIo = null;
         for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -114,15 +78,6 @@ public class GeminiService implements GeminiDataAccess {
         throw new GeminiApiException("Failed after " + MAX_RETRIES + " attempts", lastIo);
     }
 
-    /**
-     * Makes a single call to the Gemini API.
-     * 
-     * @param prompt   the prompt to send
-     * @param fileUris optional list of file URIs to include
-     * @return the API response text
-     * @throws IOException        if the request fails
-     * @throws GeminiApiException if the API returns an error
-     */
     private String callGeminiApi(String prompt, List<String> fileUris) throws IOException, GeminiApiException {
         JsonObject requestBody = buildRequestBody(prompt, fileUris);
         String jsonRequest = gson.toJson(requestBody);
@@ -144,17 +99,8 @@ public class GeminiService implements GeminiDataAccess {
         }
     }
 
-    /**
-     * Builds the JSON request body for Gemini API.
-     * 
-     * @param prompt   the prompt text
-     * @param fileUris optional list of file URIs to include
-     * @return JSON object representing the request
-     */
     private JsonObject buildRequestBody(String prompt, List<String> fileUris) {
         JsonObject root = new JsonObject();
-
-        // contents -> array of content objects -> parts array with text (and optional file references)
         JsonArray contents = createContentJsonArray(prompt, fileUris);
         root.add("contents", contents);
 
@@ -194,17 +140,9 @@ public class GeminiService implements GeminiDataAccess {
 
     @NotNull
     private static JsonArray getJsonElements(String prompt, List<String> fileUris) {
-        // Delegate to the creator; never returns null
         return createContentJsonArray(prompt, fileUris);
     }
 
-    /**
-     * Extracts the text content from Gemini API response.
-     * 
-     * @param responseBody the raw API response
-     * @return the text content
-     * @throws GeminiApiException if parsing fails
-     */
     private String extractTextFromResponse(String responseBody) throws GeminiApiException {
         try {
             JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
@@ -233,16 +171,8 @@ public class GeminiService implements GeminiDataAccess {
         }
     }
 
-    /**
-     * Parses questions from the API response text.
-     * 
-     * @param responseText the text containing JSON array of questions
-     * @return list of Question entities
-     * @throws GeminiApiException if parsing fails
-     */
     private List<Question> parseQuestions(String responseText) throws GeminiApiException {
         try {
-            // Extract JSON array from response (might be wrapped in markdown)
             String jsonText = extractJsonFromText(responseText);
 
             JsonArray questionsArray = JsonParser.parseString(jsonText).getAsJsonArray();
@@ -261,7 +191,13 @@ public class GeminiService implements GeminiDataAccess {
                     options.add(optionsArray.get(j).getAsString());
                 }
 
-                Question question = new Question(UUID.randomUUID().toString(), questionText, options, correctIndex, explanation);
+                // Validate index and convert to the correct answer string expected by Question constructor
+                if (correctIndex < 0 || correctIndex >= options.size()) {
+                    throw new GeminiApiException("Invalid correctIndex " + correctIndex + " for question: " + questionText);
+                }
+                String correctAnswer = options.get(correctIndex);
+
+                Question question = new Question(UUID.randomUUID().toString(), questionText, options, correctAnswer, explanation);
                 questions.add(question);
             }
 
@@ -272,14 +208,7 @@ public class GeminiService implements GeminiDataAccess {
         }
     }
 
-    /**
-     * Extracts JSON array from text that might contain Markdown formatting.
-     * 
-     * @param text the text containing JSON
-     * @return the JSON string
-     */
     private String extractJsonFromText(String text) {
-        // Remove Markdown code blocks if present
         text = text.trim();
         if (text.startsWith("```json")) {
             text = text.substring(7);
@@ -292,12 +221,6 @@ public class GeminiService implements GeminiDataAccess {
         return text.trim();
     }
 
-    /**
-     * Builds context text from reference materials.
-     * 
-     * @param referenceMaterialTexts list of text from reference materials
-     * @return combined context text
-     */
     private String buildContext(List<String> referenceMaterialTexts) {
         if (referenceMaterialTexts == null || referenceMaterialTexts.isEmpty()) {
             return "No reference materials provided.";
@@ -312,24 +235,17 @@ public class GeminiService implements GeminiDataAccess {
         return context.toString();
     }
 
-    /**
-     * Builds a prompt for quiz generation with text context.
-     * 
-     * @param userPrompt  the user's prompt
-     * @param contextText the context from reference materials
-     * @return the formatted prompt
-     */
     private String buildPrompt(String userPrompt, String contextText) {
         return String.format(
                 """
                         You are an AI tutor helping students study. Based on the study material provided below, \
                         generate a quiz with 5 multiple choice questions.
-                        
+
                         Study Material:
                         %s
-                        
+
                         User's Focus: %s
-                        
+
                         IMPORTANT: Return ONLY a valid JSON array with this exact format:
                         [
                           {
@@ -339,7 +255,7 @@ public class GeminiService implements GeminiDataAccess {
                             "explanation": "Explanation of why this is correct"
                           }
                         ]
-                        
+
                         Rules:
                         - Generate exactly 5 questions
                         - Each question must have 4 options
@@ -350,20 +266,14 @@ public class GeminiService implements GeminiDataAccess {
                 contextText, userPrompt);
     }
 
-    /**
-     * Builds a prompt for quiz generation with file references.
-     * 
-     * @param userPrompt the user's prompt
-     * @return the formatted prompt
-     */
     private String buildPromptForFiles(String userPrompt) {
         return String.format(
                 """
                         You are an AI tutor helping students study. Based on the uploaded files, \
                         generate a quiz with 5 multiple choice questions.
-                        
+
                         User's Focus: %s
-                        
+
                         IMPORTANT: Return ONLY a valid JSON array with this exact format:
                         [
                           {
@@ -373,7 +283,7 @@ public class GeminiService implements GeminiDataAccess {
                             "explanation": "Explanation of why this is correct"
                           }
                         ]
-                        
+
                         Rules:
                         - Generate exactly 5 questions
                         - Each question must have 4 options
@@ -384,27 +294,16 @@ public class GeminiService implements GeminiDataAccess {
                 userPrompt);
     }
 
-    /**
-     * Uploads a file to Gemini's file API with 1-hour expiry.
-     * 
-     * @param fileContent the file content
-     * @param mimeType    the MIME type (e.g., "application/pdf", "text/plain")
-     * @param displayName the display name for the file
-     * @return the file URI to use in Gemini requests
-     * @throws GeminiApiException if upload fails
-     */
     public String uploadFileToGemini(byte[] fileContent, String mimeType, String displayName)
             throws GeminiApiException {
         try {
             String uploadUrl = "https://generativelanguage.googleapis.com/upload/v1beta/files?key=" + apiKey;
 
-            // Build metadata JSON
             JsonObject metadata = new JsonObject();
             JsonObject file = new JsonObject();
             file.addProperty("display_name", displayName);
             metadata.add("file", file);
 
-            // Build multipart body
             String boundary = "----Boundary" + System.currentTimeMillis();
             MultipartBody multipartBody = new MultipartBody.Builder(boundary)
                     .setType(MultipartBody.FORM)
@@ -414,14 +313,12 @@ public class GeminiService implements GeminiDataAccess {
                             RequestBody.create(fileContent, MediaType.parse(mimeType)))
                     .build();
 
-            // Build request
             Request request = new Request.Builder()
                     .url(uploadUrl)
                     .header("X-Goog-Upload-Protocol", "multipart")
                     .post(multipartBody)
                     .build();
 
-            // Execute with longer timeout for file upload
             OkHttpClient uploadClient = client.newBuilder()
                     .readTimeout(120, TimeUnit.SECONDS)
                     .build();
@@ -437,7 +334,6 @@ public class GeminiService implements GeminiDataAccess {
                 JsonObject fileObj = jsonResponse.getAsJsonObject("file");
                 String fileUri = fileObj.get("uri").getAsString();
 
-                // Schedule deletion after 1 hour
                 scheduleFileDeletion(fileUri);
 
                 return fileUri;
@@ -448,11 +344,6 @@ public class GeminiService implements GeminiDataAccess {
         }
     }
 
-    /**
-     * Schedules a file for deletion after a delay.
-     *
-     * @param fileUri the file URI to delete
-     */
     private void scheduleFileDeletion(String fileUri) {
         Thread deletionThread = new Thread(() -> {
             try {
@@ -468,12 +359,6 @@ public class GeminiService implements GeminiDataAccess {
         deletionThread.start();
     }
 
-    /**
-     * Deletes a file from Gemini's file API.
-     * 
-     * @param fileUri the file URI (e.g., "files/abc123")
-     * @throws GeminiApiException if deletion fails
-     */
     public void deleteFileFromGemini(String fileUri) throws GeminiApiException {
         try {
             String fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
@@ -497,9 +382,6 @@ public class GeminiService implements GeminiDataAccess {
         }
     }
 
-    /**
-     * Custom exception for Gemini API errors.
-     */
     public static class GeminiApiException extends Exception {
         public GeminiApiException(String message) {
             super(message);

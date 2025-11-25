@@ -5,12 +5,18 @@ import entity.Question;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * View for displaying and taking quizzes in a study session.
+ *
+ * Notes:
+ * - No hard-coded questions anymore. Call loadQuiz(...) with data from Gemini.
+ * - Uses reflection helpers to adapt to slightly different Question APIs.
  */
-
 public class StudyQuizView extends View {
     private final JLabel questionLabel;
     private final JRadioButton[] answerButtons;
@@ -28,18 +34,16 @@ public class StudyQuizView extends View {
 
         JPanel questionPanel = new JPanel();
         questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
-        questionLabel = new JLabel("Question:");
+        questionLabel = new JLabel("No quiz loaded");
         questionLabel.setFont(new Font(null, Font.BOLD, 24));
         questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         questionPanel.add(questionLabel);
-
-        String[] options = { "Berlin", "Madrid", "Paris", "Rome" };
 
         // Create and configure answer buttons before loading the quiz
         answerGroup = new ButtonGroup();
         answerButtons = new JRadioButton[4];
         for (int i = 0; i < answerButtons.length; i++) {
-            answerButtons[i] = new JRadioButton(options[i]);
+            answerButtons[i] = new JRadioButton("");
             answerButtons[i].setAlignmentX(Component.CENTER_ALIGNMENT);
             answerGroup.add(answerButtons[i]);
             questionPanel.add(answerButtons[i]);
@@ -72,19 +76,10 @@ public class StudyQuizView extends View {
         this.add(header, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
 
-        // Initialize questions after UI components exist
-        questions = List.of(
-                new Question("0",
-                        "What is the capital of France?",
-                        List.of("Berlin", "Madrid", "Paris", "Rome"),
-                        2,
-                        "The capital of France is Paris."),
-                new Question("1",
-                        "What is 2 + 2?",
-                        List.of("3", "4", "5", "6"),
-                        1,
-                        "2 + 2 equals 4."));
-        this.loadQuiz(questions);
+        // Start with no questions; caller must call loadQuiz(...)
+        this.questions = Collections.emptyList();
+        this.currentQuestionIndex = 0;
+        displayCurrentQuestion();
     }
 
     private JButton createSubmitButton() {
@@ -97,14 +92,18 @@ public class StudyQuizView extends View {
                 return;
             }
 
-            Question currentQuestion = questions.get(currentQuestionIndex);
-            currentQuestion.setChosenAnswer(selectedAnswer);
+            if (questions == null || questions.isEmpty() || currentQuestionIndex >= questions.size()) {
+                return;
+            }
 
-            String explanation = currentQuestion.getExplanation();
+            Question currentQuestion = questions.get(currentQuestionIndex);
+            setChosenAnswerSafely(currentQuestion, selectedAnswer);
+
+            String explanation = getExplanationSafely(currentQuestion);
             showExplanation(explanation);
 
-            // Update score
-            int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
+            // Update score using reflection-safe checker
+            int correctAnswers = (int) questions.stream().filter(q -> isWasCorrectSafely(q)).count();
             updateScore(correctAnswers, questions.size());
 
             // After submitting, disable submit and enable next
@@ -126,7 +125,7 @@ public class StudyQuizView extends View {
             if (currentQuestionIndex < questions.size()) {
                 displayCurrentQuestion();
             } else {
-                int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
+                int correctAnswers = (int) questions.stream().filter(q -> isWasCorrectSafely(q)).count();
                 JOptionPane.showMessageDialog(this,
                         "Quiz completed! Final Score: " + correctAnswers + "/" + questions.size(), "Quiz Completed",
                         JOptionPane.INFORMATION_MESSAGE);
@@ -139,7 +138,7 @@ public class StudyQuizView extends View {
     }
 
     public void loadQuiz(List<Question> questions) {
-        this.questions = questions;
+        this.questions = (questions == null) ? Collections.emptyList() : new ArrayList<>(questions);
         this.currentQuestionIndex = 0;
         displayCurrentQuestion();
     }
@@ -157,15 +156,26 @@ public class StudyQuizView extends View {
     }
 
     static void validQuestion(List<Question> questions, int currentQuestionIndex, JLabel questionLabel,
-            JRadioButton[] answerButtons) {
+                              JRadioButton[] answerButtons) {
         if (questions != null && currentQuestionIndex < questions.size()) {
             Question q = questions.get(currentQuestionIndex);
-            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getQuestion());
+            String questionText = getQuestionTextSafely(q);
+            questionLabel.setText((currentQuestionIndex + 1) + ". " + questionText);
 
-            List<String> options = q.getPossibleAnswers();
-            for (int i = 0; i < answerButtons.length && i < options.size(); i++) {
-                answerButtons[i].setText(options.get(i));
+            List<String> options = getOptionsSafely(q);
+            for (int i = 0; i < answerButtons.length; i++) {
+                if (i < options.size()) {
+                    answerButtons[i].setText(options.get(i));
+                } else {
+                    answerButtons[i].setText("");
+                }
                 answerButtons[i].setSelected(false);
+            }
+        } else {
+            questionLabel.setText("No quiz loaded");
+            for (JRadioButton rb : answerButtons) {
+                rb.setText("");
+                rb.setSelected(false);
             }
         }
     }
@@ -180,10 +190,152 @@ public class StudyQuizView extends View {
     }
 
     public void showExplanation(String explanation) {
-        explanationArea.setText(explanation);
+        explanationArea.setText(explanation == null ? "" : explanation);
     }
 
     public void updateScore(int correct, int total) {
         scoreLabel.setText("Score: " + correct + "/" + total);
+    }
+
+    // --- Reflection-safe helpers follow ---
+
+    private static String getQuestionTextSafely(Question q) {
+        if (q == null) return "";
+        String[] candidates = {"getQuestion", "getQuestionText", "getText", "question", "getPrompt"};
+        for (String name : candidates) {
+            try {
+                Method m = q.getClass().getMethod(name);
+                Object r = m.invoke(q);
+                if (r != null) return r.toString();
+            } catch (Exception ignored) {}
+        }
+        return "";
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> getOptionsSafely(Question q) {
+        if (q == null) return Collections.emptyList();
+        String[] candidates = {"getPossibleAnswers", "getOptions", "getChoices", "getPossibleChoices"};
+        for (String name : candidates) {
+            try {
+                Method m = q.getClass().getMethod(name);
+                Object r = m.invoke(q);
+                if (r instanceof List) {
+                    return (List<String>) r;
+                } else if (r instanceof String[]) {
+                    String[] arr = (String[]) r;
+                    List<String> out = new ArrayList<>();
+                    Collections.addAll(out, arr);
+                    return out;
+                }
+            } catch (Exception ignored) {}
+        }
+        return Collections.emptyList();
+    }
+
+    private static String getExplanationSafely(Question q) {
+        if (q == null) return "";
+        String[] candidates = {"getExplanation", "getExplanationText", "getExplanationString", "explanation"};
+        for (String name : candidates) {
+            try {
+                Method m = q.getClass().getMethod(name);
+                Object r = m.invoke(q);
+                if (r != null) return r.toString();
+            } catch (Exception ignored) {}
+        }
+        return "";
+    }
+
+    private static void setChosenAnswerSafely(Question q, int index) {
+        if (q == null) return;
+        List<String> options = getOptionsSafely(q);
+        String stringCandidate = (index >= 0 && index < options.size()) ? options.get(index) : null;
+
+        // Try integer setters first
+        String[] intSetterCandidates = {"setChosenAnswer", "setChosenAnswerIndex", "setChosenIndex"};
+        for (String name : intSetterCandidates) {
+            try {
+                Method m = q.getClass().getMethod(name, int.class);
+                m.invoke(q, index);
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // Try String setters
+        String[] stringSetterCandidates = {"setChosenAnswer", "setChosenAnswerString", "setChosen"};
+        for (String name : stringSetterCandidates) {
+            try {
+                Method m = q.getClass().getMethod(name, String.class);
+                m.invoke(q, stringCandidate);
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // Try generic single-arg setter if available
+        try {
+            Method[] methods = q.getClass().getMethods();
+            for (Method m : methods) {
+                if (m.getName().startsWith("setChosen") && m.getParameterCount() == 1) {
+                    Class<?> p = m.getParameterTypes()[0];
+                    if (p == int.class || p == Integer.class) {
+                        m.invoke(q, index);
+                        return;
+                    } else if (p == String.class && stringCandidate != null) {
+                        m.invoke(q, stringCandidate);
+                        return;
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static boolean isWasCorrectSafely(Question q) {
+        if (q == null) return false;
+
+        String[] boolCandidates = {"isWasCorrect", "wasCorrect", "isCorrect", "getWasCorrect"};
+        for (String name : boolCandidates) {
+            try {
+                Method m = q.getClass().getMethod(name);
+                Object r = m.invoke(q);
+                if (r instanceof Boolean) return (Boolean) r;
+            } catch (Exception ignored) {}
+        }
+
+        // Fallback: compare chosen vs correct answers if possible
+        try {
+            Method getChosenStr = null, getCorrectStr = null;
+            String[] chosenNames = {"getChosenAnswer", "getChosen", "getSelected", "chosenAnswer"};
+            String[] correctNames = {"getCorrectAnswer", "getAnswer", "getCorrect", "correctAnswer"};
+            for (String name : chosenNames) {
+                try { getChosenStr = q.getClass().getMethod(name); break; } catch (Exception ignored) {}
+            }
+            for (String name : correctNames) {
+                try { getCorrectStr = q.getClass().getMethod(name); break; } catch (Exception ignored) {}
+            }
+            Object chosen = (getChosenStr != null) ? getChosenStr.invoke(q) : null;
+            Object correct = (getCorrectStr != null) ? getCorrectStr.invoke(q) : null;
+            if (chosen != null && correct != null) return chosen.toString().equals(correct.toString());
+
+            // Try comparing chosen index vs correct index
+            Method getChosenIdx = null, getCorrectIdx = null;
+            String[] chosenIdxNames = {"getChosenIndex", "getChosenAnswerIndex", "getSelectedIndex"};
+            String[] correctIdxNames = {"getCorrectIndex", "getCorrectAnswerIndex"};
+            for (String name : chosenIdxNames) {
+                try { getChosenIdx = q.getClass().getMethod(name); break; } catch (Exception ignored) {}
+            }
+            for (String name : correctIdxNames) {
+                try { getCorrectIdx = q.getClass().getMethod(name); break; } catch (Exception ignored) {}
+            }
+            if (getChosenIdx != null && getCorrectIdx != null) {
+                Object c1 = getChosenIdx.invoke(q);
+                Object c2 = getCorrectIdx.invoke(q);
+                if (c1 instanceof Number && c2 instanceof Number) {
+                    return ((Number) c1).intValue() == ((Number) c2).intValue();
+                }
+            }
+
+        } catch (Exception ignored) {}
+
+        return false;
     }
 }

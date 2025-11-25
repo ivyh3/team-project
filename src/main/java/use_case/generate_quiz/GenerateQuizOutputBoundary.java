@@ -5,6 +5,12 @@ package use_case.generate_quiz;
  */
 public interface GenerateQuizOutputBoundary {
     /**
+     * Generate the quiz.
+     * @param outputData The output data.
+     */
+    void GenerateQuiz(GenerateQuizOutputData outputData);
+
+    /**
      * Prepares the success view.
      * 
      * @param outputData the output data
