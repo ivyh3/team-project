@@ -21,6 +21,8 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
 
     @Override
     public List<StudySession> getSessionsPerWeek(User user, LocalDateTime week, String courseId) {
+
+
         String weekKey = getWeekKey(week);
         List<StudySession> sessions = getSessionsForWeek(weekKey, week, getUserId(user));
 
