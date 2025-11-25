@@ -9,28 +9,18 @@ import java.util.List;
  */
 public class StudyQuiz {
     private String id;
-    private String ownerUid;
-    private String studySessionId;
     private List<Question> questions;
-    private String courseId;
     private float score;
-    private String prompt;
-    private List<String> referenceMaterialIds;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Duration duration;
 
-    public StudyQuiz(String id, String ownerUid, String studySessionId,
-            List<Question> questions, String courseId, String prompt,
-            List<String> referenceMaterialIds) {
+    public StudyQuiz(String id, float score, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
-        this.ownerUid = ownerUid;
-        this.studySessionId = studySessionId;
-        this.questions = questions;
-        this.courseId = courseId;
-        this.prompt = prompt;
-        this.referenceMaterialIds = referenceMaterialIds;
-        this.score = 0.0f;
+        this.score = score;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.duration = Duration.between(startTime, endTime);
     }
 
     // Getters and setters
@@ -42,36 +32,12 @@ public class StudyQuiz {
         this.id = id;
     }
 
-    public String getOwnerUid() {
-        return ownerUid;
-    }
-
-    public void setOwnerUid(String ownerUid) {
-        this.ownerUid = ownerUid;
-    }
-
-    public String getStudySessionId() {
-        return studySessionId;
-    }
-
-    public void setStudySessionId(String studySessionId) {
-        this.studySessionId = studySessionId;
-    }
-
     public List<Question> getQuestions() {
         return questions;
     }
 
     public void setQuestions(List<Question> questions) {
         this.questions = questions;
-    }
-
-    public String getCourseId() {
-        return courseId;
-    }
-
-    public void setCourseId(String courseId) {
-        this.courseId = courseId;
     }
 
     public float getScore() {
@@ -82,36 +48,20 @@ public class StudyQuiz {
         this.score = score;
     }
 
-    public String getPrompt() {
-        return prompt;
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 
-    public void setPrompt(String prompt) {
-        this.prompt = prompt;
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
-    public List<String> getReferenceMaterialIds() {
-        return referenceMaterialIds;
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
-    public void setReferenceMaterialIds(List<String> referenceMaterialIds) {
-        this.referenceMaterialIds = referenceMaterialIds;
-    }
-
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public Duration getDuration() {
@@ -122,13 +72,26 @@ public class StudyQuiz {
         this.duration = duration;
     }
 
-    public void calculateScore() {
-        if (questions == null || questions.isEmpty()) {
-            this.score = 0.0f;
-            return;
-        }
-
-        long correctCount = questions.stream().filter(Question::isWasCorrect).count();
-        this.score = (float) correctCount / questions.size() * 100;
+    @Override
+    public String toString() {
+        return "StudyQuiz{" +
+                "id='" + id + '\'' +
+                ", questions=" + questions +
+                ", score=" + score +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", duration=" + duration +
+                '}';
     }
+
+    // public void calculateScore() {
+    // if (questions == null || questions.isEmpty()) {
+    // this.score = 0.0f;
+    // return;
+    // }
+
+    // long correctCount =
+    // questions.stream().filter(Question::isWasCorrect).count();
+    // this.score = (float) correctCount / questions.size() * 100;
+    // }
 }

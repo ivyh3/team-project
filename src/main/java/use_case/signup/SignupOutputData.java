@@ -5,14 +5,19 @@ package use_case.signup;
  */
 public class SignupOutputData {
 
-    private final String username;
+    private final String userId;
+    private final String email;
 
-    public SignupOutputData(String username) {
-        this.username = username;
+    public SignupOutputData(String userId, String email) {
+        this.userId = userId;
+        this.email = email;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserId() {
+        return userId;
     }
 
+    public String getEmail() {
+        return email;
+    }
 }

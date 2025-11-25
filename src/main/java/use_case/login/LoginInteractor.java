@@ -1,6 +1,7 @@
 package use_case.login;
 
 import entity.User;
+import utils.ValidationUtils;
 
 /**
  * The Login Interactor.
@@ -17,23 +18,24 @@ public class LoginInteractor implements LoginInputBoundary {
 
     @Override
     public void execute(LoginInputData loginInputData) {
-        final String username = loginInputData.getUsername();
+        final String email = loginInputData.getEmail();
         final String password = loginInputData.getPassword();
-        if (!userDataAccessObject.existsByName(username)) {
-            loginPresenter.prepareFailView(username + ": Account does not exist.");
+
+        if ("".equals(email)) {
+            loginPresenter.prepareFailView("Email cannot be empty");
+            // } else if (!ValidationUtils.isValidEmail(email)) {
+            // loginPresenter.prepareFailView("Invalid email format");
+        } else if ("".equals(password)) {
+            loginPresenter.prepareFailView("Password cannot be empty");
+        } else if (!userDataAccessObject.existsByEmail(email)) {
+            loginPresenter.prepareFailView(email + ": Account does not exist.");
+        } else if (!userDataAccessObject.verifyPassword(email, password)) {
+            loginPresenter.prepareFailView("Incorrect password for \"" + email + "\".");
         } else {
-            final String pwd = userDataAccessObject.get(username).getPassword();
-            if (!password.equals(pwd)) {
-                loginPresenter.prepareFailView("Incorrect password for \"" + username + "\".");
-            } else {
+            final User user = userDataAccessObject.getUser(email);
 
-                final User user = userDataAccessObject.get(loginInputData.getUsername());
-
-                userDataAccessObject.setCurrentUsername(username);
-
-                final LoginOutputData loginOutputData = new LoginOutputData(user.getName());
-                loginPresenter.prepareSuccessView(loginOutputData);
-            }
+            final LoginOutputData loginOutputData = new LoginOutputData(user.getUserId(), user.getEmail());
+            loginPresenter.prepareSuccessView(loginOutputData);
         }
     }
 }

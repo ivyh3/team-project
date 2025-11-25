@@ -2,9 +2,14 @@ package view;
 
 import app.AppBuilder;
 import entity.Question;
+import entity.StudyQuiz;
+import entity.StudyQuizFactory;
+import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
+import interface_adapter.view_model.DashboardState;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -133,6 +138,17 @@ public class StudyQuizView extends View {
                 // disable controls after completion
                 next.setEnabled(false);
                 submitButton.setEnabled(false);
+
+                // TODO: This is temporary to enable full flow.
+                AppBuilder.viewManagerModel.setView("dashboard");
+                FirebaseStudyQuizDataAccessObject quizDAO = new FirebaseStudyQuizDataAccessObject(
+                        new StudyQuizFactory());
+
+                float score = (float) correctAnswers / questions.size();
+                StudyQuiz quiz = new StudyQuizFactory().create(score,
+                        LocalDateTime.now(), LocalDateTime.now());
+                quizDAO.addStudyQuiz(DashboardState.userId,
+                        quiz);
             }
         });
         return next;

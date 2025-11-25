@@ -24,4 +24,8 @@ public class StartStudySessionController {
     public void setSessionType(StudySessionConfigState.SessionType sessionType) {
         interactor.setSessionType(sessionType);
     }
+
+    public void refreshFileOptions() {
+        interactor.refreshFileOptions();
+    }
 }

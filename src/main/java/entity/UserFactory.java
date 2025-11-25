@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
  */
 public class UserFactory {
 
-    public User create(String name, String password) {
-        return new User(name, password);
+    public User create(String userId, String email) {
+        return new User(userId, email, null);
+    }
+
+    public User create(String userId, String email, LocalDateTime createdAt) {
+        return new User(userId, email, createdAt);
     }
 }
