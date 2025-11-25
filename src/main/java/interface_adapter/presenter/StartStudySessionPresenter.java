@@ -33,11 +33,15 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     public void startStudySession(StartStudySessionOutputData outputData) {
         // Prepare study session view state with set config
         studySessionViewModel.setState(new StudySessionState(outputData.getConfig(), outputData.getStartTime()));
+        studySessionViewModel.firePropertyChange();
 
-        studySessionConfigViewModel.setState(new StudySessionConfigState()); // Reset config view state to default
+        // Reset config view state to default
+        studySessionConfigViewModel.setState(new StudySessionConfigState());
+        studySessionConfigViewModel.firePropertyChange();
 
         // Navigate to study session view
         viewManagerModel.setView(studySessionViewModel.getViewName());
+        viewManagerModel.firePropertyChange();
 
     }
 
@@ -45,15 +49,16 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     public void abortStudySessionConfig() {
         // Reset config state.
         studySessionConfigViewModel.setState(new StudySessionConfigState());
+        studySessionConfigViewModel.firePropertyChange();
 
         // Navigate back to the dashboard.
         viewManagerModel.setView(dashboardViewName);
+        viewManagerModel.firePropertyChange();
     }
 
     @Override
     public void setSessionType(StudySessionConfigState.SessionType sessionType) {
         studySessionConfigViewModel.getState().setSessionType(sessionType);
-
         studySessionConfigViewModel.firePropertyChange();
     }
 
