@@ -1,11 +1,14 @@
 package frameworks_drivers.firebase;
 
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import entity.UserFactory;
 import okhttp3.*;
 import com.google.gson.JsonObject;
@@ -74,6 +77,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
     /**
      * Creates a new user with the given email and password.
+     * Creates a document in Firestore named after the new userId.
      *
      * @param email    the email of the new user
      * @param password the password of the new user
@@ -88,15 +92,11 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         try {
             UserRecord userRecord = firebaseAuth.createUser(createUserRequest);
+            String userId = userRecord.getUid();
 
-            Map<String, Object> userData = new HashMap<>();
+            createUserDocument(userId);
 
-            firestore.collection(USERS_COLLECTION)
-                    .document(userRecord.getUid())
-                    .set(userData)
-                    .get(); // blocking call to ensure write completes
-
-            System.out.println("Successfully created new user: " + userRecord.getUid());
+            System.out.println("Successfully created new user: " + userId);
         } catch (FirebaseAuthException e) {
             System.err.println("Error creating user: " + e.getMessage());
         } catch (InterruptedException | ExecutionException e) {
@@ -105,11 +105,27 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
+     * Creates a document in Firestore for the given user ID.
+     * Creates a placeholder file to establish the folder structure.
+     *
+     * @param userId the user ID to create a folder for
+     */
+
+    private void createUserDocument(String userId) throws InterruptedException, ExecutionException {
+        // Create Firestore document for user
+        Map<String, Object> userData = new HashMap<>();
+        firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .set(userData)
+                .get(); // blocking call to ensure write completes
+    }
+
+    /**
      * Verifies if the given password matches the password of a user with the given
      * email.
      *
      * @param email    the email to look for
-     * @param password
+     * @param password the given password to verify
      * @return true if given password matches the password of a user with the given
      *         email; false otherwise
      */
