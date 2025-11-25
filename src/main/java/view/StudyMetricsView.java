@@ -80,18 +80,18 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
     }
 
     private void loadMetrics() {
-        User user = getCurrentUser();
+        // User user = getCurrentUser();
 
-        if (user == null) {
-            // For testing: create a dummy user
-            user = new User("test_user", "password"); // Adjust constructor as needed
-            System.out.println("Warning: Using test user for metrics");
-        }
+        // if (user == null) {
+        //     // For testing: create a dummy user
+        //     user = new User("test_user", "test@example.com", LocalDateTime.now()); // Adjust constructor as needed
+        //     System.out.println("Warning: Using test user for metrics");
+        // }
 
-        String courseId = "all";
-        LocalDateTime weekStart = getStartDateForOffset(weekOffset);
+        // String courseId = "all";
+        // LocalDateTime weekStart = getStartDateForOffset(weekOffset);
 
-        controller.execute(user, courseId, weekStart);
+        // controller.execute(user, courseId, weekStart);
     }
 
     private User getCurrentUser() {

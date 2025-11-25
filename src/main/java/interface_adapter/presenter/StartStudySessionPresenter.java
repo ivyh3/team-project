@@ -14,9 +14,9 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     private final String dashboardViewName;
 
     public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel,
-                                      StudySessionViewModel studySessionViewModel,
-                                      ViewManagerModel viewManagerModel,
-                                      String dashboardViewName) {
+            StudySessionViewModel studySessionViewModel,
+            ViewManagerModel viewManagerModel,
+            String dashboardViewName) {
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
         this.viewManagerModel = viewManagerModel;
@@ -55,5 +55,11 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
         studySessionConfigViewModel.getState().setSessionType(sessionType);
 
         studySessionConfigViewModel.firePropertyChange();
+    }
+
+    @Override
+    public void refreshFileOptions(java.util.List<String> fileOptions) {
+        studySessionConfigViewModel.getState().setFileOptions(fileOptions);
+        studySessionConfigViewModel.firePropertyChange("fileOptions");
     }
 }

@@ -43,7 +43,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         Map<DayOfWeek, Integer> countMap = new HashMap<>();
 
         for (StudyQuiz quiz : quizzes) {
-            DayOfWeek day = quiz.getStartDate().getDayOfWeek();
+            DayOfWeek day = quiz.getStartTime().getDayOfWeek();
             float score = quiz.getScore();
 
             sumMap.merge(day, score, Float::sum);

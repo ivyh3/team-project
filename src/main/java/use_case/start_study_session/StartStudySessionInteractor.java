@@ -1,18 +1,23 @@
 package use_case.start_study_session;
 
+import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * The interactor for the start study session use case.
  */
 public class StartStudySessionInteractor implements StartStudySessionInputBoundary {
     private final StartStudySessionOutputBoundary presenter;
-    // private ReferenceFilesDataAccessInterface referenceFilesDataAccessObject
+    private final StartStudySessionDataAccessInterface fileDataAccessObject;
 
-    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter) {
+    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter,
+            StartStudySessionDataAccessInterface fileRepository) {
         this.presenter = presenter;
+        this.fileDataAccessObject = fileRepository;
     }
 
     @Override
@@ -43,8 +48,6 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
                 config,
                 LocalDateTime.now());
 
-        // TODO: Have two seperate views for study sessions, and I guess would need two
-        // view model state classes then
         presenter.startStudySession(outputData);
     }
 
@@ -60,11 +63,29 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
 
     /**
      * Check if the given file resource exists in storage.
+     *
      * @param file The file to check.
      * @return whether the file exists.
      */
     private boolean checkIfFileExists(String file) {
-        return true; // Temporary.
+        // TODO: MMake User ID handling, well, real
+        return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
+    }
+
+    // TODO: Either remove this and move this to navigation from dashboard to config
+    // view, or
+    // make sure this is called when the config view is opened somehow.
+    @Override
+    public void refreshFileOptions() {
+
+        // TODO: Use real user ID
+        List<String> fileOptions = fileDataAccessObject.getAllUserFiles(DashboardState.userId);
+        if (fileOptions == null || fileOptions.isEmpty()) {
+            presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
+            presenter.abortStudySessionConfig();
+        } else {
+            presenter.refreshFileOptions(fileOptions);
+        }
     }
 
 }
