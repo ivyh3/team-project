@@ -2,31 +2,26 @@ package entity;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Represents a study session.
  */
 public class StudySession {
     private String id;
-    private String ownerUid;
-    private String courseId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Duration duration;
-    private List<String> referenceMaterialIds;
-    private String quizId;
-    private String status;
-    private String calendarEventId;
-    private boolean syncCalendar;
 
-    public StudySession(String id, String ownerUid, String courseId, LocalDateTime startTime) {
+    // private String calendarEventId;
+    // private boolean syncCalendar;
+
+    public StudySession(String id, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
-        this.ownerUid = ownerUid;
-        this.courseId = courseId;
         this.startTime = startTime;
-        this.status = "active";
-        this.syncCalendar = false;
+        this.endTime = endTime;
+        this.duration = Duration.between(startTime, endTime);
+        // this.status = "active";
+        // this.syncCalendar = false;
     }
 
     // Getters and setters
@@ -36,22 +31,6 @@ public class StudySession {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getOwnerUid() {
-        return ownerUid;
-    }
-
-    public void setOwnerUid(String ownerUid) {
-        this.ownerUid = ownerUid;
-    }
-
-    public String getCourseId() {
-        return courseId;
-    }
-
-    public void setCourseId(String courseId) {
-        this.courseId = courseId;
     }
 
     public LocalDateTime getStartTime() {
@@ -81,43 +60,29 @@ public class StudySession {
         this.duration = duration;
     }
 
-    public List<String> getReferenceMaterialIds() {
-        return referenceMaterialIds;
+    @Override
+    public String toString() {
+        return "StudySession{" +
+                "id='" + id + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", duration=" + duration +
+                '}';
     }
 
-    public void setReferenceMaterialIds(List<String> referenceMaterialIds) {
-        this.referenceMaterialIds = referenceMaterialIds;
-    }
+    // public String getCalendarEventId() {
+    // return calendarEventId;
+    // }
 
-    public String getQuizId() {
-        return quizId;
-    }
+    // public void setCalendarEventId(String calendarEventId) {
+    // this.calendarEventId = calendarEventId;
+    // }
 
-    public void setQuizId(String quizId) {
-        this.quizId = quizId;
-    }
+    // public boolean isSyncCalendar() {
+    // return syncCalendar;
+    // }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getCalendarEventId() {
-        return calendarEventId;
-    }
-
-    public void setCalendarEventId(String calendarEventId) {
-        this.calendarEventId = calendarEventId;
-    }
-
-    public boolean isSyncCalendar() {
-        return syncCalendar;
-    }
-
-    public void setSyncCalendar(boolean syncCalendar) {
-        this.syncCalendar = syncCalendar;
-    }
+    // public void setSyncCalendar(boolean syncCalendar) {
+    // this.syncCalendar = syncCalendar;
+    // }
 }

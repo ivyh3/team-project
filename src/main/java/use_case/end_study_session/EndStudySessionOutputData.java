@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 public class EndStudySessionOutputData {
     private final StudySessionState studySessionState;
     private final LocalDateTime endTime;
-    private final int sessionId;
+    private final String sessionId;
 
-    public EndStudySessionOutputData(StudySessionState studySessionState, LocalDateTime endTime, int sessionId) {
+    public EndStudySessionOutputData(StudySessionState studySessionState, LocalDateTime endTime, String sessionId) {
         this.studySessionState = studySessionState;
         this.endTime = endTime;
         this.sessionId = sessionId;
@@ -26,7 +26,7 @@ public class EndStudySessionOutputData {
         return endTime;
     }
 
-    public int getSessionId() {
+    public String getSessionId() {
         return sessionId;
     }
 

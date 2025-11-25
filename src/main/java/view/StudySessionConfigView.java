@@ -9,6 +9,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
 
@@ -40,7 +41,6 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         selectDurationPanel = buildChooseDurationPanel();
         JPanel selectReferencePanel = buildChooseReferencePanel();
 
-
         JPanel navigationContainer = new JPanel();
         navigationContainer.setLayout(new BoxLayout(navigationContainer, BoxLayout.X_AXIS));
 
@@ -62,18 +62,26 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         main.add(selectReferencePanel);
         main.add(navigationContainer);
 
+        JButton refreshButton = new JButton("Refresh File List");
+        refreshButton.addActionListener(e -> {
+            startStudySessionController.refreshFileOptions();
+        });
+
+        viewHeader.add(refreshButton, BorderLayout.EAST);
+
+        // Initialize view on initial state
         updateDurationPanelVisibility(viewModel.getState().getSessionType());
         updateFileSelector(viewModel.getState().getFileOptions());
+        attachListeners();
+        setFields(viewModel.getState());
 
         this.add(viewHeader, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
-
-        attachListeners();
-        setFields(viewModel.getState());
     }
 
     /**
-     * Updates whether the panel to change the duration hours/minute options are visible in the view,
+     * Updates whether the panel to change the duration hours/minute options are
+     * visible in the view,
      * depending on the currently selected session type.
      *
      * @param sessionType The current session type selected.
@@ -212,7 +220,8 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     private void attachListeners() {
         typeSelector.addActionListener(e -> {
             String choice = (String) typeSelector.getSelectedItem();
-            if (choice == null) return;
+            if (choice == null)
+                return;
 
             SessionType sessionType = choice.equals(VARIABLE_SESSION) ? SessionType.VARIABLE : SessionType.FIXED;
             viewModel.getState().setSessionType(sessionType);
@@ -292,11 +301,37 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
      * @param fileOptions the options the user can choose from.
      */
     private void updateFileSelector(List<String> fileOptions) {
+        if (fileOptions == null) {
+            return;
+        }
+        // Extract the change listener from the file selector.
+        ActionListener[] fileSelectorChangeListeners = fileSelector.getActionListeners();
+        ActionListener fileSelectorChangeListener = fileSelectorChangeListeners.length > 0
+                ? fileSelectorChangeListeners[0]
+                : null;
+
+        // Temporarily remove listner to avoid firing change evnets when updating
+        fileSelector.removeActionListener(fileSelectorChangeListener);
+
+        // Repopulate selector
         fileSelector.removeAllItems();
-        if (fileOptions != null) {
-            for (String fileName : fileOptions) {
-                fileSelector.addItem(fileName);
-            }
+        for (String fileName : fileOptions) {
+            fileSelector.addItem(fileName);
+        }
+
+        if (fileSelectorChangeListener != null) { // Re add the change listener
+            fileSelector.addActionListener(fileSelectorChangeListener);
+        }
+
+        String previousSelectedFile = viewModel.getState().getReferenceFile();
+        if (previousSelectedFile != null && !previousSelectedFile.isEmpty()
+                && fileOptions.contains(previousSelectedFile)) {
+            // Select previous selcted file
+            fileSelector.setSelectedItem(previousSelectedFile);
+            return;
+        } else if (fileSelector.getItemCount() > 0) { // set to first item if possible
+            fileSelector.setSelectedIndex(0);
+            return;
         }
     }
 
@@ -320,6 +355,9 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
             StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
             String error = state.getError();
             JOptionPane.showMessageDialog(this, error, "Configuration Error", JOptionPane.ERROR_MESSAGE);
+        } else if (evt.getPropertyName().equals("fileOptions")) {
+            List<String> fileOptions = viewModel.getState().getFileOptions();
+            updateFileSelector(fileOptions);
         }
     }
 }

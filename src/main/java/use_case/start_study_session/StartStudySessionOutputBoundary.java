@@ -1,5 +1,7 @@
 package use_case.start_study_session;
 
+import java.util.List;
+
 import interface_adapter.view_model.StudySessionConfigState;
 
 /**
@@ -8,12 +10,14 @@ import interface_adapter.view_model.StudySessionConfigState;
 public interface StartStudySessionOutputBoundary {
     /**
      * Start the study session.
+     * 
      * @param outputData The output data.
      */
     void startStudySession(StartStudySessionOutputData outputData);
 
     /**
      * Prepare a failure view or prompt.
+     * 
      * @param errorMessage The explanation for the error.
      */
     void prepareErrorView(String errorMessage);
@@ -25,7 +29,13 @@ public interface StartStudySessionOutputBoundary {
 
     /**
      * Set the session type for the config.
+     * 
      * @param sessionType The type of the session.
      */
     void setSessionType(StudySessionConfigState.SessionType sessionType);
+
+    /**
+     * Sets the possible file selections for the file selector
+     */
+    void refreshFileOptions(List<String> fileOptions);
 }

@@ -3,8 +3,8 @@ package interface_adapter.presenter;
 import interface_adapter.view_model.LoginState;
 import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.view_model.ViewManagerModel;
-import interface_adapter.view_model.LoggedInState;
-import interface_adapter.view_model.LoggedInViewModel;
+import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.DashboardViewModel;
 import use_case.login.LoginOutputBoundary;
 import use_case.login.LoginOutputData;
 
@@ -14,36 +14,39 @@ import use_case.login.LoginOutputData;
 public class LoginPresenter implements LoginOutputBoundary {
 
     private final LoginViewModel loginViewModel;
-    private final LoggedInViewModel loggedInViewModel;
+    private final DashboardViewModel dashboardViewModel;
     private final ViewManagerModel viewManagerModel;
 
     public LoginPresenter(ViewManagerModel viewManagerModel,
-            LoggedInViewModel loggedInViewModel,
+            DashboardViewModel dashboardViewModel,
             LoginViewModel loginViewModel) {
         this.viewManagerModel = viewManagerModel;
-        this.loggedInViewModel = loggedInViewModel;
+        this.dashboardViewModel = dashboardViewModel;
         this.loginViewModel = loginViewModel;
     }
 
     @Override
     public void prepareSuccessView(LoginOutputData response) {
-        // On success, update the loggedInViewModel's state
-        final LoggedInState loggedInState = loggedInViewModel.getState();
-        loggedInState.setUsername(response.getUsername());
-        this.loggedInViewModel.firePropertyChange();
+        // On success, update the dashboardViewModel's state with user info
+        final DashboardState dashboardState = dashboardViewModel.getState();
+        dashboardState.setUserId(response.getUserId());
+        dashboardState.setEmail(response.getEmail());
+        dashboardViewModel.setState(dashboardState);
+        this.dashboardViewModel.firePropertyChange();
 
-        // and clear everything from the LoginViewModel's state
+        // Clear everything from the LoginViewModel's state
         loginViewModel.setState(new LoginState());
 
-        // switch to the logged in view
-        this.viewManagerModel.setState(loggedInViewModel.getViewName());
+        // Switch to the dashboard view
+        this.viewManagerModel.setState(dashboardViewModel.getViewName());
         this.viewManagerModel.firePropertyChange();
     }
 
     @Override
     public void prepareFailView(String error) {
         final LoginState loginState = loginViewModel.getState();
-        loginState.setLoginError(error);
+        loginState.setEmailError(error);
+        loginViewModel.setState(loginState);
         loginViewModel.firePropertyChange();
     }
 }

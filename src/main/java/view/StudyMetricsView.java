@@ -8,9 +8,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 // JfreeChart to create a dual axis line chart
+import entity.User;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -20,6 +22,7 @@ import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
+import org.jfree.data.time.Day;
 
 public class StudyMetricsView extends View implements PropertyChangeListener {
     private final MetricsViewModel viewModel;
@@ -73,17 +76,38 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         main.add(returnPanel, BorderLayout.SOUTH);
         this.add(main, BorderLayout.SOUTH);
 
-        // Load metrics when view is created
         loadMetrics();
     }
 
     private void loadMetrics() {
-        // Trigger the use case to load metrics
-        String userId = "user123"; // TODO: Get from session
-        String courseId = "all"; // TODO: Get from UI selection
-        String timeFilter = "week"; // TODO: fix time filter lol
+        // User user = getCurrentUser();
 
-        controller.execute(userId, courseId, timeFilter);
+        // if (user == null) {
+        //     // For testing: create a dummy user
+        //     user = new User("test_user", "test@example.com", LocalDateTime.now()); // Adjust constructor as needed
+        //     System.out.println("Warning: Using test user for metrics");
+        // }
+
+        // String courseId = "all";
+        // LocalDateTime weekStart = getStartDateForOffset(weekOffset);
+
+        // controller.execute(user, courseId, weekStart);
+    }
+
+    private User getCurrentUser() {
+        // TODO: Implement one of the following:
+
+        // Option 1: From session manager
+        // return SessionManager.getInstance().getCurrentUser();
+
+        // Option 2: From static field
+        // return AppBuilder.currentUser;
+
+        // Option 3: From constructor parameter (recommended)
+        // return this.currentUser;
+
+        // For now, return null and we'll create test user above
+        return null;
     }
 
     /**
@@ -110,7 +134,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         String propertyName = evt.getPropertyName();
 
         // Update chart when daily study durations or course scores change
-        if ("dailyStudyDurations".equals(propertyName) || "courseScores".equals(propertyName)) {
+        if ("dailyStudyDurations".equals(propertyName) || "averageQuizScores".equals(propertyName)) {
             updateChart();
         }
 
@@ -129,26 +153,27 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
             main.remove(chartPanel);
         }
 
-        // DATASET 1 — Study duration (left axis)
+        // DATASET 1: Study duration (left axis)
         DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
 
-        Map<String, Duration> dailyData = viewModel.getDailyStudyDurations();
+        Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        String[] daysOrder = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-        for (String day : daysOrder) {
+        DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
+        for (DayOfWeek day : days) {
             Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
             double hours = (double) duration.toMinutes() / 60;
             leftDataset.addValue(hours, "Study Duration", day);
         }
-        // TODO: update the date
         LocalDateTime startDate = getStartDateForOffset(weekOffset);
-        String dateRange = formatDateRange(startDate);
+         String dateRange = formatDateRange(startDate);
 
         JFreeChart chart = ChartFactory.createLineChart(
                 dateRange,
                 "",
                 "Hours Studied",
-                leftDataset);
+                leftDataset
+        );
 
         CategoryPlot plot = chart.getCategoryPlot();
 
@@ -158,15 +183,13 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         leftRenderer.setSeriesPaint(0, Color.RED);
         plot.setRenderer(0, leftRenderer);
 
-        // DATASET 2 — Quiz score (right axis)
+        // DATASET 2: Quiz score (right axis)
         DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
 
         // Get quiz scores from viewModel
-        Map<String, String> courseScores = viewModel.getCourseScores();
-        for (String day : daysOrder) {
-            String scoreStr = courseScores.getOrDefault(day, "0%");
-            // Parse the percentage string (e.g., "80.0%")
-            double score = parseScore(scoreStr);
+        Map<DayOfWeek, Float> quizScores = viewModel.getAverageQuizScores();
+        for (DayOfWeek day : days) {
+            Float score = quizScores.getOrDefault(day, 0f);
             rightDataset.addValue(score, "Quiz Score", day);
         }
 
@@ -194,18 +217,6 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         // Refresh the panel
         main.revalidate();
         main.repaint();
-    }
-
-    /**
-     * Helper method to parse score strings like "80.0%" into doubles.
-     */
-    private double parseScore(String scoreStr) {
-        try {
-            // Remove the % sign and parse
-            return Double.parseDouble(scoreStr.replace("%", "").trim());
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
     }
 
     /**

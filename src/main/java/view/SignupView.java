@@ -1,99 +1,92 @@
 package view;
 
+import app.AppBuilder;
 import interface_adapter.controller.SignupController;
 import interface_adapter.view_model.SignupState;
 import interface_adapter.view_model.SignupViewModel;
 
 import javax.swing.*;
+import java.awt.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 /**
  * The View for the Signup Use Case.
  */
-public class SignupView extends JPanel implements ActionListener, PropertyChangeListener {
-    private final String viewName = "sign up";
-
-    private final SignupViewModel signupViewModel;
-    private final JTextField usernameInputField = new JTextField(15);
+public class SignupView extends StatefulView<SignupState> {
+    private final JTextField emailInputField = new JTextField(15);
     private final JPasswordField passwordInputField = new JPasswordField(15);
     private final JPasswordField repeatPasswordInputField = new JPasswordField(15);
-    private SignupController signupController = null;
+    private final JLabel signupErrorField = new JLabel();
+    private SignupController signupController;
 
-    private final JButton signUp;
-    private final JButton cancel;
-    private final JButton toLogin;
+    private final JButton signupButton;
+    private final JButton returnButton;
+    private final JButton toLoginButton;
 
     public SignupView(SignupViewModel signupViewModel) {
-        this.signupViewModel = signupViewModel;
-        signupViewModel.addPropertyChangeListener(this);
+        super("sign up", signupViewModel);
 
-        // final JLabel title = new JLabel(SignupViewModel.TITLE_LABEL);
-        // title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        final JLabel title = new JLabel(SignupViewModel.TITLE_LABEL);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        final LabelTextPanel usernameInfo = new LabelTextPanel(
-                new JLabel(SignupViewModel.USERNAME_LABEL), usernameInputField);
+        final LabelTextPanel emailInfo = new LabelTextPanel(
+                new JLabel(SignupViewModel.EMAIL_LABEL), emailInputField);
         final LabelTextPanel passwordInfo = new LabelTextPanel(
                 new JLabel(SignupViewModel.PASSWORD_LABEL), passwordInputField);
         final LabelTextPanel repeatPasswordInfo = new LabelTextPanel(
                 new JLabel(SignupViewModel.REPEAT_PASSWORD_LABEL), repeatPasswordInputField);
 
+        // Style the error label
+        signupErrorField.setForeground(Color.RED);
+        signupErrorField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         final JPanel buttons = new JPanel();
-        toLogin = new JButton(SignupViewModel.TO_LOGIN_BUTTON_LABEL);
-        buttons.add(toLogin);
-        signUp = new JButton(SignupViewModel.SIGNUP_BUTTON_LABEL);
-        buttons.add(signUp);
-        cancel = new JButton(SignupViewModel.CANCEL_BUTTON_LABEL);
-        buttons.add(cancel);
 
-        signUp.addActionListener(
-                // This creates an anonymous subclass of ActionListener and instantiates it.
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        if (evt.getSource().equals(signUp)) {
-                            final SignupState currentState = signupViewModel.getState();
+        toLoginButton = new JButton(SignupViewModel.TO_LOGIN_BUTTON_LABEL);
+        toLoginButton.addActionListener(e -> {
+            AppBuilder.viewManagerModel.setView("login");
+        });
+        buttons.add(toLoginButton);
 
-                            signupController.execute(
-                                    currentState.getUsername(),
-                                    currentState.getPassword(),
-                                    currentState.getRepeatPassword());
-                        }
-                    }
-                });
+        signupButton = new JButton(SignupViewModel.SIGNUP_BUTTON_LABEL);
+        signupButton.addActionListener(e -> {
+            SignupState state = viewModel.getState();
+            signupController.execute(
+                    state.getEmail(),
+                    state.getPassword(),
+                    state.getRepeatPassword());
+        });
+        buttons.add(signupButton);
 
-        toLogin.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        signupController.switchToLoginView();
-                    }
-                });
+        returnButton = new JButton(SignupViewModel.CANCEL_BUTTON_LABEL);
+        returnButton.addActionListener(e -> {
+            AppBuilder.viewManagerModel.setView("initial");
+        });
+        buttons.add(returnButton);
 
-        cancel.addActionListener(this);
-
-        addUsernameListener();
+        addEmailListener();
         addPasswordListener();
         addRepeatPasswordListener();
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // this.add(title);
-        this.add(usernameInfo);
+        this.add(title);
+        this.add(emailInfo);
         this.add(passwordInfo);
         this.add(repeatPasswordInfo);
+        this.add(signupErrorField);
         this.add(buttons);
     }
 
-    private void addUsernameListener() {
-        usernameInputField.getDocument().addDocumentListener(new DocumentListener() {
+    private void addEmailListener() {
+        emailInputField.getDocument().addDocumentListener(new DocumentListener() {
 
             private void documentListenerHelper() {
-                final SignupState currentState = signupViewModel.getState();
-                currentState.setUsername(usernameInputField.getText());
-                signupViewModel.setState(currentState);
+                final SignupState currentState = viewModel.getState();
+                currentState.setEmail(emailInputField.getText());
+                viewModel.setState(currentState);
             }
 
             @Override
@@ -117,9 +110,9 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
         passwordInputField.getDocument().addDocumentListener(new DocumentListener() {
 
             private void documentListenerHelper() {
-                final SignupState currentState = signupViewModel.getState();
+                final SignupState currentState = viewModel.getState();
                 currentState.setPassword(new String(passwordInputField.getPassword()));
-                signupViewModel.setState(currentState);
+                viewModel.setState(currentState);
             }
 
             @Override
@@ -143,9 +136,9 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
         repeatPasswordInputField.getDocument().addDocumentListener(new DocumentListener() {
 
             private void documentListenerHelper() {
-                final SignupState currentState = signupViewModel.getState();
+                final SignupState currentState = viewModel.getState();
                 currentState.setRepeatPassword(new String(repeatPasswordInputField.getPassword()));
-                signupViewModel.setState(currentState);
+                viewModel.setState(currentState);
             }
 
             @Override
@@ -166,20 +159,16 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
     }
 
     @Override
-    public void actionPerformed(ActionEvent evt) {
-        JOptionPane.showMessageDialog(this, "Cancel not implemented yet.");
-    }
-
-    @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        final SignupState state = (SignupState) evt.getNewValue();
-        if (state.getUsernameError() != null) {
-            JOptionPane.showMessageDialog(this, state.getUsernameError());
+        if (evt.getPropertyName().equals("state")) {
+            final SignupState state = (SignupState) evt.getNewValue();
+            // Display error message if present
+            if (state.getEmailError() != null && !state.getEmailError().isEmpty()) {
+                signupErrorField.setText(state.getEmailError());
+            } else {
+                signupErrorField.setText("");
+            }
         }
-    }
-
-    public String getViewName() {
-        return viewName;
     }
 
     public void setSignupController(SignupController controller) {

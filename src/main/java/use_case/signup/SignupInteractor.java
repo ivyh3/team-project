@@ -1,5 +1,7 @@
 package use_case.signup;
 
+import utils.ValidationUtils;
+
 import entity.User;
 import entity.UserFactory;
 
@@ -8,38 +10,37 @@ import entity.UserFactory;
  */
 public class SignupInteractor implements SignupInputBoundary {
     private final SignupUserDataAccessInterface userDataAccessObject;
-    private final SignupOutputBoundary userPresenter;
-    private final UserFactory userFactory;
+    private final SignupOutputBoundary signupPresenter;
 
     public SignupInteractor(SignupUserDataAccessInterface signupDataAccessInterface,
-            SignupOutputBoundary signupOutputBoundary,
-            UserFactory userFactory) {
+            SignupOutputBoundary signupOutputBoundary) {
         this.userDataAccessObject = signupDataAccessInterface;
-        this.userPresenter = signupOutputBoundary;
-        this.userFactory = userFactory;
+        this.signupPresenter = signupOutputBoundary;
     }
 
     @Override
     public void execute(SignupInputData signupInputData) {
-        if (userDataAccessObject.existsByName(signupInputData.getUsername())) {
-            userPresenter.prepareFailView("User already exists.");
-        } else if (!signupInputData.getPassword().equals(signupInputData.getRepeatPassword())) {
-            userPresenter.prepareFailView("Passwords don't match.");
-        } else if ("".equals(signupInputData.getPassword())) {
-            userPresenter.prepareFailView("New password cannot be empty");
-        } else if ("".equals(signupInputData.getUsername())) {
-            userPresenter.prepareFailView("Username cannot be empty");
+        final String email = signupInputData.getEmail();
+        final String password = signupInputData.getPassword();
+
+        if ("".equals(email)) {
+            signupPresenter.prepareFailView("Email cannot be empty");
+            // } else if (!ValidationUtils.isValidEmail(email)) {
+            // signupPresenter.prepareFailView("A valid email is required");
+        } else if ("".equals(password)) {
+            signupPresenter.prepareFailView("Password cannot be empty");
+        } else if (password.length() < 6) {
+            signupPresenter.prepareFailView("Password must be at least 6 characters");
+        } else if (userDataAccessObject.existsByEmail(email)) {
+            signupPresenter.prepareFailView("User already exists");
+        } else if (!password.equals(signupInputData.getRepeatPassword())) {
+            signupPresenter.prepareFailView("Passwords don't match");
         } else {
-            final User user = userFactory.create(signupInputData.getUsername(), signupInputData.getPassword());
-            userDataAccessObject.save(user);
+            userDataAccessObject.createUser(email, password);
+            final User user = userDataAccessObject.getUser(email);
 
-            final SignupOutputData signupOutputData = new SignupOutputData(user.getName());
-            userPresenter.prepareSuccessView(signupOutputData);
+            final SignupOutputData signupOutputData = new SignupOutputData(user.getUserId(), user.getEmail());
+            signupPresenter.prepareSuccessView(signupOutputData);
         }
-    }
-
-    @Override
-    public void switchToLoginView() {
-        userPresenter.switchToLoginView();
     }
 }

@@ -6,57 +6,37 @@ import java.time.LocalDateTime;
  * Represents a user in the AI Study Companion application.
  */
 public class User {
-    private String id;
-    private String name;
-    private String email;
-    private LocalDateTime createdAt;
+    private final String userId;
+    private final String email;
+    private final LocalDateTime createdAt;
 
-    public User(String id, String password) {
-        // TEMPORARY TO LET IT COMPILE
-    }
+    // TODO: Most likely will store more data after implementation.
 
-    public User(String id, String name, String email, LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
+    public User(String userId, String email, LocalDateTime createdAt) {
+        if ("".equals(userId)) {
+            throw new IllegalArgumentException("User ID cannot be empty");
+        }
+        if ("".equals(email)) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+        if (createdAt == null) {
+            throw new IllegalArgumentException("CreatedAt cannot be empty");
+        }
+        this.userId = userId;
         this.email = email;
         this.createdAt = createdAt;
     }
 
     // Getters and setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public String getUserId() {
+        return userId;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // TEMPORARY TO LET IT COMPILE
-    public String getPassword() {
-        return "no";
     }
 }
