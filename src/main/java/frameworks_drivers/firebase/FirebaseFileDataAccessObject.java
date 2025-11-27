@@ -12,6 +12,9 @@ import javax.swing.JOptionPane;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.StorageClient;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -31,13 +34,18 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
 
         // TODO: Fix this garbage.
         try {
-            Storage storage = StorageOptions.newBuilder()
-                    .setCredentials(
-                            GoogleCredentials.fromStream(new FileInputStream(Config.getFirebaseCredentialsPath())))
-                    .build()
-                    .getService();
+            if (FirebaseApp.getApps().isEmpty()) {
+                FileInputStream serviceAccount = new FileInputStream(Config.getFirebaseCredentialsPath());
 
-            bucket = storage.get(FILES_BUCKET);
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .setStorageBucket(FILES_BUCKET)
+                        .build();
+
+                FirebaseApp.initializeApp(options);
+            }
+
+            bucket = StorageClient.getInstance().bucket();
         } catch (IOException e) {
             throw new RuntimeException("Error initializing Firebase Storage: " + e.getMessage(), e);
         }
@@ -76,7 +84,7 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
      * Deletes a file from Firebase Storage.
      * 
      * @param userId   The id of the user
-     * @param filePath The path of the file to delete
+     * @param fileName The path of the file to delete
      */
     public void deleteFile(String userId, String fileName) {
         try {

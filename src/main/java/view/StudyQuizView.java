@@ -9,13 +9,16 @@ import interface_adapter.view_model.DashboardState;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * View for displaying and taking quizzes in a study session.
  */
-
 public class StudyQuizView extends View {
     private final JLabel questionLabel;
     private final JRadioButton[] answerButtons;
@@ -27,6 +30,7 @@ public class StudyQuizView extends View {
 
     private List<Question> questions;
     private int currentQuestionIndex;
+    private boolean[] wasCorrect;
 
     public StudyQuizView() {
         super("studyQuiz");
@@ -48,8 +52,6 @@ public class StudyQuizView extends View {
             answerButtons[i].setAlignmentX(Component.CENTER_ALIGNMENT);
             answerGroup.add(answerButtons[i]);
             questionPanel.add(answerButtons[i]);
-            int finalI = i;
-            answerButtons[i].addActionListener(e -> answerButtons[finalI].setSelected(true));
         }
 
         scoreLabel = new JLabel("Score: 0/0");
@@ -82,12 +84,12 @@ public class StudyQuizView extends View {
                 new Question("0",
                         "What is the capital of France?",
                         List.of("Berlin", "Madrid", "Paris", "Rome"),
-                        2,
+                        "Paris",
                         "The capital of France is Paris."),
                 new Question("1",
                         "What is 2 + 2?",
                         List.of("3", "4", "5", "6"),
-                        1,
+                        "4",
                         "2 + 2 equals 4."));
         this.loadQuiz(questions);
     }
@@ -103,13 +105,19 @@ public class StudyQuizView extends View {
             }
 
             Question currentQuestion = questions.get(currentQuestionIndex);
-            currentQuestion.setChosenAnswer(selectedAnswer);
 
-            String explanation = currentQuestion.getExplanation();
-            showExplanation(explanation);
+            List<String> options = currentQuestion.getOptions();
+            String chosenText = (selectedAnswer >= 0 && selectedAnswer < options.size()) ? options.get(selectedAnswer) : null;
+            String correctText = resolveCorrectAnswer(currentQuestion);
 
-            // Update score
-            int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
+            boolean correct = correctText != null && correctText.equals(chosenText);
+            wasCorrect[currentQuestionIndex] = correct;
+
+            String explanation = resolveExplanation(currentQuestion);
+            showExplanation(explanation == null ? "" : explanation);
+
+            // Update score using helper
+            int correctAnswers = countCorrectAnswers();
             updateScore(correctAnswers, questions.size());
 
             // After submitting, disable submit and enable next
@@ -117,9 +125,7 @@ public class StudyQuizView extends View {
             nextButton.setEnabled(true);
 
             // prevent changing the selected answer after submit
-            for (JRadioButton rb : answerButtons) {
-                rb.setEnabled(false);
-            }
+            setAnswerButtonsEnabled(false);
         });
         return submit;
     }
@@ -131,10 +137,10 @@ public class StudyQuizView extends View {
             if (currentQuestionIndex < questions.size()) {
                 displayCurrentQuestion();
             } else {
-                int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
+                int correctAnswers = countCorrectAnswers();
                 JOptionPane.showMessageDialog(this,
-                        "Quiz completed! Final Score: " + correctAnswers + "/" + questions.size(), "Quiz Completed",
-                        JOptionPane.INFORMATION_MESSAGE);
+                        "Quiz completed! Final Score: " + correctAnswers + "/" + questions.size()
+                );
                 // disable controls after completion
                 next.setEnabled(false);
                 submitButton.setEnabled(false);
@@ -157,32 +163,29 @@ public class StudyQuizView extends View {
     public void loadQuiz(List<Question> questions) {
         this.questions = questions;
         this.currentQuestionIndex = 0;
+        this.wasCorrect = new boolean[questions.size()];
         displayCurrentQuestion();
     }
 
     private void displayCurrentQuestion() {
-        validQuestion(questions, currentQuestionIndex, questionLabel, answerButtons);
+        validQuestion(questions, currentQuestionIndex, questionLabel);
         // Reset UI state for a fresh question
         explanationArea.setText("");
         submitButton.setEnabled(true);
         nextButton.setEnabled(false);
-        answerGroup.clearSelection();
-        for (JRadioButton rb : answerButtons) {
-            rb.setEnabled(true);
-        }
+        clearAnswerButtonSelection();
+        setAnswerButtonsEnabled(true);
     }
 
-    static void validQuestion(List<Question> questions, int currentQuestionIndex, JLabel questionLabel,
-            JRadioButton[] answerButtons) {
+    private void validQuestion(List<Question> questions, int currentQuestionIndex, JLabel questionLabel) {
         if (questions != null && currentQuestionIndex < questions.size()) {
             Question q = questions.get(currentQuestionIndex);
-            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getQuestion());
+            // Use the presenter's API: getText(), getOptions()
+            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getText());
 
-            List<String> options = q.getPossibleAnswers();
-            for (int i = 0; i < answerButtons.length && i < options.size(); i++) {
-                answerButtons[i].setText(options.get(i));
-                answerButtons[i].setSelected(false);
-            }
+            List<String> options = q.getOptions();
+            updateAnswerButtonsText(options);
+            clearAnswerButtonSelection();
         }
     }
 
@@ -201,5 +204,99 @@ public class StudyQuizView extends View {
 
     public void updateScore(int correct, int total) {
         scoreLabel.setText("Score: " + correct + "/" + total);
+    }
+
+    // --- Reflection helpers to tolerate different Question APIs ---
+
+    private String resolveCorrectAnswer(Question q) {
+        Object resp = tryInvokeAny(q, "getAnswer", "getCorrectAnswer", "getCorrect", "correctAnswer", "getCorrectIndex");
+        String result = answerFromObject(resp, q);
+        if (result != null) return result;
+
+        Object fieldVal = tryFieldAccess(q, "correctAnswer", "answer", "correct");
+        return answerFromObject(fieldVal, q);
+    }
+
+    private String resolveExplanation(Question q) {
+        Object resp = tryInvokeAny(q, "getExplanation", "getExplanationText", "getDetails", "explanation");
+        if (resp != null) return resp.toString();
+        Object fieldVal = tryFieldAccess(q, "explanation", "details");
+        return fieldVal == null ? null : fieldVal.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> safeGetOptions(Question q) {
+        Object resp = tryInvokeAny(q, "getOptions", "getPossibleAnswers", "getChoices", "getAnswers");
+        if (resp instanceof List) return (List<String>) resp;
+        if (resp instanceof Collection) {
+            return List.copyOf((Collection<String>) resp);
+        }
+        return null;
+    }
+
+    private Object tryInvokeAny(Object target, String... names) {
+        if (target == null) return null;
+        Class<?> cls = target.getClass();
+        for (String n : names) {
+            try {
+                Method m = cls.getMethod(n);
+                return m.invoke(target);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private Object tryFieldAccess(Object target, String... names) {
+        if (target == null) return null;
+        Class<?> cls = target.getClass();
+        for (String n : names) {
+            try {
+                Field f = cls.getDeclaredField(n);
+                f.setAccessible(true);
+                return f.get(target);
+            } catch (NoSuchFieldException | IllegalAccessException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private void setAnswerButtonsEnabled(boolean enabled) {
+        for (JRadioButton rb : answerButtons) {
+            rb.setEnabled(enabled);
+        }
+    }
+
+    private void clearAnswerButtonSelection() {
+        answerGroup.clearSelection();
+    }
+
+    private void updateAnswerButtonsText(List<String> options) {
+        for (int i = 0; i < answerButtons.length; i++) {
+            if (i < options.size()) {
+                answerButtons[i].setText(options.get(i));
+                answerButtons[i].setVisible(true);
+            } else {
+                answerButtons[i].setText("");
+                answerButtons[i].setVisible(false);
+            }
+        }
+    }
+
+    private int countCorrectAnswers() {
+        int correct = 0;
+        for (boolean b : wasCorrect) if (b) correct++;
+        return correct;
+    }
+
+    private String answerFromObject(Object value, Question q) {
+        if (value == null) return null;
+        if (value instanceof Number) {
+            int idx = ((Number) value).intValue();
+            List<String> opts = safeGetOptions(q);
+            if (opts != null && idx >= 0 && idx < opts.size()) return opts.get(idx);
+            return String.valueOf(idx);
+        }
+        return value.toString();
     }
 }

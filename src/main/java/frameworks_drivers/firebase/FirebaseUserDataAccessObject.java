@@ -26,13 +26,13 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Firebase Data Access Object for User entities.
- * Handles both Firebase Authentication and Firestore data persistence.
- * Combines authentication operations with CRUD operations for User entities.
+ * Handles Firebase Authentication and Firestore persistence.
  */
 public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterface,
         LoginUserDataAccessInterface,
         ChangePasswordUserDataAccessInterface,
         LogoutUserDataAccessInterface {
+
     private static final String USERS_COLLECTION = "users";
     private final Firestore firestore;
     private final UserFactory userFactory;
@@ -49,18 +49,12 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         this.firebaseWebApiKey = Config.getFirebaseWebApiKey();
     }
 
-    /**
-     * Returns the user with the given email.
-     *
-     * @param email the email to look up
-     * @return the user with the given email
-     */
     @Override
     public User getUser(String email) {
         try {
             UserRecord userRecord = this.firebaseAuth.getUserByEmail(email);
 
-            long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp(); // in milliseconds
+            long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp();
             LocalDateTime createdAt = LocalDateTime.ofInstant(
                     Instant.ofEpochMilli(createdTimestamp),
                     ZoneId.systemDefault());
@@ -72,12 +66,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
-    /**
-     * Creates a new user with the given email and password.
-     *
-     * @param email    the email of the new user
-     * @param password the password of the new user
-     */
     @Override
     public void createUser(String email, String password) {
         CreateRequest createUserRequest = new CreateRequest()
@@ -94,7 +82,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
             firestore.collection(USERS_COLLECTION)
                     .document(userRecord.getUid())
                     .set(userData)
-                    .get(); // blocking call to ensure write completes
+                    .get(); // blocking call
 
             System.out.println("Successfully created new user: " + userRecord.getUid());
         } catch (FirebaseAuthException e) {
@@ -104,18 +92,8 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
-    /**
-     * Verifies if the given password matches the password of a user with the given
-     * email.
-     *
-     * @param email    the email to look for
-     * @param password
-     * @return true if given password matches the password of a user with the given
-     *         email; false otherwise
-     */
     @Override
     public boolean verifyPassword(String email, String password) {
-        // Build request body
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("email", email);
         requestBody.addProperty("password", password);
@@ -123,10 +101,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         String url = FIREBASE_AUTH_URL + ":signInWithPassword?key=" + firebaseWebApiKey;
 
-        RequestBody body = RequestBody.create(
-                requestBody.toString(),
-                MediaType.parse("application/json"));
-
+        RequestBody body = RequestBody.create(requestBody.toString(), MediaType.parse("application/json"));
         Request request = new Request.Builder().url(url).post(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -137,12 +112,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
-    /**
-     * Checks if a user with the given email exists.
-     *
-     * @param email the email to look for
-     * @return true if a user with the given email exists; false otherwise
-     */
     @Override
     public boolean existsByEmail(String email) {
         try {
@@ -153,33 +122,18 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
-    /**
-     * Updates the system to record this user's password.
-     *
-     * @param user the user whose password is to be updated
-     */
     @Override
     public void changePassword(User user) {
-
+        // Java 11 safe: implementation left empty or add Firebase password update logic
     }
 
-    /**
-     * Returns the username of the current user of the application.
-     *
-     * @return the username of the current user
-     */
     @Override
     public String getCurrentUsername() {
         return "";
     }
 
-    /**
-     * Sets the username indicating who is the current user of the application.
-     *
-     * @param username the new current username
-     */
     @Override
     public void setCurrentUsername(String username) {
-
+        // no-op
     }
 }

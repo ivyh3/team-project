@@ -51,6 +51,7 @@ public class Config {
         try (FileInputStream serviceAccount = new FileInputStream(credsFile)) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setStorageBucket("csc207-team-project.firebasestorage.app")
                     .build();
             FirebaseApp.initializeApp(options);
             firebaseInitialized = true;

@@ -22,11 +22,11 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
     @Override
     public void prepareSuccessView(GenerateQuizOutputData outputData) {
         StudyQuiz quiz = outputData.getQuiz();
-        List<Question> questions = quiz.getQuestions();
+        List<Question> questions = (quiz == null) ? null : quiz.getQuestions();
 
         if (questions != null && !questions.isEmpty()) {
             // Update view model with first question
-            Question firstQuestion = questions.getFirst();
+            Question firstQuestion = questions.get(0);
             viewModel.setCurrentQuestion(firstQuestion.getText());
             viewModel.setCurrentOptions(firstQuestion.getOptions());
             viewModel.setCurrentQuestionNumber(1);

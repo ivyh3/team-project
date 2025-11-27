@@ -10,21 +10,21 @@ import java.util.*;
 /**
  * Interactor for the Generate Quiz use case.
  *
- * @param repo   port in use_case
- * @param gemini another port
  */
-public record GenerateQuizInteractor(GenerateQuizOutputBoundary output, QuestionDataAccess repo,
-                                     GeminiDataAccess gemini) implements GenerateQuizInputBoundary {
+public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
+    private final GenerateQuizOutputBoundary output;
+    private final QuestionDataAccess repo;
+    private final GeminiDataAccess gemini;
+
+    public GenerateQuizInteractor(GenerateQuizOutputBoundary output, QuestionDataAccess repo,
+                                  GeminiDataAccess gemini) {
+        this.output = output;
+        this.repo = repo;
+        this.gemini = gemini;
+    }
 
     @Override
     public void execute(GenerateQuizInputData input) {
-        // // TODO: Implement the business logic for generating a quiz
-        // // 1. Fetch reference materials
-        // // 2. Call Gemini API to generate quiz questions
-        // // 3. Create StudyQuiz entity
-        // // 4. Save to repository
-        // // 5. Prepare success or failure view
-
         // 1. Fetch reference materials (try input, then repo, then fallback)
         List<String> referenceMaterials = fetchReferenceMaterials(input);
 
@@ -92,6 +92,7 @@ public record GenerateQuizInteractor(GenerateQuizOutputBoundary output, Question
         return List.of("Introduction to Algorithms", "Effective Java", "Clean Code");
     }
 
+
     private List<Map<String, Object>> generateQuestions(List<String> referenceMaterials) {
         List<Map<String, Object>> questions = null;
 
@@ -100,16 +101,46 @@ public record GenerateQuizInteractor(GenerateQuizOutputBoundary output, Question
                 String name = m.getName().toLowerCase();
                 if ((name.contains("generate") || name.contains("create") || name.contains("question")
                         || name.contains("quiz") || name.contains("ask"))
-                        && (m.getParameterCount() == 0 || m.getParameterCount() == 1)) {
+                        && (m.getParameterCount() == 0 || m.getParameterCount() == 1 || m.getParameterCount() == 2)) {
+
                     Object resp;
-                    if (m.getParameterCount() == 1) {
-                        resp = m.invoke(gemini, referenceMaterials);
-                    } else {
-                        resp = m.invoke(gemini);
+                    try {
+                        if (m.getParameterCount() == 2) {
+                            // try (String prompt, List<String> refs) if available — pass null for prompt
+                            resp = m.invoke(gemini, null, referenceMaterials);
+                        } else if (m.getParameterCount() == 1) {
+                            resp = m.invoke(gemini, referenceMaterials);
+                        } else {
+                            resp = m.invoke(gemini);
+                        }
+                    } catch (IllegalArgumentException iae) {
+                        // parameter types didn't match; skip this method
+                        continue;
                     }
+
                     if (resp instanceof List) {
-                        //noinspection unchecked
-                        questions = new ArrayList<>((List<Map<String, Object>>) resp);
+                        List<?> raw = (List<?>) resp;
+                        if (raw.isEmpty()) {
+                            break;
+                        }
+
+                        Object first = raw.get(0);
+                        if (first instanceof Map) {
+                            //noinspection unchecked
+                            questions = new ArrayList<>((List<Map<String, Object>>) raw);
+                        } else {
+                            // try to convert domain Question objects (or other POJOs) into Map<String,Object>
+                            questions = new ArrayList<>();
+                            for (Object o : raw) {
+                                Map<String, Object> converted = convertObjectToQuestionMap(o);
+                                if (converted != null) {
+                                    questions.add(converted);
+                                }
+                            }
+                            if (questions.isEmpty()) {
+                                questions = null;
+                            }
+                        }
                     }
                     break;
                 }
@@ -123,18 +154,107 @@ public record GenerateQuizInteractor(GenerateQuizOutputBoundary output, Question
                     Map.of(
                             "id", 1,
                             "text", "What is a binary search?",
-                            "options", List.of("Search sorted array", "Search unsorted array", "Sort then search"),
+                            "options", List.of("Search sorted array", "Search unsorted array", "Sort then search", "None of the above"),
                             "answer", "Search sorted array"),
                     Map.of(
                             "id", 2,
                             "text", "Which book is authored by Joshua Bloch?",
-                            "options", List.of("Clean Code", "Effective Java", "Introduction to Algorithms"),
+                            "options", List.of("Clean Code", "Effective Java", "Introduction to Algorithms", "Design Patterns"),
                             "answer", "Effective Java")
             );
         }
 
         return questions;
     }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> convertObjectToQuestionMap(Object o) {
+        if (o == null) return null;
+
+        // If it's already a Map-like object, return cast result
+        if (o instanceof Map) {
+            return new HashMap<>((Map<String, Object>) o);
+        }
+
+        try {
+            Class<?> cls = o.getClass();
+            Map<String, Object> map = new HashMap<>();
+
+            // id
+            Object id = tryInvokeAny(cls, o, "getId", "getID", "id");
+            if (id != null) map.put("id", id.toString());
+
+            // text (question)
+            Object text = tryInvokeAny(cls, o, "getQuestion", "getText", "question", "text");
+            if (text != null) map.put("text", text.toString());
+
+            // options
+            Object opts = tryInvokeAny(cls, o, "getOptions", "getPossibleAnswers", "getChoices", "getAnswers", "options");
+            if (opts instanceof List) {
+                map.put("options", new ArrayList<>((List<String>) opts));
+            } else if (opts instanceof java.util.Collection) {
+                List<String> conv = new ArrayList<>();
+                for (Object item : (java.util.Collection<?>) opts) {
+                    conv.add(item == null ? null : item.toString());
+                }
+                map.put("options", conv);
+            }
+
+            // answer: try to get a String answer first, then an index
+            Object answer = tryInvokeAny(cls, o, "getAnswer", "getCorrectAnswer", "getCorrect", "getCorrectIndex", "answer", "correctIndex");
+            if (answer != null) {
+                if (answer instanceof Number) {
+                    // convert index -> option string if available
+                    List<String> options = (List<String>) map.get("options");
+                    int idx = ((Number) answer).intValue();
+                    if (options != null && idx >= 0 && idx < options.size()) {
+                        map.put("answer", options.get(idx));
+                    } else {
+                        map.put("answer", String.valueOf(idx));
+                    }
+                } else {
+                    map.put("answer", answer.toString());
+                }
+            } else {
+                // try field "correctAnswer" or similar via reflection access
+                Object ca = tryFieldAccess(cls, o, "correctAnswer", "answer", "correct");
+                if (ca != null) map.put("answer", ca.toString());
+            }
+
+            // minimal validation
+            if (!map.containsKey("text") || !map.containsKey("options")) {
+                return null;
+            }
+
+            return map;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private Object tryInvokeAny(Class<?> cls, Object target, String... methodNames) {
+        for (String mn : methodNames) {
+            try {
+                Method m = cls.getMethod(mn);
+                return m.invoke(target);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private Object tryFieldAccess(Class<?> cls, Object target, String... fieldNames) {
+        for (String fn : fieldNames) {
+            try {
+                java.lang.reflect.Field f = cls.getDeclaredField(fn);
+                f.setAccessible(true);
+                return f.get(target);
+            } catch (NoSuchFieldException | IllegalAccessException ignored) {
+            }
+        }
+        return null;
+    }
+
 
     private boolean saveQuizToRepository(Map<String, Object> studyQuiz) {
         boolean saved = false;
@@ -144,16 +264,18 @@ public record GenerateQuizInteractor(GenerateQuizOutputBoundary output, Question
                 if ((name.contains("save") || name.contains("insert") || name.contains("add") || name.contains("create"))
                         && m.getParameterCount() == 1) {
                     Object saveResult = m.invoke(repo, studyQuiz);
-                    saved = switch (saveResult) {
-                        case null ->
-                            // void method or null -> assume success
-                                true;
-                        case Boolean b -> b;
-                        case Number number -> number.longValue() != 0;
-                        default ->
-                            // assume success if no exception thrown
-                                true;
-                    };
+
+                    if (saveResult == null) {
+                        // void method or null -> assume success
+                        saved = true;
+                    } else if (saveResult instanceof Boolean) {
+                        saved = (Boolean) saveResult;
+                    } else if (saveResult instanceof Number) {
+                        saved = ((Number) saveResult).longValue() != 0;
+                    } else {
+                        // assume success if no exception thrown
+                        saved = true;
+                    }
                     break;
                 }
             }
