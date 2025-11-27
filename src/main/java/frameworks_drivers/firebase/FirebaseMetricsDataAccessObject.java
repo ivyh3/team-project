@@ -30,23 +30,21 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     }
 
     @Override
-    public List<StudySession> getSessionsPerWeek(User user, LocalDateTime currentTime, String courseId) {
-        // Get date range between today and a week ago.
-        LocalDateTime weekAgo = currentTime.minusWeeks(1).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
-        List<StudySession> sessions = sessionDAO.getStudySessionsInRange(DashboardState.userId, weekAgo, today);
-
+    public List<StudySession> getSessionsPerWeek(String userId, LocalDateTime currentTime) {
+        // Get date range for a week (starting from the given sunday).
+        LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        List<StudySession> sessions = sessionDAO.getStudySessionsInRange(userId, start, end);
         return sessions;
     }
 
     @Override
-    public List<StudyQuiz> getQuizzesPerWeek(User user, LocalDateTime currentTime, String courseId) {
-        // Get date range between today and a week ago.
-        LocalDateTime weekAgo = currentTime.minusWeeks(1).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime today = currentTime.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+    public List<StudyQuiz> getQuizzesPerWeek(String userId, LocalDateTime currentTime) {
+        // Get date range for a week (starting from the given sunday).
+        LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
-        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(DashboardState.userId, weekAgo, today);
+        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(DashboardState.userId, start, end);
 
         return quizzes;
     }

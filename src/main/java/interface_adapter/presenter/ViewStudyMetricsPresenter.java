@@ -21,7 +21,7 @@ public class ViewStudyMetricsPresenter implements ViewStudyMetricsOutputBoundary
 
 	@Override
 	public void prepareSuccessView(ViewStudyMetricsOutputData outputData) {
-		viewModel.setAverageWeeklyStudyTime(outputData.getAverageWeeklyStudyTime());
+//		viewModel.setAverageWeeklyStudyTime(outputData.getAverageWeeklyStudyTime());
 		viewModel.setDailyStudyDurations(outputData.getDailyStudyDurations());
 		viewModel.setStartDate(outputData.getStartDate());
 		viewModel.setAverageQuizScores(outputData.getAverageQuizScores());

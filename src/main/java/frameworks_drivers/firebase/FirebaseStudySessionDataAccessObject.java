@@ -134,15 +134,27 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
         try {
             List<StudySession> sessions = new ArrayList<>();
             for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-                String startTimeStr = document.getString("start_time");
-                String endTimeStr = document.getString("end_time");
+                Long startTimestamp = document.getLong("start_time_timestamp");
+                Long endTimestamp = document.getLong("end_time_timestamp");
 
-                StudySession session = studySessionFactory.create(
-                        document.getId(),
-                        java.time.LocalDateTime.parse(startTimeStr),
-                        java.time.LocalDateTime.parse(endTimeStr));
+                if (startTimestamp != null && endTimestamp != null) {
+                    LocalDateTime sessionStart = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(startTimestamp),
+                            java.time.ZoneOffset.UTC
+                    );
 
-                sessions.add(session);
+                    LocalDateTime sessionEnd = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(endTimestamp),
+                            java.time.ZoneOffset.UTC
+                    );
+
+                    StudySession session = studySessionFactory.create(
+                            document.getId(),
+                            sessionStart,
+                            sessionEnd);
+
+                    sessions.add(session);
+                }
             }
 
             return sessions;

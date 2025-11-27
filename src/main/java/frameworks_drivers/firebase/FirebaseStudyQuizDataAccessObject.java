@@ -141,20 +141,31 @@ public class FirebaseStudyQuizDataAccessObject {
 		try {
 			List<StudyQuiz> quizzes = new ArrayList<>();
 			for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-				String startTimeStr = document.getString("start_time");
-				String endTimeStr = document.getString("end_time");
-				Double scoreDouble = document.getDouble("score");
-				float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
+				Long startTimestamp = document.getLong("start_time_timestamp");
+				Long endTimestamp = document.getLong("end_time_timestamp");
 
-				StudyQuiz quiz = studyQuizFactory.create(
-						document.getId(),
-						score,
-						LocalDateTime.parse(startTimeStr),
-						LocalDateTime.parse(endTimeStr));
+				if (startTimestamp != null && endTimestamp != null) {
+					LocalDateTime sessionStart = LocalDateTime.ofInstant(
+							java.time.Instant.ofEpochMilli(startTimestamp),
+							java.time.ZoneOffset.UTC
+					);
 
-				quizzes.add(quiz);
+					LocalDateTime sessionEnd = LocalDateTime.ofInstant(
+							java.time.Instant.ofEpochMilli(endTimestamp),
+							java.time.ZoneOffset.UTC
+					);
+					Double scoreDouble = document.getDouble("score");
+					float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
+
+					StudyQuiz quiz = studyQuizFactory.create(
+							document.getId(),
+							score,
+							sessionStart,
+							sessionEnd);
+
+					quizzes.add(quiz);
+				}
 			}
-
 			return quizzes;
 		} catch (Exception e) {
 			throw new RuntimeException("Error retrieving study quizzes: " + e.getMessage(), e);

@@ -16,11 +16,9 @@ public class MetricsViewModel {
 	private final PropertyChangeSupport support;
 	
 	private Duration averageWeeklyStudyTime;
-//	private String mostStudiedSubject;
 	private Map<DayOfWeek, Duration> dailyStudyDurations;
 	private Map<DayOfWeek, Float> averageQuizScores;
 
-//	private String selectedCourse;
 	private LocalDateTime startDate;
 	private String errorMessage;
 	
@@ -28,10 +26,8 @@ public class MetricsViewModel {
 		this.support = new PropertyChangeSupport(this);
 		this.averageWeeklyStudyTime = Duration.ZERO;
 		this.averageQuizScores = new HashMap<>();
-//		this.mostStudiedSubject = "--";
 		this.dailyStudyDurations = new HashMap<>();
-//		this.selectedCourse = "All";
-		this.startDate = LocalDateTime.now();
+		this.startDate = null;
 		this.errorMessage = "";
 	}
 	
@@ -43,25 +39,16 @@ public class MetricsViewModel {
 		support.removePropertyChangeListener(listener);
 	}
 	
-	public Duration getAverageWeeklyStudyTime() {
-		return averageWeeklyStudyTime;
-	}
-	
-	public void setAverageWeeklyStudyTime(Duration averageWeeklyStudyTime) {
-		Duration oldValue = this.averageWeeklyStudyTime;
-		this.averageWeeklyStudyTime = averageWeeklyStudyTime;
-		support.firePropertyChange("averageWeeklyStudyTime", oldValue, averageWeeklyStudyTime);
-	}
-	
-//	public String getMostStudiedSubject() {
-//		return mostStudiedSubject;
+//	public Duration getAverageWeeklyStudyTime() {
+//		return averageWeeklyStudyTime;
 //	}
 //
-//	public void setMostStudiedSubject(String mostStudiedSubject) {
-//		String oldValue = this.mostStudiedSubject;
-//		this.mostStudiedSubject = mostStudiedSubject;
-//		support.firePropertyChange("mostStudiedSubject", oldValue, mostStudiedSubject);
+//	public void setAverageWeeklyStudyTime(Duration averageWeeklyStudyTime) {
+//		Duration oldValue = this.averageWeeklyStudyTime;
+//		this.averageWeeklyStudyTime = averageWeeklyStudyTime;
+//		support.firePropertyChange("averageWeeklyStudyTime", oldValue, averageWeeklyStudyTime);
 //	}
+
 	
 	public Map<DayOfWeek, Duration> getDailyStudyDurations() {
 		return new HashMap<>(dailyStudyDurations);
@@ -82,21 +69,11 @@ public class MetricsViewModel {
 		this.averageQuizScores = new HashMap<>(averageQuizScores);
 		support.firePropertyChange("averageQuizScores", oldValue, this.averageQuizScores);
 	}
-	
-//	public String getSelectedCourse() {
-//		return selectedCourse;
-//	}
-//
-//	public void setSelectedCourse(String selectedCourse) {
-//		String oldValue = this.selectedCourse;
-//		this.selectedCourse = selectedCourse;
-//		support.firePropertyChange("selectedCourse", oldValue, selectedCourse);
-//	}
-	
+
 	public LocalDateTime getStartDate() {
 		return startDate;
 	}
-	
+
 	public void setStartDate(LocalDateTime startDate) {
 		LocalDateTime oldValue = this.startDate;
 		this.startDate = startDate;

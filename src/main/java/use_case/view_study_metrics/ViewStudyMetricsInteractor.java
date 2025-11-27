@@ -26,17 +26,17 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
 
     @Override
     public void execute(ViewStudyMetricsInputData inputData) {
-        User user = inputData.getUser();
-        String courseId = inputData.getCourseId();
+        String userId = inputData.getUser();
         LocalDateTime week = inputData.getWeek();
-        List<StudySession> sessions = metricsDataAccessObject.getSessionsPerWeek(user, week, courseId);
-        List<StudyQuiz> quizzes = metricsDataAccessObject.getQuizzesPerWeek(user, week, courseId);
+        List<StudySession> sessions = metricsDataAccessObject.getSessionsPerWeek(userId, week);
+        List<StudyQuiz> quizzes = metricsDataAccessObject.getQuizzesPerWeek(userId, week);
 
         // retrieve the daily study durations
         Map<DayOfWeek, Duration> dailyStudyDurations = new HashMap<>();
         for (StudySession session : sessions) {
             dailyStudyDurations.merge(DayOfWeek.from(session.getStartTime()), session.getDuration(), Duration::plus);
         }
+        System.out.println(dailyStudyDurations); // debugging
 
         // retrieve the average quiz scores
         Map<DayOfWeek, Float> sumMap = new HashMap<>();
@@ -44,7 +44,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
 
         for (StudyQuiz quiz : quizzes) {
             DayOfWeek day = quiz.getStartTime().getDayOfWeek();
-            float score = quiz.getScore();
+            float score = quiz.getScore() * 100;
 
             sumMap.merge(day, score, Float::sum);
             countMap.merge(day, 1, Integer::sum);
@@ -61,7 +61,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         }
         Duration averageWeeklyStudyTime = Duration.ofMinutes(times / 7);
 
-        // get the first sunday for the graph
+        // get the startDate for the graph
         LocalDateTime startDate = week;
 
         ViewStudyMetricsOutputData outputData = new ViewStudyMetricsOutputData(
@@ -69,8 +69,6 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
                 averageQuizScores,
                 averageWeeklyStudyTime,
                 startDate
-//                mostStudiedSubject, TODO: implement if there's time (need to filter by courses)
-//                subjectStrengths
         );
 
         outputBoundary.prepareSuccessView(outputData);

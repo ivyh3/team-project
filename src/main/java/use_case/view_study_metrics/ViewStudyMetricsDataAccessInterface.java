@@ -11,21 +11,19 @@ public interface ViewStudyMetricsDataAccessInterface {
     /**
      * gets the sessions for a user.
      *
-     * @param user     the user to look for
+     * @param userId     the user to look for
      * @param week     the Sunday of the week desired
-     * @param courseId the course specified, or "all" for all courses
      * @return List<StudySession>
      */
-    List<StudySession> getSessionsPerWeek(User user, LocalDateTime week, String courseId);
+    List<StudySession> getSessionsPerWeek(String userId, LocalDateTime week);
 
     /**
      * gets the quizzes for a user.
      *
-     * @param user     the user to look for
+     * @param userId     the user to look for
      * @param week     the Sunday of the week desired
-     * @param courseId the course specified, or "all" for all courses
      * @return List<StudyQuiz>
      */
-    List<StudyQuiz> getQuizzesPerWeek(User user, LocalDateTime week, String courseId);
+    List<StudyQuiz> getQuizzesPerWeek(String userId, LocalDateTime week);
 }
 
