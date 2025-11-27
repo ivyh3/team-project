@@ -1,7 +1,10 @@
 package frameworks_drivers.firebase;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +24,9 @@ import entity.StudyQuiz;
 import entity.StudyQuizFactory;
 
 // TODO: Fix this AI generated code up (although I probably wouldn't do much better...)
+/**
+ * Data access object for StudyQuiz entities.
+ */
 public class FirebaseStudyQuizDataAccessObject {
 	private static final String USERS_COLLECTION = "users";
 	private static final String QUIZZES_COLLECTION = "studyQuizzes";
@@ -39,14 +45,16 @@ public class FirebaseStudyQuizDataAccessObject {
 
 		Map<String, Object> data = new HashMap<>();
 
-		// Store times as ISO strings and as epoch millis for range queries.
-		// no timezones because I want to sleep.
-		data.put("start_time", quiz.getStartTime().toString());
-		data.put("end_time", quiz.getEndTime().toString());
+		// Store times as ISO strings in utc and as epoch millis for range queries.
+		ZonedDateTime utcStartTime = convertToUtc(quiz.getStartTime());
+		ZonedDateTime utcEndTime = convertToUtc(quiz.getEndTime());
+
+		data.put("start_time", utcStartTime.toString());
+		data.put("end_time", utcEndTime.toString());
 		data.put("duration_seconds", quiz.getDuration().toSeconds());
 		data.put("score", quiz.getScore());
-		data.put("start_time_timestamp", quiz.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli());
-		data.put("end_time_timestamp", quiz.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli());
+		data.put("start_time_timestamp", utcStartTime.toInstant().toEpochMilli());
+		data.put("end_time_timestamp", utcEndTime.toInstant().toEpochMilli());
 
 		try {
 			ApiFuture<DocumentReference> result = quizzesRef.add(data);
@@ -73,16 +81,7 @@ public class FirebaseStudyQuizDataAccessObject {
 			DocumentSnapshot document = future.get();
 
 			if (document.exists()) {
-				String startTimeStr = document.getString("start_time");
-				String endTimeStr = document.getString("end_time");
-				Double scoreDouble = document.getDouble("score");
-				float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
-
-				return studyQuizFactory.create(
-						document.getId(),
-						score,
-						LocalDateTime.parse(startTimeStr),
-						LocalDateTime.parse(endTimeStr));
+				return createStudyQuizFromDocument(document);
 			} else {
 				return null;
 			}
@@ -103,18 +102,7 @@ public class FirebaseStudyQuizDataAccessObject {
 			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
 			for (QueryDocumentSnapshot document : documents) {
-				String startTimeStr = document.getString("start_time");
-				String endTimeStr = document.getString("end_time");
-				Double scoreDouble = document.getDouble("score");
-				float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
-
-				StudyQuiz quiz = studyQuizFactory.create(
-						document.getId(),
-						score,
-						LocalDateTime.parse(startTimeStr),
-						LocalDateTime.parse(endTimeStr));
-
-				quizzes.add(quiz);
+				quizzes.add(createStudyQuizFromDocument(document));
 			}
 
 			return quizzes;
@@ -129,8 +117,11 @@ public class FirebaseStudyQuizDataAccessObject {
 				.document(userId)
 				.collection(QUIZZES_COLLECTION);
 
-		long startTimeStamp = startTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-		long endTimeStamp = endTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+		ZonedDateTime utcStartTime = convertToUtc(startTime);
+		ZonedDateTime utcEndTime = convertToUtc(endTime);
+
+		long startTimeStamp = utcStartTime.toInstant().toEpochMilli();
+		long endTimeStamp = utcEndTime.toInstant().toEpochMilli();
 
 		Query query = quizzesRef
 				.whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)
@@ -141,23 +132,64 @@ public class FirebaseStudyQuizDataAccessObject {
 		try {
 			List<StudyQuiz> quizzes = new ArrayList<>();
 			for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-				String startTimeStr = document.getString("start_time");
-				String endTimeStr = document.getString("end_time");
-				Double scoreDouble = document.getDouble("score");
-				float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
-
-				StudyQuiz quiz = studyQuizFactory.create(
-						document.getId(),
-						score,
-						LocalDateTime.parse(startTimeStr),
-						LocalDateTime.parse(endTimeStr));
-
-				quizzes.add(quiz);
+				quizzes.add(createStudyQuizFromDocument(document));
 			}
 
 			return quizzes;
 		} catch (Exception e) {
 			throw new RuntimeException("Error retrieving study quizzes: " + e.getMessage(), e);
 		}
+	}
+
+	/**
+	 * Create a StudyQuiz entity from a Firestore DocumentSnapshot.
+	 * 
+	 * @param document the document with the study quiz data
+	 * @return the study quiz entity
+	 */
+	private StudyQuiz createStudyQuizFromDocument(DocumentSnapshot document) {
+		String startTimeStr = document.getString("start_time");
+		String endTimeStr = document.getString("end_time");
+
+		ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
+		ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
+
+		LocalDateTime startTime = convertToLocalDateTime(startZoned);
+		LocalDateTime endTime = convertToLocalDateTime(endZoned);
+
+		Double scoreDouble = document.getDouble("score");
+		float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
+
+		StudyQuiz quiz = studyQuizFactory.create(
+				document.getId(),
+				score,
+				startTime,
+				endTime);
+
+		return quiz;
+	}
+
+	/**
+	 * Return the UTC equivalent of a LocalDateTime in the system default timezone.
+	 * 
+	 * @param localDateTime the LocalDateTime to convert
+	 * @return the ZonedDateTime in UTC
+	 */
+	private ZonedDateTime convertToUtc(LocalDateTime localDateTime) {
+		ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
+		ZonedDateTime utcZoned = ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
+		return utcZoned;
+	}
+
+	/**
+	 * Return the LocalDateTime equivalent of a ZonedDateTime in the system default
+	 * timezone.
+	 * 
+	 * @param zonedDateTime the ZonedDateTime to convert
+	 * @return the LocalDateTime in the system default timezone
+	 */
+	private LocalDateTime convertToLocalDateTime(ZonedDateTime zonedDateTime) {
+		ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
+		return localZoned.toLocalDateTime();
 	}
 }
