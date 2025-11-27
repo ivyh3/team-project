@@ -56,11 +56,6 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         presenter.abortStudySessionConfig();
     }
 
-    @Override
-    public void setSessionType(SessionType sessionType) {
-        presenter.setSessionType(sessionType);
-    }
-
     /**
      * Check if the given file resource exists in storage.
      *

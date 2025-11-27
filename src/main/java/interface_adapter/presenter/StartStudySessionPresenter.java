@@ -57,12 +57,6 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     }
 
     @Override
-    public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-        studySessionConfigViewModel.getState().setSessionType(sessionType);
-        studySessionConfigViewModel.firePropertyChange();
-    }
-
-    @Override
     public void refreshFileOptions(java.util.List<String> fileOptions) {
         studySessionConfigViewModel.getState().setFileOptions(fileOptions);
         studySessionConfigViewModel.firePropertyChange("fileOptions");
