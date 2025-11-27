@@ -28,13 +28,6 @@ public interface StartStudySessionOutputBoundary {
     void abortStudySessionConfig();
 
     /**
-     * Set the session type for the config.
-     * 
-     * @param sessionType The type of the session.
-     */
-    void setSessionType(StudySessionConfigState.SessionType sessionType);
-
-    /**
      * Sets the possible file selections for the file selector
      */
     void refreshFileOptions(List<String> fileOptions);

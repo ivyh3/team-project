@@ -31,10 +31,14 @@ public class EndStudySessionPresenter implements EndStudySessionOutputBoundary {
         // should work fine rn)
         // Set states for the views
         studySessionViewModel.setState(finalizedSession);
+        studySessionViewModel.firePropertyChange();
+        
         studySessionEndViewModel.setState(endState);
+        studySessionEndViewModel.firePropertyChange();
 
         // Todo: use actual method to swap view
         // Swap to session end view
         viewManagerModel.setView(studySessionEndViewModel.getViewName());
+        viewManagerModel.firePropertyChange();
     }
 }
