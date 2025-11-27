@@ -8,15 +8,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class GeminiResponseReceiverDataAccessObject {
-    private static HttpServer server;
+public class GeminiResponseReceiverDataAccessObject implements GeminiResponseReceiver {
+    private HttpServer server;
 
-    public static synchronized void startIfNeeded(int port, Path responsesDir) throws IOException {
+    @Override
+    public void start(int port, Path responsesDir) throws IOException {
         if (server != null) return;
 
         Files.createDirectories(responsesDir);
@@ -27,7 +27,15 @@ public class GeminiResponseReceiverDataAccessObject {
         server.start();
     }
 
-    static class ResponseHandler implements HttpHandler {
+    @Override
+    public void stop() {
+        if (server != null) {
+            server.stop(0);
+            server = null;
+        }
+    }
+
+    private static class ResponseHandler implements HttpHandler {
         private final Path responsesDir;
 
         ResponseHandler(Path responsesDir) {
@@ -35,7 +43,7 @@ public class GeminiResponseReceiverDataAccessObject {
         }
 
         @Override
-        public void handle(HttpExchange exchange) {
+        public void handle(HttpExchange exchange) throws IOException {
             try {
                 if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                     exchange.sendResponseHeaders(405, -1);
@@ -61,10 +69,10 @@ public class GeminiResponseReceiverDataAccessObject {
 
                 try {
                     Files.move(tmp, out,
-                            java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            StandardCopyOption.ATOMIC_MOVE,
+                            StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException ex) {
-                    Files.move(tmp, out, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(tmp, out, StandardCopyOption.REPLACE_EXISTING);
                 }
 
                 byte[] ok = "ok".getBytes();
@@ -72,8 +80,6 @@ public class GeminiResponseReceiverDataAccessObject {
                 try (OutputStream os = exchange.getResponseBody()) {
                     os.write(ok);
                 }
-
-            } catch (Exception ignored) {
             } finally {
                 exchange.close();
             }

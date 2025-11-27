@@ -7,6 +7,9 @@ package frameworks_drivers.storage;
 public interface StorageService {
     /**
      * Delete the file at the given storage path.
+     *
+     * @param filePath path of the file to delete
+     * @throws StorageException if deletion fails
      */
-    void deleteFile(String filePath);
+    void deleteFile(String filePath) throws StorageException;
 }

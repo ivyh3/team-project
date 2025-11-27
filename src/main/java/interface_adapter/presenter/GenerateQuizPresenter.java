@@ -1,7 +1,6 @@
 package interface_adapter.presenter;
 
 import entity.Question;
-import entity.StudyQuiz;
 import interface_adapter.view_model.QuizViewModel;
 import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.generate_quiz.GenerateQuizOutputData;
@@ -21,8 +20,7 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
 
     @Override
     public void prepareSuccessView(GenerateQuizOutputData outputData) {
-        StudyQuiz quiz = outputData.getQuiz();
-        List<Question> questions = (quiz == null) ? null : quiz.getQuestions();
+        List<Question> questions = outputData.getQuestions();
 
         if (questions != null && !questions.isEmpty()) {
             // Update view model with first question
@@ -40,9 +38,8 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
         }
     }
 
-    // Implement the interface method required by GenerateQuizOutputBoundary
-    @Override
     public void GenerateQuiz(GenerateQuizOutputData outputData) {
+        // Simply call prepareSuccessView
         prepareSuccessView(outputData);
     }
 

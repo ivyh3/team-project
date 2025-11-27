@@ -1,18 +1,21 @@
 package repository;
 
+import entity.ReferenceMaterial;
+
 /**
- * Minimal repository interface used by the interactor.
- * Implementations should return a domain object or null from getById
- * and perform deletion in delete.
+ * Repository interface for reference materials.
+ * Handles retrieval and deletion of reference materials.
  */
 public interface ReferenceMaterialRepository {
-    /**
-     * Return the material object for given userId and materialId, or null if not found.
-     */
-    Object getById(String userId, String materialId);
 
     /**
-     * Delete the material metadata for given userId and materialId.
+     * Returns the reference material for the given userId and materialId,
+     * or null if not found.
+     */
+    ReferenceMaterial getById(String userId, String materialId);
+
+    /**
+     * Deletes the reference material for the given userId and materialId.
      */
     void delete(String userId, String materialId);
 }

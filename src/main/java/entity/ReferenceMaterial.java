@@ -1,84 +1,65 @@
 package entity;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
- * Represents reference material (textbooks, PDFs, etc.) uploaded by a user.
+ * Domain entity representing reference material uploaded by a user.
+ * Immutable after creation to maintain domain integrity.
  */
 public class ReferenceMaterial {
-    private String id;
-    private String ownerUid;
-    private String storagePath;
-    private String filename;
-    private long sizeBytes;
-    private LocalDateTime uploadedAt;
-    private String fingerprint;
 
-    public ReferenceMaterial(String id, String ownerUid, String storagePath, String filename,
-            long sizeBytes, LocalDateTime uploadedAt, String fingerprint) {
-        this.id = id;
-        this.ownerUid = ownerUid;
-        this.storagePath = storagePath;
-        this.filename = filename;
+    private final String id;
+    private final String ownerUid;
+    private final String storagePath;
+    private final String filename;
+    private final long sizeBytes;
+    private final LocalDateTime uploadedAt;
+    private final String fingerprint;
+
+    public ReferenceMaterial(
+            String id,
+            String ownerUid,
+            String storagePath,
+            String filename,
+            long sizeBytes,
+            LocalDateTime uploadedAt,
+            String fingerprint
+    ) {
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.ownerUid = Objects.requireNonNull(ownerUid, "ownerUid cannot be null");
+        this.storagePath = Objects.requireNonNull(storagePath, "storagePath cannot be null");
+        this.filename = Objects.requireNonNull(filename, "filename cannot be null");
+        this.fingerprint = Objects.requireNonNull(fingerprint, "fingerprint cannot be null");
         this.sizeBytes = sizeBytes;
-        this.uploadedAt = uploadedAt;
-        this.fingerprint = fingerprint;
+        this.uploadedAt = uploadedAt == null ? LocalDateTime.now() : uploadedAt;
     }
 
-    // Getters and setters
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getOwnerUid() {
         return ownerUid;
     }
 
-    public void setOwnerUid(String ownerUid) {
-        this.ownerUid = ownerUid;
-    }
-
     public String getStoragePath() {
         return storagePath;
-    }
-
-    public void setStoragePath(String storagePath) {
-        this.storagePath = storagePath;
     }
 
     public String getFilename() {
         return filename;
     }
 
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
     public long getSizeBytes() {
         return sizeBytes;
-    }
-
-    public void setSizeBytes(long sizeBytes) {
-        this.sizeBytes = sizeBytes;
     }
 
     public LocalDateTime getUploadedAt() {
         return uploadedAt;
     }
 
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
-
     public String getFingerprint() {
         return fingerprint;
-    }
-
-    public void setFingerprint(String fingerprint) {
-        this.fingerprint = fingerprint;
     }
 }

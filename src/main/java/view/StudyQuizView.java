@@ -81,15 +81,16 @@ public class StudyQuizView extends View {
 
         // Initialize questions after UI components exist
         questions = List.of(
+                // NOTE: correctIndex is 0-based (0 -> Berlin, 1 -> Madrid, 2 -> Paris, 3 -> Rome)
                 new Question("0",
                         "What is the capital of France?",
                         List.of("Berlin", "Madrid", "Paris", "Rome"),
-                        "Paris",
+                        2, // <- index of "Paris"
                         "The capital of France is Paris."),
                 new Question("1",
                         "What is 2 + 2?",
                         List.of("3", "4", "5", "6"),
-                        "4",
+                        1, // <- index of "4"
                         "2 + 2 equals 4."));
         this.loadQuiz(questions);
     }

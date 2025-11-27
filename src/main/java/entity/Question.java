@@ -1,40 +1,42 @@
 package entity;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Simple Question model used for mapping Gemini response JSON.
- * Fields must match the response JSON structure used in data/gemini/responses/*.json
  */
 public class Question {
-    private String id;
-    private String text;
-    private List<String> options;
-    private String correctAnswer;
-    private String explanation;
 
-    public Question() {}
+    private final String id;
+    private final String questionText;
+    private final List<String> choices;
+    private final int correctIndex;
+    private final String explanation;
+    private boolean wasCorrect; // NEW: tracks if user answered correctly
 
-    public Question(String id, String text, List<String> options, String correctAnswer, String explanation) {
-        this.id = id;
-        this.text = text;
-        this.options = options;
-        this.correctAnswer = correctAnswer;
-        this.explanation = explanation;
+    public Question(String id, String questionText, List<String> choices, int correctIndex, String explanation) {
+        this.id = Objects.requireNonNull(id);
+        this.questionText = Objects.requireNonNull(questionText);
+        this.choices = choices == null ? Collections.emptyList() : List.copyOf(choices);
+        this.correctIndex = correctIndex;
+        this.explanation = explanation == null ? "" : explanation;
+        this.wasCorrect = false; // default
     }
 
     public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
 
-    public String getText() { return text; }
-    public void setText(String text) { this.text = text; }
+    public String getText() { return questionText; }
 
-    public List<String> getOptions() { return options; }
-    public void setOptions(List<String> options) { this.options = options; }
+    public List<String> getOptions() { return choices; }
 
-    public String getCorrectAnswer() { return correctAnswer; }
-    public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
+    public int getCorrectIndex() { return correctIndex; }
 
     public String getExplanation() { return explanation; }
-    public void setExplanation(String explanation) { this.explanation = explanation; }
+
+    // --- NEW ---
+    public boolean isWasCorrect() { return wasCorrect; }
+
+    public void setWasCorrect(boolean wasCorrect) { this.wasCorrect = wasCorrect; }
 }

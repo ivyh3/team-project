@@ -53,7 +53,8 @@ public class FirebaseStudyQuizDataAccessObject {
 			String documentId = result.get().getId();
 
 			return studyQuizFactory.create(
-					documentId,
+                    documentId,
+                    List.of(),
 					quiz.getScore(),
 					quiz.getStartTime(),
 					quiz.getEndTime());
@@ -80,6 +81,7 @@ public class FirebaseStudyQuizDataAccessObject {
 
 				return studyQuizFactory.create(
 						document.getId(),
+                        List.of(),
 						score,
 						LocalDateTime.parse(startTimeStr),
 						LocalDateTime.parse(endTimeStr));
@@ -110,6 +112,7 @@ public class FirebaseStudyQuizDataAccessObject {
 
 				StudyQuiz quiz = studyQuizFactory.create(
 						document.getId(),
+                        List.of(),
 						score,
 						LocalDateTime.parse(startTimeStr),
 						LocalDateTime.parse(endTimeStr));
@@ -148,6 +151,7 @@ public class FirebaseStudyQuizDataAccessObject {
 
 				StudyQuiz quiz = studyQuizFactory.create(
 						document.getId(),
+                        List.of(),
 						score,
 						LocalDateTime.parse(startTimeStr),
 						LocalDateTime.parse(endTimeStr));

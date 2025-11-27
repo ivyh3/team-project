@@ -1,7 +1,5 @@
 package use_case.upload_reference_material;
 
-
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,11 +7,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Interactor for the Upload Reference Material use case.
+ * Clean, SOLID-compliant, and strongly typed.
  */
 public class UploadReferenceMaterialInteractor implements UploadReferenceMaterialInputBoundary {
+
     private final ReferenceMaterialRepository materialRepository;
     private final StorageService storageService;
     private final UploadReferenceMaterialOutputBoundary outputBoundary;
@@ -26,68 +27,60 @@ public class UploadReferenceMaterialInteractor implements UploadReferenceMateria
         this.outputBoundary = Objects.requireNonNull(outputBoundary);
     }
 
-    // Backwards-compatible constructor that keeps previous simulated behaviour
-    public UploadReferenceMaterialInteractor(UploadReferenceMaterialOutputBoundary outputBoundary) {
-        this(null, null, outputBoundary);
-    }
-
     @Override
     public void execute(UploadReferenceMaterialInputData inputData) {
         try {
-            // Basic validation
             if (inputData == null || inputData.getFile() == null) {
-                // failure: invalid input -> return empty output (keeps compatibility with prior code)
-                UploadReferenceMaterialOutputData failureOutput = new UploadReferenceMaterialOutputData("", "");
-                outputBoundary.prepareSuccessView(failureOutput);
+                fail();
                 return;
             }
 
-            File content = inputData.getFile();
-            String filename = inputData.getFile().getName();
+            File file = inputData.getFile();
+            String filename = file.getName();
             String mimeType = inputData.getPrompt();
 
-            // 1. Compute fingerprint (SHA-256 hex)
-            String fingerprint = computeSha256Hex(content);
+            // 1. Compute fingerprint
+            String fingerprint = computeSha256Hex(file);
 
-            // 1a. Check for duplicates using repository if available
-            boolean isDuplicate = false;
-            if (materialRepository != null) {
-                ReferenceMaterial existing = materialRepository.findByFingerprint(fingerprint);
-                isDuplicate = existing != null;
-            }
+            // 2. Check for duplicates if repository exists
+            boolean isDuplicate = materialRepository != null &&
+                    materialRepository.findByFingerprint(fingerprint).isPresent();
 
             if (isDuplicate) {
-                // 5. Prepare failure view for duplicate (keeps old behaviour: empty fields on failure)
-                UploadReferenceMaterialOutputData failureOutput = new UploadReferenceMaterialOutputData("", "");
-                outputBoundary.prepareSuccessView(failureOutput);
+                fail();
                 return;
             }
 
-            // 2. Upload file to storage (if storageService provided) otherwise simulate path
-            String storagePath;
-            if (storageService != null) {
-                storagePath = storageService.upload(content, mimeType, filename);
-            } else {
-                // Simulated path for environments without StorageService configured
-                storagePath = "firebase://bucket/uploads/" + filename;
-            }
+            // 3. Upload file if storageService exists, otherwise simulate path
+            String storagePath = (storageService != null)
+                    ? storageService.upload(file, mimeType, filename)
+                    : "firebase://bucket/uploads/" + filename;
 
-            // 3. Create ReferenceMaterial entity with metadata
-            ReferenceMaterial material = new ReferenceMaterial(filename, storagePath, fingerprint, Instant.now());
+            // 4. Create ReferenceMaterial entity
+            ReferenceMaterial material = new ReferenceMaterial(
+                    filename,
+                    storagePath,
+                    fingerprint,
+                    Instant.now()
+            );
 
-            // 4. Save to repository if available (otherwise skip)
+            // 5. Save to repository if available
             if (materialRepository != null) {
                 materialRepository.save(material);
             }
 
-            // 5. Prepare success view
+            // 6. Prepare success output
             UploadReferenceMaterialOutputData outputData = new UploadReferenceMaterialOutputData(filename, storagePath);
             outputBoundary.prepareSuccessView(outputData);
+
         } catch (Exception e) {
-            // On unexpected error, return failure output consistent with prior code
-            UploadReferenceMaterialOutputData failureOutput = new UploadReferenceMaterialOutputData("", "");
-            outputBoundary.prepareSuccessView(failureOutput);
+            fail();
         }
+    }
+
+    private void fail() {
+        UploadReferenceMaterialOutputData failureOutput = new UploadReferenceMaterialOutputData("", "");
+        outputBoundary.prepareSuccessView(failureOutput);
     }
 
     private static String computeSha256Hex(File data) throws NoSuchAlgorithmException, IOException {
@@ -101,4 +94,3 @@ public class UploadReferenceMaterialInteractor implements UploadReferenceMateria
         return sb.toString();
     }
 }
-

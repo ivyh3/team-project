@@ -12,15 +12,16 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Service for Gemini API operations.
- * Handles AI-powered quiz generation using Google's Gemini API.
+ * Implements both GeminiQuizDataAccess and GeminiFileDataAccess.
+ * Handles AI-powered quiz generation and file management via Google's Gemini API.
  */
-public class GeminiDataAccessObject implements GeminiDataAccess {
+public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileDataAccess {
 
     private final String apiKey;
     private final String apiUrl;
     private final Gson gson;
     private final OkHttpClient client;
+
     private static final int MAX_RETRIES = 3;
     private static final int RETRY_DELAY_MS = 1000;
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -35,6 +36,7 @@ public class GeminiDataAccessObject implements GeminiDataAccess {
                 .build();
     }
 
+    @Override
     public List<Question> generateQuiz(String prompt, List<String> referenceMaterialTexts) throws GeminiApiException {
         String contextText = buildContext(referenceMaterialTexts);
         String fullPrompt = buildPrompt(prompt, contextText);
@@ -48,6 +50,94 @@ public class GeminiDataAccessObject implements GeminiDataAccess {
         return parseQuestions(response);
     }
 
+    public String uploadFileToGemini(byte[] fileContent, String mimeType, String displayName) throws GeminiApiException {
+        try {
+            String uploadUrl = "https://generativelanguage.googleapis.com/upload/v1beta/files?key=" + apiKey;
+
+            JsonObject metadata = new JsonObject();
+            JsonObject file = new JsonObject();
+            file.addProperty("display_name", displayName);
+            metadata.add("file", file);
+
+            String boundary = "----Boundary" + System.currentTimeMillis();
+            MultipartBody multipartBody = new MultipartBody.Builder(boundary)
+                    .setType(MultipartBody.FORM)
+                    .addPart(Headers.of("Content-Type", "application/json; charset=UTF-8"),
+                            RequestBody.create(gson.toJson(metadata), MediaType.parse("application/json")))
+                    .addPart(Headers.of("Content-Type", mimeType),
+                            RequestBody.create(fileContent, MediaType.parse(mimeType)))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(uploadUrl)
+                    .header("X-Goog-Upload-Protocol", "multipart")
+                    .post(multipartBody)
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new GeminiApiException("File upload failed: " + response.code() + " " + response.message());
+                }
+
+                String responseBody = response.body().string();
+                JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+                String fileUri = jsonResponse.getAsJsonObject("file").get("uri").getAsString();
+
+                scheduleFileDeletion(fileUri);
+
+                return fileUri;
+            }
+
+        } catch (IOException e) {
+            throw new GeminiApiException("Failed to upload file: " + e.getMessage(), e);
+        }
+    }
+
+    public void deleteFileFromGemini(String fileUri) throws GeminiApiException {
+        try {
+            String fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
+            String deleteUrl = "https://generativelanguage.googleapis.com/v1beta/files/" + fileName + "?key=" + apiKey;
+
+            Request request = new Request.Builder().url(deleteUrl).delete().build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful() && response.code() != 204) {
+                    throw new GeminiApiException("File deletion failed: " + response.code() + " " + response.message());
+                }
+            }
+
+        } catch (IOException e) {
+            throw new GeminiApiException("Failed to delete file: " + e.getMessage(), e);
+        }
+    }
+
+    public String generateText(String prompt) throws GeminiApiException {
+        return callGeminiApiWithRetry(prompt, null);
+    }
+
+    // ===========================
+    // Helper Methods
+    // ===========================
+
+    private String buildContext(List<String> referenceMaterialTexts) {
+        if (referenceMaterialTexts == null || referenceMaterialTexts.isEmpty()) return "No reference materials.";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < referenceMaterialTexts.size(); i++) {
+            sb.append("=== Reference Material ").append(i+1).append(" ===\n");
+            sb.append(referenceMaterialTexts.get(i)).append("\n\n");
+        }
+        return sb.toString();
+    }
+
+    private String buildPrompt(String userPrompt, String contextText) {
+        return "You are an AI tutor. Study Material:\n" + contextText + "\nUser Focus: " + userPrompt +
+                "\nGenerate 5 MCQs in JSON format only.";
+    }
+
+    private String buildPromptForFiles(String userPrompt) {
+        return "You are an AI tutor. Based on uploaded files, generate 5 MCQs in JSON format only.\nUser Focus: " + userPrompt;
+    }
+
     private String callGeminiApiWithRetry(String prompt, List<String> fileUris) throws GeminiApiException {
         IOException lastIo = null;
         for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -56,36 +146,24 @@ public class GeminiDataAccessObject implements GeminiDataAccess {
             } catch (IOException e) {
                 lastIo = e;
                 if (attempt < MAX_RETRIES - 1) {
-                    try {
-                        Thread.sleep(RETRY_DELAY_MS * (attempt + 1));
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw new GeminiApiException("Request interrupted", ie);
-                    }
+                    try { Thread.sleep(RETRY_DELAY_MS * (attempt + 1)); }
+                    catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new GeminiApiException("Interrupted", ie);}
                 }
             }
         }
-        throw new GeminiApiException("Failed after " + MAX_RETRIES + " attempts", lastIo);
+        throw new GeminiApiException("Failed after retries", lastIo);
     }
 
     private String callGeminiApi(String prompt, List<String> fileUris) throws IOException, GeminiApiException {
         JsonObject requestBody = buildRequestBody(prompt, fileUris);
         RequestBody body = RequestBody.create(gson.toJson(requestBody), JSON);
 
-        Request request = new Request.Builder()
-                .url(apiUrl + "?key=" + apiKey)
-                .post(body)
-                .build();
+        Request request = new Request.Builder().url(apiUrl + "?key=" + apiKey).post(body).build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new GeminiApiException("API returned error " + response.code() + ": " + response.message());
-            }
-            if (response.body() == null) {
-                throw new GeminiApiException("Response body is null");
-            }
-            String responseBody = response.body().string();
-            return extractTextFromResponse(responseBody);
+            if (!response.isSuccessful()) throw new GeminiApiException("API error " + response.code());
+            if (response.body() == null) throw new GeminiApiException("Response body null");
+            return extractTextFromResponse(response.body().string());
         }
     }
 
@@ -93,17 +171,16 @@ public class GeminiDataAccessObject implements GeminiDataAccess {
         JsonObject root = new JsonObject();
         root.add("contents", createContentJsonArray(prompt, fileUris));
 
-        JsonObject generationConfig = new JsonObject();
-        generationConfig.addProperty("temperature", 0.7);
-        generationConfig.addProperty("topK", 40);
-        generationConfig.addProperty("topP", 0.95);
-        generationConfig.addProperty("maxOutputTokens", 1024);
-        root.add("generationConfig", generationConfig);
-
+        JsonObject config = new JsonObject();
+        config.addProperty("temperature", 0.7);
+        config.addProperty("topK", 40);
+        config.addProperty("topP", 0.95);
+        config.addProperty("maxOutputTokens", 1024);
+        root.add("generationConfig", config);
         return root;
     }
 
-    private static JsonArray createContentJsonArray(String prompt, List<String> fileUris) {
+    private JsonArray createContentJsonArray(String prompt, List<String> fileUris) {
         JsonArray contents = new JsonArray();
         JsonObject content = new JsonObject();
         JsonArray parts = new JsonArray();
@@ -131,178 +208,55 @@ public class GeminiDataAccessObject implements GeminiDataAccess {
         try {
             JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
             JsonArray candidates = jsonResponse.getAsJsonArray("candidates");
-            if (candidates == null || candidates.size() == 0) {
-                throw new GeminiApiException("No candidates in response");
-            }
             JsonObject firstCandidate = candidates.get(0).getAsJsonObject();
             JsonArray parts = firstCandidate.getAsJsonObject("content").getAsJsonArray("parts");
-            if (parts == null || parts.size() == 0) {
-                throw new GeminiApiException("No parts in response");
-            }
             return parts.get(0).getAsJsonObject().get("text").getAsString();
         } catch (Exception e) {
-            throw new GeminiApiException("Failed to parse response: " + e.getMessage(), e);
+            throw new GeminiApiException("Failed to parse response", e);
         }
     }
 
     private List<Question> parseQuestions(String responseText) throws GeminiApiException {
         try {
-            String jsonText = extractJsonFromText(responseText);
-            JsonArray questionsArray = JsonParser.parseString(jsonText).getAsJsonArray();
+            String jsonText = responseText.trim();
+            if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7);
+            else if (jsonText.startsWith("```")) jsonText = jsonText.substring(3);
+            if (jsonText.endsWith("```")) jsonText = jsonText.substring(0, jsonText.length()-3);
+
+            JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
             List<Question> questions = new ArrayList<>();
-            for (int i = 0; i < questionsArray.size(); i++) {
-                JsonObject questionObj = questionsArray.get(i).getAsJsonObject();
-                String questionText = questionObj.get("question").getAsString();
-                JsonArray optionsArray = questionObj.getAsJsonArray("options");
-                int correctIndex = questionObj.get("correctIndex").getAsInt();
-                String explanation = questionObj.has("explanation") ? questionObj.get("explanation").getAsString() : "";
+            for (JsonElement el : arr) {
+                JsonObject obj = el.getAsJsonObject();
+                String qText = obj.get("question").getAsString();
+                JsonArray optionsArr = obj.getAsJsonArray("options");
+                int correctIndex = obj.get("correctIndex").getAsInt();
                 List<String> options = new ArrayList<>();
-                for (int j = 0; j < optionsArray.size(); j++) {
-                    options.add(optionsArray.get(j).getAsString());
-                }
-                String correctAnswer = options.get(correctIndex);
-                questions.add(new Question(UUID.randomUUID().toString(), questionText, options, correctAnswer, explanation));
+                for (JsonElement opt : optionsArr) options.add(opt.getAsString());
+                questions.add(new Question(UUID.randomUUID().toString(), qText, options, correctIndex, ""));
             }
             return questions;
         } catch (Exception e) {
-            throw new GeminiApiException("Failed to parse questions: " + e.getMessage() + "\nResponse: " + responseText, e);
-        }
-    }
-
-    private String extractJsonFromText(String text) {
-        text = text.trim();
-        if (text.startsWith("```json")) text = text.substring(7);
-        else if (text.startsWith("```")) text = text.substring(3);
-        if (text.endsWith("```")) text = text.substring(0, text.length() - 3);
-        return text.trim();
-    }
-
-    private String buildContext(List<String> referenceMaterialTexts) {
-        if (referenceMaterialTexts == null || referenceMaterialTexts.isEmpty()) return "No reference materials provided.";
-        StringBuilder context = new StringBuilder();
-        for (int i = 0; i < referenceMaterialTexts.size(); i++) {
-            context.append("=== Reference Material ").append(i + 1).append(" ===\n");
-            context.append(referenceMaterialTexts.get(i)).append("\n\n");
-        }
-        return context.toString();
-    }
-
-    private String buildPrompt(String userPrompt, String contextText) {
-        return "You are an AI tutor helping students study. Based on the study material provided below, generate a quiz with 5 multiple choice questions.\n\n" +
-                "Study Material:\n" + contextText + "\n" +
-                "User's Focus: " + userPrompt + "\n\n" +
-                "IMPORTANT: Return ONLY a valid JSON array with this exact format:\n" +
-                "[ { \"question\": \"Question text here?\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 0, \"explanation\": \"Explanation\" } ]\n" +
-                "Rules:\n- Generate exactly 5 questions\n- Each question must have 4 options\n- correctIndex is 0-based\n- Provide clear explanations\n- Focus on the user's specified topic\n- Return ONLY the JSON array, no other text";
-    }
-
-    private String buildPromptForFiles(String userPrompt) {
-        return "You are an AI tutor helping students study. Based on the uploaded files, generate a quiz with 5 multiple choice questions.\n\n" +
-                "User's Focus: " + userPrompt + "\n\n" +
-                "IMPORTANT: Return ONLY a valid JSON array with this exact format:\n" +
-                "[ { \"question\": \"Question text here?\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"correctIndex\": 0, \"explanation\": \"Explanation\" } ]\n" +
-                "Rules:\n- Generate exactly 5 questions\n- Each question must have 4 options\n- correctIndex is 0-based\n- Provide clear explanations\n- Focus on the user's specified topic\n- Return ONLY the JSON array, no other text";
-    }
-
-    public String uploadFileToGemini(byte[] fileContent, String mimeType, String displayName)
-            throws GeminiApiException {
-        try {
-            String uploadUrl = "https://generativelanguage.googleapis.com/upload/v1beta/files?key=" + apiKey;
-
-            JsonObject metadata = new JsonObject();
-            JsonObject file = new JsonObject();
-            file.addProperty("display_name", displayName);
-            metadata.add("file", file);
-
-            String boundary = "----Boundary" + System.currentTimeMillis();
-            MultipartBody multipartBody = new MultipartBody.Builder(boundary)
-                    .setType(MultipartBody.FORM)
-                    .addPart(Headers.of("Content-Type", "application/json; charset=UTF-8"),
-                            RequestBody.create(gson.toJson(metadata), MediaType.parse("application/json")))
-                    .addPart(Headers.of("Content-Type", mimeType),
-                            RequestBody.create(fileContent, MediaType.parse(mimeType)))
-                    .build();
-
-            Request request = new Request.Builder()
-                    .url(uploadUrl)
-                    .header("X-Goog-Upload-Protocol", "multipart")
-                    .post(multipartBody)
-                    .build();
-
-            OkHttpClient uploadClient = client.newBuilder()
-                    .readTimeout(120, TimeUnit.SECONDS)
-                    .build();
-
-            try (Response response = uploadClient.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new GeminiApiException("File upload failed: " + response.code() + " " + response.message());
-                }
-
-                assert response.body() != null;
-                String responseBody = response.body().string();
-                JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
-                JsonObject fileObj = jsonResponse.getAsJsonObject("file");
-                String fileUri = fileObj.get("uri").getAsString();
-
-                scheduleFileDeletion(fileUri);
-
-                return fileUri;
-            }
-
-        } catch (IOException e) {
-            throw new GeminiApiException("Failed to upload file to Gemini: " + e.getMessage(), e);
+            throw new GeminiApiException("Failed to parse questions", e);
         }
     }
 
     private void scheduleFileDeletion(String fileUri) {
         Thread deletionThread = new Thread(() -> {
             try {
-                Thread.sleep(3600 * 1000L);
+                Thread.sleep(3600 * 1000L); // 1 hour delay
                 deleteFileFromGemini(fileUri);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (GeminiApiException e) {
-                System.err.println("Failed to delete Gemini file " + fileUri + ": " + e.getMessage());
+                System.err.println("Failed to delete file: " + e.getMessage());
             }
         });
         deletionThread.setDaemon(true);
         deletionThread.start();
     }
 
-    public void deleteFileFromGemini(String fileUri) throws GeminiApiException {
-        try {
-            String fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
-            String deleteUrl = "https://generativelanguage.googleapis.com/v1beta/files/" + fileName + "?key="
-                    + apiKey;
-
-            Request request = new Request.Builder()
-                    .url(deleteUrl)
-                    .delete()
-                    .build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful() && response.code() != 204) {
-                    throw new GeminiApiException(
-                            "File deletion failed: " + response.code() + " " + response.message());
-                }
-            }
-
-        } catch (IOException e) {
-            throw new GeminiApiException("Failed to delete file from Gemini: " + e.getMessage(), e);
-        }
-    }
-
     public static class GeminiApiException extends Exception {
-        public GeminiApiException(String message) {
-            super(message);
-        }
-        public GeminiApiException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    @Override
-    public String generateText(String prompt) throws Exception {
-        return callGeminiApiWithRetry(prompt, null);
+        public GeminiApiException(String msg) { super(msg); }
+        public GeminiApiException(String msg, Throwable cause) { super(msg, cause); }
     }
 }

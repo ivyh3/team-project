@@ -15,83 +15,66 @@ public class StudyQuiz {
     private LocalDateTime endTime;
     private Duration duration;
 
-    public StudyQuiz(String id, float score, LocalDateTime startTime, LocalDateTime endTime) {
+    public StudyQuiz(String id, List<Question> questions, float score, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
+        this.questions = questions;
         this.score = score;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.duration = Duration.between(startTime, endTime);
+        this.duration = (startTime != null && endTime != null) ? Duration.between(startTime, endTime) : null;
     }
 
-    // Getters and setters
+    // Getters
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public List<Question> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(List<Question> questions) {
-        this.questions = questions;
-    }
-
     public float getScore() {
         return score;
-    }
-
-    public void setScore(float score) {
-        this.score = score;
     }
 
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
     public LocalDateTime getEndTime() {
         return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
     }
 
     public Duration getDuration() {
         return duration;
     }
 
-    public void setDuration(Duration duration) {
-        this.duration = duration;
+    // Setters (for database / ID assignment)
+    public void setId(String id) {
+        this.id = id;
     }
 
-    @Override
-    public String toString() {
-        return "StudyQuiz{" +
-                "id='" + id + '\'' +
-                ", questions=" + questions +
-                ", score=" + score +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+    public void setQuestions(List<Question> questions) {
+        this.questions = questions;
     }
 
-    // public void calculateScore() {
-    // if (questions == null || questions.isEmpty()) {
-    // this.score = 0.0f;
-    // return;
-    // }
+    public void setScore(float score) {
+        this.score = score;
+    }
 
-    // long correctCount =
-    // questions.stream().filter(Question::isWasCorrect).count();
-    // this.score = (float) correctCount / questions.size() * 100;
-    // }
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+        recalcDuration();
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+        recalcDuration();
+    }
+
+    private void recalcDuration() {
+        if (startTime != null && endTime != null) {
+            this.duration = Duration.between(startTime, endTime);
+        }
+    }
 }

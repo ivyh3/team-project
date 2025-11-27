@@ -1,55 +1,53 @@
 package service.impl;
 
+import okhttp3.*;
 import service.GeminiService;
+import service.GeminiServiceException;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * HTTP implementation of GeminiService using OkHttp.
+ * Uses constructor injection for API key and URL (SOLID principle).
+ */
 public class GeminiServiceHttp implements GeminiService {
-    private final HttpClient client;
-    private final String endpoint;
-    private final String apiKey;
 
-    public GeminiServiceHttp(String endpoint, String apiKey) {
-        this.client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
-        this.endpoint = endpoint;
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+    private final String apiKey;
+    private final String apiUrl;
+    private final OkHttpClient client;
+
+    public GeminiServiceHttp(String apiKey, String apiUrl) {
         this.apiKey = apiKey;
+        this.apiUrl = apiUrl;
+        this.client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build();
     }
 
     @Override
-    public String generateText(String prompt) throws Exception {
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("Gemini API key not configured (GEMINI_API_KEY)");
-        }
-        String json = "{\"prompt\": " + toJsonString(prompt) + "}";
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .timeout(Duration.ofSeconds(30))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(json))
+    public String generateText(String prompt) throws GeminiServiceException {
+        RequestBody body = RequestBody.create(prompt, JSON);
+
+        Request request = new Request.Builder()
+                .url(apiUrl + "?key=" + apiKey)
+                .post(body)
                 .build();
 
-        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-        int status = resp.statusCode();
-        if (status < 200 || status >= 300) {
-            throw new RuntimeException("Gemini API returned status " + status + ": " + resp.body());
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new GeminiServiceException(
+                        "Gemini API error: " + response.code() + " " + response.message());
+            }
+            if (response.body() == null) {
+                throw new GeminiServiceException("Gemini API returned empty body");
+            }
+            return response.body().string();
+        } catch (IOException e) {
+            throw new GeminiServiceException("Failed to call Gemini API", e);
         }
-        return resp.body();
-    }
-
-    private static String toJsonString(String s) {
-        if (s == null) return "null";
-        return "\"" + s
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                + "\"";
     }
 }

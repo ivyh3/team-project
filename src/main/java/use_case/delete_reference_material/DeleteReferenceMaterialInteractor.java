@@ -4,6 +4,8 @@ import repository.ReferenceMaterialRepository;
 import frameworks_drivers.storage.StorageService;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Interactor for the Delete Reference Material use case.
@@ -17,11 +19,11 @@ public class DeleteReferenceMaterialInteractor implements DeleteReferenceMateria
             ReferenceMaterialRepository materialRepository,
             StorageService storageService,
             DeleteReferenceMaterialOutputBoundary outputBoundary) {
-        this.materialRepository = materialRepository;
-        this.storageService = storageService;
-        this.outputBoundary = outputBoundary;
+        this.materialRepository = Objects.requireNonNull(materialRepository);
+        this.storageService = Objects.requireNonNull(storageService);
+        this.outputBoundary = Objects.requireNonNull(outputBoundary);
     }
-    
+
     @Override
     public void execute(DeleteReferenceMaterialInputData inputData) {
         if (inputData == null) {
@@ -43,25 +45,20 @@ public class DeleteReferenceMaterialInteractor implements DeleteReferenceMateria
         String userId = inputData.getUserId();
 
         try {
-            // Ensure each material exists
-            for (String materialId : materialIds) {
-                var material = materialRepository.getById(userId, materialId);
-                if (material == null) {
-                    outputBoundary.prepareFailView("Material not found: " + materialId);
-                    return;
-                }
+            // Validate all materials exist
+            List<String> missingMaterials = materialIds.stream()
+                    .filter(id -> materialRepository.getById(userId, id) == null)
+                    .collect(Collectors.toList());
+
+            if (!missingMaterials.isEmpty()) {
+                outputBoundary.prepareFailView("Materials not found: " + missingMaterials);
+                return;
             }
 
-            // Delete files from storage and then delete metadata
+            // Delete files and metadata
             for (String materialId : materialIds) {
-                String filePath = "reference_materials/" + materialId + ".pdf";
-                String thumbnailPath = "reference_materials/thumbnails/" + materialId + ".png";
-
-                // StorageService may throw; let it be handled by catch below
-                storageService.deleteFile(filePath);
-                storageService.deleteFile(thumbnailPath);
-
-                // Remove metadata (adapter may return boolean or void; assume void or may throw)
+                storageService.deleteFile(getFilePath(materialId));
+                storageService.deleteFile(getThumbnailPath(materialId));
                 materialRepository.delete(userId, materialId);
             }
 
@@ -70,5 +67,13 @@ public class DeleteReferenceMaterialInteractor implements DeleteReferenceMateria
         } catch (Exception e) {
             outputBoundary.prepareFailView("Failed to delete material: " + e.getMessage());
         }
+    }
+
+    private String getFilePath(String materialId) {
+        return "reference_materials/" + materialId + ".pdf";
+    }
+
+    private String getThumbnailPath(String materialId) {
+        return "reference_materials/thumbnails/" + materialId + ".png";
     }
 }
