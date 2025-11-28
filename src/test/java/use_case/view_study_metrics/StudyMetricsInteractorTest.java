@@ -38,14 +38,9 @@
          LocalDateTime Sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
          List<StudySession> testSessions = new ArrayList<>();
 
-         // sunday
          testSessions.add(createTestSession("s1", Sunday.plusDays(0), Sunday.plusDays(0).plusMinutes(30)));
          testSessions.add(createTestSession("s2", Sunday.plusDays(0), Sunday.plusDays(0).plusMinutes(30)));
-
-         // monday
          testSessions.add(createTestSession("s3", Sunday.plusDays(1), Sunday.plusDays(1).plusMinutes(90)));
-
-         // tuesday
          testSessions.add(createTestSession("s4", Sunday.plusDays(2), Sunday.plusDays(2).plusMinutes(120)));
 
          when(metricsDAO.getSessionsPerWeek(user.getUserId(), Sunday))
@@ -67,7 +62,6 @@
          assertEquals(Duration.ofMinutes(90), dailyDurations.get(DayOfWeek.MONDAY));
          assertEquals(Duration.ofMinutes(120), dailyDurations.get(DayOfWeek.TUESDAY));
          assertNull(dailyDurations.get(DayOfWeek.WEDNESDAY));
-
      }
 
      void dailyStudyDurationsEmptyTest() {
@@ -77,22 +71,19 @@
      @Test
      // check average scores make sense when there are multiple quizzes in a day
      void averageQuizScoresMultipleQuizzesTest() {
-         LocalDateTime Sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
+         LocalDateTime sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
          List<StudyQuiz> testQuizzes = new ArrayList<>();
 
-         // sunday: average 85%
-         testQuizzes.add(createTestQuiz("q1", 0.8f, Sunday.plusDays(0), Sunday.plusDays(0)));
-         testQuizzes.add(createTestQuiz("q2", 0.9f, Sunday.plusDays(0), Sunday.plusDays(0)));
+         testQuizzes.add(createTestQuiz("q1", 0.8f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(createTestQuiz("q2", 0.9f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(createTestQuiz("q3", 0.7f, sunday.plusDays(1), sunday.plusDays(1)));
 
-         // monday: average 70%
-         testQuizzes.add(createTestQuiz("q3", 0.7f, Sunday.plusDays(1), Sunday.plusDays(1)));
-
-         when(metricsDAO.getSessionsPerWeek(user.getUserId(), Sunday))
-                 .thenReturn(new ArrayList<>()); // Empty sessions for this test
-         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), Sunday))
+         when(metricsDAO.getSessionsPerWeek(user.getUserId(), sunday))
+                 .thenReturn(new ArrayList<>());
+         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), sunday))
                  .thenReturn(testQuizzes);
 
-         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), Sunday);
+         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), sunday);
          interactor.execute(inputData);
 
          ArgumentCaptor<ViewStudyMetricsOutputData> captor =

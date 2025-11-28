@@ -65,14 +65,11 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         main = new JPanel();
         main.setLayout(new BorderLayout());
 
-        // Create initial chart with data from viewModel
         updateChart();
 
         JPanel returnPanel = new JPanel();
         JButton returnButton = new JButton("Return");
-        returnButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("dashboard");
-        });
+        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
         returnPanel.add(returnButton);
 
         main.add(returnPanel, BorderLayout.SOUTH);
@@ -107,12 +104,11 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
     }
 
     private void updateChart() {
-        // Remove old chart if it exists
         if (chartPanel != null) {
             main.remove(chartPanel);
         }
 
-        // Study duration (left axis)
+        // study durations
         DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
 
         Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
@@ -137,10 +133,11 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
         leftRenderer.setSeriesShapesVisible(0, true);
-        leftRenderer.setSeriesPaint(0, Color.RED);
+        leftRenderer.setSeriesPaint(0, new Color(1.0f, 0.0f, 0.0f, 0.5f));
+        leftRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
         plot.setRenderer(0, leftRenderer);
 
-        // Quiz score (right axis)
+        // quiz scores
         DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
 
         Map<DayOfWeek, Float> quizScores = viewModel.getAverageQuizScores();
@@ -155,7 +152,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         plot.mapDatasetToRangeAxis(1, 1);
         LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
         rightRenderer.setSeriesShapesVisible(0, true);
-        rightRenderer.setSeriesPaint(0, Color.BLUE);
+        rightRenderer.setSeriesPaint(0, new Color(0.0f, 0.0f, 1.0f, 0.5f));
+        rightRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
         plot.setRenderer(1, rightRenderer);
 
         chartPanel = new ChartPanel(chart);

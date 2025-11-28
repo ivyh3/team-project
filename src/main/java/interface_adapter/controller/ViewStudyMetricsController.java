@@ -22,7 +22,7 @@ public class ViewStudyMetricsController {
 //     * @param userId the user
      * @param week the time filter (e.g., "week", "month", "all")
      */
-    public void execute(LocalDateTime week) { // TODO: note: userid taken out bc i guess we should get the id here?
+    public void execute(LocalDateTime week) {
         String userId = dashboardViewModel.getState().getUserId();
         System.out.println("User: " + userId);
         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(userId, week);

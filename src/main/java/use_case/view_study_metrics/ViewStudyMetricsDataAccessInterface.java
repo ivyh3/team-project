@@ -11,7 +11,7 @@ public interface ViewStudyMetricsDataAccessInterface {
     /**
      * gets the sessions for a user.
      *
-     * @param userId     the user to look for
+     * @param userId     the user id to look for
      * @param week     the Sunday of the week desired
      * @return List<StudySession>
      */
@@ -20,7 +20,7 @@ public interface ViewStudyMetricsDataAccessInterface {
     /**
      * gets the quizzes for a user.
      *
-     * @param userId     the user to look for
+     * @param userId     the user id to look for
      * @param week     the Sunday of the week desired
      * @return List<StudyQuiz>
      */

@@ -14,8 +14,6 @@ import java.util.Map;
  */
 public class MetricsViewModel {
 	private final PropertyChangeSupport support;
-	
-	private Duration averageWeeklyStudyTime;
 	private Map<DayOfWeek, Duration> dailyStudyDurations;
 	private Map<DayOfWeek, Float> averageQuizScores;
 
@@ -24,7 +22,6 @@ public class MetricsViewModel {
 	
 	public MetricsViewModel() {
 		this.support = new PropertyChangeSupport(this);
-		this.averageWeeklyStudyTime = Duration.ZERO;
 		this.averageQuizScores = new HashMap<>();
 		this.dailyStudyDurations = new HashMap<>();
 		this.startDate = null;
@@ -38,18 +35,7 @@ public class MetricsViewModel {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		support.removePropertyChangeListener(listener);
 	}
-	
-//	public Duration getAverageWeeklyStudyTime() {
-//		return averageWeeklyStudyTime;
-//	}
-//
-//	public void setAverageWeeklyStudyTime(Duration averageWeeklyStudyTime) {
-//		Duration oldValue = this.averageWeeklyStudyTime;
-//		this.averageWeeklyStudyTime = averageWeeklyStudyTime;
-//		support.firePropertyChange("averageWeeklyStudyTime", oldValue, averageWeeklyStudyTime);
-//	}
 
-	
 	public Map<DayOfWeek, Duration> getDailyStudyDurations() {
 		return new HashMap<>(dailyStudyDurations);
 	}

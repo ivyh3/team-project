@@ -53,13 +53,7 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         for (DayOfWeek day : sumMap.keySet()) {
             averageQuizScores.put(day, sumMap.get(day) / countMap.get(day));
         }
-
-        // calculate average weekly study time (unused)
-        long times = 0;
-        for (Duration value: dailyStudyDurations.values()) {
-            times += value.toMinutes();
-        }
-        Duration averageWeeklyStudyTime = Duration.ofMinutes(times / 7);
+        System.out.println(averageQuizScores); // debugging
 
         // get the startDate for the graph
         LocalDateTime startDate = week;
@@ -67,7 +61,6 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         ViewStudyMetricsOutputData outputData = new ViewStudyMetricsOutputData(
                 dailyStudyDurations,
                 averageQuizScores,
-                averageWeeklyStudyTime,
                 startDate
         );
 
