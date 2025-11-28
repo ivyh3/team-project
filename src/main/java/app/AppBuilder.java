@@ -10,20 +10,20 @@ import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
+import frameworks_drivers.gemini.GeminiQuizDataAccess;
 import interface_adapter.controller.ChangePasswordController;
-import interface_adapter.presenter.ChangePasswordPresenter;
+import interface_adapter.presenter.*;
 import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.controller.LoginController;
-import interface_adapter.presenter.LoginPresenter;
 import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.controller.LogoutController;
-import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.controller.SignupController;
-import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.view_model.SignupViewModel;
+import repository.QuestionDataAccess;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -41,14 +41,11 @@ import view.InitialView;
 
 import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.presenter.StartStudySessionPresenter;
-import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
 import use_case.end_study_session.EndStudySessionInteractor;
 import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
-import interface_adapter.presenter.ViewStudyMetricsPresenter;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 
 //import interface_adapter.repository.StudySessionRepository;
@@ -271,8 +268,15 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        StudyQuizView studyQuizView = new StudyQuizView();
+        // 1. Create the ViewModel
+        QuizViewModel quizViewModel = new QuizViewModel();
+
+        // 2. Create the View, passing in the ViewModel
+        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
+
+        // 3. Add to the card panel
         cardPanel.add(studyQuizView, studyQuizView.getViewName());
+
         return this;
     }
 

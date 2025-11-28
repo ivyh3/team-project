@@ -1,155 +1,163 @@
 package interface_adapter.view_model;
 
+import entity.Question;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * ViewModel for the Quiz view.
- * Stores the state and data that the quiz view needs to display.
+ * ViewModel for Study Quiz.
+ * Exposes all quiz state to the View and notifies observers on change.
+ * Presenter can update the ViewModel via public setters.
  */
 public class QuizViewModel {
-    private final PropertyChangeSupport support;
 
-    private String currentQuestion;
-    private List<String> currentOptions;
-    private int currentQuestionNumber;
-    private int totalQuestions;
-    private String explanation;
-    private String scoreDisplay;
-    private boolean quizComplete;
-    private boolean showingExplanation;
-    private String errorMessage;
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    public QuizViewModel() {
-        this.support = new PropertyChangeSupport(this);
-        this.currentQuestion = "";
-        this.currentOptions = new ArrayList<>();
-        this.currentQuestionNumber = 0;
-        this.totalQuestions = 0;
-        this.explanation = "";
-        this.scoreDisplay = "0/0";
-        this.quizComplete = false;
-        this.showingExplanation = false;
-        this.errorMessage = "";
-    }
+    private String currentQuestion = "";
+    private List<String> currentOptions = new ArrayList<>();
+    private String explanation = "";
+    private String scoreDisplay = "0/0";
+    private boolean submitEnabled = true;
+    private boolean nextEnabled = false;
+    private boolean quizComplete = false;
 
+    private int selectedAnswer = -1;
+    private int currentQuestionIndex = 0;
+    private int totalQuestions = 0;
+    private int score = 0;
+
+    private List<Question> questions = new ArrayList<>();
+
+    // --- PropertyChangeListener support ---
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-        support.addPropertyChangeListener(listener);
+        pcs.addPropertyChangeListener(listener);
     }
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        support.removePropertyChangeListener(listener);
+        pcs.removePropertyChangeListener(listener);
     }
 
-    public String getCurrentQuestion() {
-        return currentQuestion;
-    }
-
+    // --- Public setters for Presenter ---
     public void setCurrentQuestion(String currentQuestion) {
-        if (!Objects.equals(this.currentQuestion, currentQuestion)) {
-            String oldValue = this.currentQuestion;
-            this.currentQuestion = currentQuestion;
-            support.firePropertyChange("currentQuestion", oldValue, currentQuestion);
-        }
-    }
-
-    public List<String> getCurrentOptions() {
-        return new ArrayList<>(currentOptions);
+        String old = this.currentQuestion;
+        this.currentQuestion = currentQuestion != null ? currentQuestion : "";
+        pcs.firePropertyChange("currentQuestion", old, this.currentQuestion);
     }
 
     public void setCurrentOptions(List<String> currentOptions) {
-        List<String> safeOptions = (currentOptions != null) ? new ArrayList<>(currentOptions) : new ArrayList<>();
-        if (!safeOptions.equals(this.currentOptions)) {
-            List<String> oldValue = this.currentOptions;
-            this.currentOptions = safeOptions;
-            support.firePropertyChange("currentOptions", oldValue, this.currentOptions);
-        }
-    }
-
-    public int getCurrentQuestionNumber() {
-        return currentQuestionNumber;
-    }
-
-    public void setCurrentQuestionNumber(int currentQuestionNumber) {
-        if (this.currentQuestionNumber != currentQuestionNumber) {
-            int oldValue = this.currentQuestionNumber;
-            this.currentQuestionNumber = currentQuestionNumber;
-            support.firePropertyChange("currentQuestionNumber", oldValue, currentQuestionNumber);
-        }
-    }
-
-    public int getTotalQuestions() {
-        return totalQuestions;
-    }
-
-    public void setTotalQuestions(int totalQuestions) {
-        if (this.totalQuestions != totalQuestions) {
-            int oldValue = this.totalQuestions;
-            this.totalQuestions = totalQuestions;
-            support.firePropertyChange("totalQuestions", oldValue, totalQuestions);
-        }
-    }
-
-    public String getExplanation() {
-        return explanation;
+        List<String> old = this.currentOptions;
+        this.currentOptions = currentOptions != null ? currentOptions : new ArrayList<>();
+        pcs.firePropertyChange("currentOptions", old, this.currentOptions);
     }
 
     public void setExplanation(String explanation) {
-        if (!Objects.equals(this.explanation, explanation)) {
-            String oldValue = this.explanation;
-            this.explanation = explanation;
-            support.firePropertyChange("explanation", oldValue, explanation);
-        }
-    }
-
-    public String getScoreDisplay() {
-        return scoreDisplay;
+        String old = this.explanation;
+        this.explanation = explanation != null ? explanation : "";
+        pcs.firePropertyChange("explanation", old, this.explanation);
     }
 
     public void setScoreDisplay(String scoreDisplay) {
-        if (!Objects.equals(this.scoreDisplay, scoreDisplay)) {
-            String oldValue = this.scoreDisplay;
-            this.scoreDisplay = scoreDisplay;
-            support.firePropertyChange("scoreDisplay", oldValue, scoreDisplay);
-        }
+        String old = this.scoreDisplay;
+        this.scoreDisplay = scoreDisplay != null ? scoreDisplay : "0/0";
+        pcs.firePropertyChange("scoreDisplay", old, this.scoreDisplay);
     }
 
-    public boolean isQuizComplete() {
-        return quizComplete;
+    public void setSubmitEnabled(boolean submitEnabled) {
+        boolean old = this.submitEnabled;
+        this.submitEnabled = submitEnabled;
+        pcs.firePropertyChange("submitEnabled", old, submitEnabled);
+    }
+
+    public void setNextEnabled(boolean nextEnabled) {
+        boolean old = this.nextEnabled;
+        this.nextEnabled = nextEnabled;
+        pcs.firePropertyChange("nextEnabled", old, nextEnabled);
     }
 
     public void setQuizComplete(boolean quizComplete) {
-        if (this.quizComplete != quizComplete) {
-            boolean oldValue = this.quizComplete;
-            this.quizComplete = quizComplete;
-            support.firePropertyChange("quizComplete", oldValue, quizComplete);
+        boolean old = this.quizComplete;
+        this.quizComplete = quizComplete;
+        pcs.firePropertyChange("quizComplete", old, quizComplete);
+        setSubmitEnabled(!quizComplete);
+        setNextEnabled(!quizComplete);
+    }
+
+    public void setQuestions(List<Question> questions) {
+        this.questions = questions != null ? questions : new ArrayList<>();
+        this.totalQuestions = this.questions.size();
+        this.currentQuestionIndex = 0;
+        this.score = 0;
+
+        if (!this.questions.isEmpty()) {
+            updateCurrentQuestion();
+        }
+
+        setScoreDisplay(score + "/" + totalQuestions);
+        setSubmitEnabled(true);
+        setNextEnabled(false);
+    }
+
+    // --- Internal logic ---
+    private void updateCurrentQuestion() {
+        if (currentQuestionIndex < questions.size()) {
+            Question q = questions.get(currentQuestionIndex);
+            setCurrentQuestion(q.getText());
+            setCurrentOptions(q.getOptions());
+            setExplanation("");
+            setSubmitEnabled(true);
+            setNextEnabled(false);
+        } else {
+            setQuizComplete(true);
         }
     }
 
-    public boolean isShowingExplanation() {
-        return showingExplanation;
+    // --- Selected answer ---
+    public int getSelectedAnswer() {
+        return selectedAnswer;
     }
 
-    public void setShowingExplanation(boolean showingExplanation) {
-        if (this.showingExplanation != showingExplanation) {
-            boolean oldValue = this.showingExplanation;
-            this.showingExplanation = showingExplanation;
-            support.firePropertyChange("showingExplanation", oldValue, showingExplanation);
+    public void setSelectedAnswer(int selectedAnswer) {
+        int old = this.selectedAnswer;
+        this.selectedAnswer = selectedAnswer;
+        pcs.firePropertyChange("selectedAnswer", old, selectedAnswer);
+    }
+
+    // --- Submission / scoring ---
+    public void submitAnswer() {
+        if (currentQuestionIndex >= questions.size() || selectedAnswer < 0) return;
+
+        Question current = questions.get(currentQuestionIndex);
+        if (selectedAnswer == current.getCorrectIndex()) score++;
+
+        setExplanation(current.getExplanation());
+        setScoreDisplay(score + "/" + totalQuestions);
+
+        setSubmitEnabled(false);
+        setNextEnabled(true);
+    }
+
+    public void nextQuestion() {
+        if (currentQuestionIndex < questions.size() - 1) {
+            currentQuestionIndex++;
+            selectedAnswer = -1;
+            updateCurrentQuestion();
+        } else {
+            setQuizComplete(true);
         }
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        if (!Objects.equals(this.errorMessage, errorMessage)) {
-            String oldValue = this.errorMessage;
-            this.errorMessage = errorMessage;
-            support.firePropertyChange("errorMessage", oldValue, errorMessage);
-        }
-    }
+    // --- Getters for View ---
+    public String getCurrentQuestion() { return currentQuestion; }
+    public List<String> getCurrentOptions() { return currentOptions; }
+    public String getExplanation() { return explanation; }
+    public String getScoreDisplay() { return scoreDisplay; }
+    public boolean isSubmitEnabled() { return submitEnabled; }
+    public boolean isNextEnabled() { return nextEnabled; }
+    public boolean isQuizComplete() { return quizComplete; }
+    public int getCurrentQuestionIndex() { return currentQuestionIndex; }
+    public int getTotalQuestions() { return totalQuestions; }
+    public int getScore() { return score; }
 }

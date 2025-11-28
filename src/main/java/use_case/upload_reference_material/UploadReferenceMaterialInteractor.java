@@ -37,7 +37,7 @@ public class UploadReferenceMaterialInteractor implements UploadReferenceMateria
 
             File file = inputData.getFile();
             String filename = file.getName();
-            String mimeType = inputData.getPrompt();
+            String mimeType = inputData.getMimeType();
 
             // 1. Compute fingerprint
             String fingerprint = computeSha256Hex(file);

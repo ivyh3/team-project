@@ -1,32 +1,37 @@
 package view;
 
-import app.AppBuilder;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class UploadSessionMaterialsView extends View {
+
+    private final JButton cancelButton;
+    private final JButton nextButton;
+
     public UploadSessionMaterialsView() {
         super("uploadSessionMaterials");
+
         JPanel header = new ViewHeader("Study Materials");
 
-        JPanel main = new JPanel();
+        cancelButton = new JButton("Cancel");
+        nextButton = new JButton("Next");
 
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("dashboard");
-        });
-
-        JButton nextButton = new JButton("Next");
-        nextButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("variableSession");
-        });
-        main.add(cancelButton);
-        main.add(nextButton);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(nextButton);
 
         this.add(header, BorderLayout.NORTH);
-        this.add(main, BorderLayout.CENTER);
-
+        this.add(buttonPanel, BorderLayout.CENTER);
     }
 
+    // --- Public API for controller ---
+
+    public void bindCancelAction(Runnable action) {
+        cancelButton.addActionListener(e -> action.run());
+    }
+
+    public void bindNextAction(Runnable action) {
+        nextButton.addActionListener(e -> action.run());
+    }
 }

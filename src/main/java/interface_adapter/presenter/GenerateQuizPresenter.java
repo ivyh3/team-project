@@ -8,10 +8,11 @@ import use_case.generate_quiz.GenerateQuizOutputData;
 import java.util.List;
 
 /**
- * Presenter for the Generate Quiz use case.
- * Formats output data and updates the QuizViewModel.
+ * Presenter for Generate Quiz.
+ * Updates the QuizViewModel based on interactor output.
  */
 public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
+
     private final QuizViewModel viewModel;
 
     public GenerateQuizPresenter(QuizViewModel viewModel) {
@@ -21,31 +22,28 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
     @Override
     public void prepareSuccessView(GenerateQuizOutputData outputData) {
         List<Question> questions = outputData.getQuestions();
-
-        if (questions != null && !questions.isEmpty()) {
-            // Update view model with first question
-            Question firstQuestion = questions.get(0);
-            viewModel.setCurrentQuestion(firstQuestion.getText());
-            viewModel.setCurrentOptions(firstQuestion.getOptions());
-            viewModel.setCurrentQuestionNumber(1);
-            viewModel.setTotalQuestions(questions.size());
-            viewModel.setScoreDisplay("0/" + questions.size());
-            viewModel.setQuizComplete(false);
-            viewModel.setShowingExplanation(false);
-            viewModel.setErrorMessage("");
-        } else {
+        if (questions == null || questions.isEmpty()) {
             prepareFailView("No questions were generated.");
+            return;
         }
-    }
 
-    public void GenerateQuiz(GenerateQuizOutputData outputData) {
-        // Simply call prepareSuccessView
-        prepareSuccessView(outputData);
+        // Populate the ViewModel with questions
+        viewModel.setQuestions(questions);
+        viewModel.setQuizComplete(false);
+        viewModel.setExplanation("");
+        viewModel.setScoreDisplay("0/" + questions.size());
+        viewModel.setSubmitEnabled(true);
+        viewModel.setNextEnabled(false);
     }
 
     @Override
-    public void prepareFailView(String error) {
-        viewModel.setErrorMessage(error);
-        viewModel.setQuizComplete(false);
+    public void prepareFailView(String errorMessage) {
+        // Clear previous state and display error
+        viewModel.setQuestions(List.of());
+        viewModel.setCurrentQuestion("");
+        viewModel.setCurrentOptions(List.of());
+        viewModel.setExplanation(errorMessage);
+        viewModel.setScoreDisplay("0/0");
+        viewModel.setQuizComplete(true);
     }
 }

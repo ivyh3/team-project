@@ -1,67 +1,56 @@
 package view;
 
-import app.AppBuilder;
-
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * View for uploading and managing reference materials.
- */
 public class UploadMaterialsView extends View {
+
     private final JButton uploadButton;
     private final JButton deleteButton;
+    private final JButton cancelButton;
     private final JList<String> materialsList;
     private final JTextArea promptArea;
     private final DefaultListModel<String> listModel;
 
     public UploadMaterialsView() {
         super("uploadMaterials");
+
         JPanel header = new ViewHeader("Upload Materials");
 
-        JPanel main = new JPanel();
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-
+        // Prompt panel
         JPanel promptPanel = new JPanel();
-
         JLabel promptLabel = new JLabel("Upload and manage your reference materials here.");
         promptArea = new JTextArea(3, 30);
         promptArea.setLineWrap(true);
-
         promptPanel.add(promptLabel);
         promptPanel.add(new JScrollPane(promptArea));
 
+        // Upload button panel
         uploadButton = new JButton("Upload File");
-
         JPanel uploadButtonPanel = new JPanel();
         uploadButtonPanel.add(uploadButton);
 
-        JPanel deletePanel = new JPanel();
-
-        JLabel materialsLabel = new JLabel("Uploaded Materials:");
+        // Materials list panel
         listModel = new DefaultListModel<>();
         materialsList = new JList<>(listModel);
         materialsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        deletePanel.add(materialsLabel);
-        deletePanel.add(new JScrollPane(materialsList));
-
         deleteButton = new JButton("Delete Selected");
+        JPanel deletePanel = new JPanel(new BorderLayout());
+        deletePanel.add(new JLabel("Uploaded Materials:"), BorderLayout.NORTH);
+        deletePanel.add(new JScrollPane(materialsList), BorderLayout.CENTER);
+        deletePanel.add(deleteButton, BorderLayout.SOUTH);
 
-        deletePanel.add(deleteButton);
-
+        // Main panel
+        JPanel main = new JPanel();
+        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.add(promptPanel);
         main.add(uploadButtonPanel);
         main.add(deletePanel);
 
+        // Dashboard/cancel panel
+        cancelButton = new JButton("Cancel");
         JPanel dashboard = new JPanel();
-
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(e -> {
-            // Navigate back to dashboard
-            AppBuilder.viewManagerModel.setView("dashboard");
-        });
-
         dashboard.add(cancelButton);
 
         this.add(header, BorderLayout.NORTH);
@@ -69,12 +58,14 @@ public class UploadMaterialsView extends View {
         this.add(dashboard, BorderLayout.SOUTH);
     }
 
+    // --- Public API for controller ---
+
     public void addMaterial(String materialName) {
-        listModel.addElement(materialName);
+        SwingUtilities.invokeLater(() -> listModel.addElement(materialName));
     }
 
     public void removeMaterial(String materialName) {
-        listModel.removeElement(materialName);
+        SwingUtilities.invokeLater(() -> listModel.removeElement(materialName));
     }
 
     public String[] getSelectedMaterials() {
@@ -85,11 +76,15 @@ public class UploadMaterialsView extends View {
         return promptArea.getText();
     }
 
-    public void setUploadButtonListener(java.awt.event.ActionListener listener) {
-        uploadButton.addActionListener(listener);
+    public void bindUploadAction(Runnable action) {
+        uploadButton.addActionListener(e -> action.run());
     }
 
-    public void setDeleteButtonListener(java.awt.event.ActionListener listener) {
-        deleteButton.addActionListener(listener);
+    public void bindDeleteAction(Runnable action) {
+        deleteButton.addActionListener(e -> action.run());
+    }
+
+    public void bindCancelAction(Runnable action) {
+        cancelButton.addActionListener(e -> action.run());
     }
 }
