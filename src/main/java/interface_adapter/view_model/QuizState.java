@@ -2,7 +2,6 @@ package interface_adapter.view_model;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public final class QuizState {
 
@@ -16,27 +15,17 @@ public final class QuizState {
     private final boolean quizComplete;
     private final String errorMessage;
 
-    public QuizState(String questionText,
-                     List<String> answerOptions,
-                     int questionNumber,
-                     int totalQuestions,
-                     String explanation,
-                     int score,
-                     boolean showingExplanation,
-                     boolean quizComplete,
-                     String errorMessage) {
-
-        this.questionText = Objects.requireNonNullElse(questionText, "");
-        this.answerOptions = answerOptions == null
-                ? Collections.emptyList()
-                : Collections.unmodifiableList(answerOptions);
-        this.questionNumber = questionNumber;
-        this.totalQuestions = totalQuestions;
-        this.explanation = Objects.requireNonNullElse(explanation, "");
-        this.score = score;
-        this.showingExplanation = showingExplanation;
-        this.quizComplete = quizComplete;
-        this.errorMessage = Objects.requireNonNullElse(errorMessage, "");
+    // No-argument constructor with default values
+    public QuizState() {
+        this.questionText = "";
+        this.answerOptions = Collections.emptyList();
+        this.questionNumber = 0;
+        this.totalQuestions = 0;
+        this.explanation = "";
+        this.score = 0;
+        this.showingExplanation = false;
+        this.quizComplete = false;
+        this.errorMessage = "";
     }
 
     // Getters only — immutable
@@ -49,9 +38,4 @@ public final class QuizState {
     public boolean isShowingExplanation() { return showingExplanation; }
     public boolean isQuizComplete() { return quizComplete; }
     public String getErrorMessage() { return errorMessage; }
-
-    public static QuizState initial() {
-        return new QuizState("", Collections.emptyList(), 0, 0, "",
-                0, false, false, "");
-    }
 }

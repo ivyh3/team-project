@@ -1,5 +1,6 @@
 package view;
 
+import interface_adapter.view_model.QuizState;
 import interface_adapter.view_model.QuizViewModel;
 
 import javax.swing.*;
@@ -13,7 +14,9 @@ import java.util.List;
  * Observes QuizViewModel and updates the UI automatically.
  * Does NOT hold business state or mutate ViewModel directly.
  */
-public class StudyQuizView extends View {
+public class StudyQuizView extends StatefulView<QuizState> {
+
+    private final QuizViewModel quizViewModel; // <-- add this field
 
     private final JLabel questionLabel;
     private final JPanel optionsPanel;
@@ -22,20 +25,19 @@ public class StudyQuizView extends View {
     private final JButton submitButton;
     private final JButton nextButton;
 
-    private final QuizViewModel viewModel;
     private ButtonGroup optionGroup;
 
-    public StudyQuizView(QuizViewModel viewModel) {
-        super("studyQuiz");
-        this.viewModel = viewModel;
+    public StudyQuizView(QuizViewModel quizViewModel) {
+        super("quiz", quizViewModel);
+        this.quizViewModel = quizViewModel; // <-- assign constructor param to field
 
         // --- Header ---
         JPanel header = new JPanel(new BorderLayout());
-        scoreLabel = new JLabel(viewModel.getScoreDisplay());
+        scoreLabel = new JLabel(this.quizViewModel.getScoreDisplay());
         header.add(scoreLabel, BorderLayout.EAST);
 
         // --- Question ---
-        questionLabel = new JLabel(viewModel.getCurrentQuestion());
+        questionLabel = new JLabel(this.quizViewModel.getCurrentQuestion());
         questionLabel.setFont(new Font(null, Font.BOLD, 24));
         questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -43,13 +45,13 @@ public class StudyQuizView extends View {
         optionsPanel = new JPanel();
         optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
         optionGroup = new ButtonGroup();
-        renderOptions(viewModel.getCurrentOptions());
+        renderOptions(this.quizViewModel.getCurrentOptions());
 
         // --- Explanation Area ---
         explanationArea = new JTextArea(5, 40);
         explanationArea.setEditable(false);
         explanationArea.setLineWrap(true);
-        explanationArea.setText(viewModel.getExplanation());
+        explanationArea.setText(this.quizViewModel.getExplanation());
 
         // --- Buttons ---
         submitButton = new JButton("Submit");
@@ -72,7 +74,7 @@ public class StudyQuizView extends View {
         this.add(mainPanel, BorderLayout.CENTER);
 
         // --- Observe ViewModel ---
-        viewModel.addPropertyChangeListener(new QuizViewModelObserver());
+        this.quizViewModel.addPropertyChangeListener(new QuizViewModelObserver());
     }
 
     // --- Bind user actions to controller callbacks ---
@@ -93,8 +95,7 @@ public class StudyQuizView extends View {
             for (int i = 0; i < options.size(); i++) {
                 int idx = i;
                 JRadioButton btn = new JRadioButton(options.get(i));
-                // User selection handled by controller via ViewModel
-                btn.addActionListener(e -> viewModel.setSelectedAnswer(idx));
+                btn.addActionListener(e -> quizViewModel.setSelectedAnswer(idx));
                 optionGroup.add(btn);
                 optionsPanel.add(btn);
             }

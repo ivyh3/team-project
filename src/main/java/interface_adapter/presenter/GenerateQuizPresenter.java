@@ -13,10 +13,10 @@ import java.util.List;
  */
 public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
 
-    private final QuizViewModel viewModel;
+    private final QuizViewModel quizViewModel;
 
-    public GenerateQuizPresenter(QuizViewModel viewModel) {
-        this.viewModel = viewModel;
+    public GenerateQuizPresenter(QuizViewModel quizViewModel) {
+        this.quizViewModel = quizViewModel;
     }
 
     @Override
@@ -28,22 +28,22 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
         }
 
         // Populate the ViewModel with questions
-        viewModel.setQuestions(questions);
-        viewModel.setQuizComplete(false);
-        viewModel.setExplanation("");
-        viewModel.setScoreDisplay("0/" + questions.size());
-        viewModel.setSubmitEnabled(true);
-        viewModel.setNextEnabled(false);
+        quizViewModel.setQuestions(questions);
+        quizViewModel.setQuizComplete(false);
+        quizViewModel.setExplanation("");
+        quizViewModel.setScoreDisplay("0/" + questions.size());
+        quizViewModel.setSubmitEnabled(true);
+        quizViewModel.setNextEnabled(false);
     }
 
     @Override
     public void prepareFailView(String errorMessage) {
         // Clear previous state and display error
-        viewModel.setQuestions(List.of());
-        viewModel.setCurrentQuestion("");
-        viewModel.setCurrentOptions(List.of());
-        viewModel.setExplanation(errorMessage);
-        viewModel.setScoreDisplay("0/0");
-        viewModel.setQuizComplete(true);
+        quizViewModel.setQuestions(List.of());
+        quizViewModel.setCurrentQuestion("");
+        quizViewModel.setCurrentOptions(List.of());
+        quizViewModel.setExplanation(errorMessage);
+        quizViewModel.setScoreDisplay("0/0");
+        quizViewModel.setQuizComplete(true);
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
  * Exposes all quiz state to the View and notifies observers on change.
  * Presenter can update the ViewModel via public setters.
  */
-public class QuizViewModel {
+public class QuizViewModel extends ViewModel<QuizState> {
 
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
@@ -30,6 +30,11 @@ public class QuizViewModel {
     private int score = 0;
 
     private List<Question> questions = new ArrayList<>();
+
+    public QuizViewModel() {
+        super("studyQuiz");
+        setState(new QuizState());
+    }
 
     // --- PropertyChangeListener support ---
     public void addPropertyChangeListener(PropertyChangeListener listener) {

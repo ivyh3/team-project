@@ -20,6 +20,7 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 
+import entity.Question;
 import entity.StudyQuiz;
 import entity.StudyQuizFactory;
 
@@ -61,7 +62,7 @@ public class FirebaseStudyQuizDataAccessObject {
 			String documentId = result.get().getId();
 
 			return studyQuizFactory.create(
-					documentId,
+                    quiz.getQuestions(),
 					quiz.getScore(),
 					quiz.getStartTime(),
 					quiz.getEndTime());
@@ -159,9 +160,10 @@ public class FirebaseStudyQuizDataAccessObject {
 
 		Double scoreDouble = document.getDouble("score");
 		float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
+        List<Question> questions = new ArrayList<>();
 
 		StudyQuiz quiz = studyQuizFactory.create(
-				document.getId(),
+				questions,
 				score,
 				startTime,
 				endTime);

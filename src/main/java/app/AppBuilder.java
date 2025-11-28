@@ -5,11 +5,8 @@ import entity.StudySessionFactory;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
 import frameworks_drivers.database.InMemoryDatabase;
-import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
-import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
-import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
-import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
-import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
+import frameworks_drivers.firebase.*;
+import frameworks_drivers.gemini.GeminiDataAccessObject;
 import frameworks_drivers.gemini.GeminiQuizDataAccess;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.presenter.*;
@@ -23,6 +20,7 @@ import repository.QuestionDataAccess;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.generate_quiz.GenerateQuizInteractor;
 import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
@@ -71,10 +69,12 @@ public class AppBuilder {
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
+    private StudyQuizView studyQuizView;
 
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
+    private QuizViewModel quizViewModel;
 
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
@@ -111,6 +111,10 @@ public class AppBuilder {
     }
 
     public AppBuilder addSignupView() {
+        StudyQuizFactory factory = new StudyQuizFactory(); // or however you create it
+        FirebaseStudyQuizDataAccessObject dao = new FirebaseStudyQuizDataAccessObject(factory);
+        QuestionDataAccess questionDAO = new FirebaseQuestionDataAccessAdapter(dao);
+
         signupViewModel = new SignupViewModel();
         signupView = new SignupView(signupViewModel);
         cardPanel.add(signupView, signupView.getViewName());
@@ -268,17 +272,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        // 1. Create the ViewModel
-        QuizViewModel quizViewModel = new QuizViewModel();
-
-        // 2. Create the View, passing in the ViewModel
-        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
-
-        // 3. Add to the card panel
+        quizViewModel = new QuizViewModel();
+        studyQuizView = new StudyQuizView(quizViewModel);
         cardPanel.add(studyQuizView, studyQuizView.getViewName());
-
         return this;
     }
+
 
     public AppBuilder addFileManagerView() {
         FileManagerView fileManagerView = new FileManagerView();
