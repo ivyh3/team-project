@@ -11,12 +11,16 @@ public class ViewManagerModel extends ViewModel<String> {
     }
 
     /**
-     * Sets the state (active view name).
+     * Sets the currently active view. Will automatically fire property change.
      * 
      * @param viewName The view name of the now active view.
      */
     public void setView(String viewName) {
         this.setState(viewName);
-        // this.firePropertyChange();
+
+        // I cannot think of any case where we set the view and NOT navigate to it,
+        // basically, setting state => will fire property change so merged into one
+        // method that makes it clear what the ViewManagerModel is doing.
+        firePropertyChange();
     }
 }
