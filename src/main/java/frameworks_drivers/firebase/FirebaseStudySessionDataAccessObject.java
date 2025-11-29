@@ -1,7 +1,9 @@
 package frameworks_drivers.firebase;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,9 @@ import entity.StudySession;
 import entity.StudySessionFactory;
 import use_case.end_study_session.EndStudySessionDataAccessInterface;
 
+/**
+ * Firebase Data Access Object for StudySession entities.
+ */
 public class FirebaseStudySessionDataAccessObject implements EndStudySessionDataAccessInterface {
     private static final String USERS_COLLECTION = "users";
     private static final String STUDY_SESSIONS_COLLECTION = "studySessions";
@@ -39,13 +44,18 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
 
         Map<String, Object> data = new HashMap<>();
 
-        // Store times as an ISO string
+        // Store times as an ISO string in UTC tz
         // Store duration in seconds.
-        data.put("start_time", session.getStartTime().toString());
-        data.put("end_time", session.getEndTime().toString());
+        // Store epoch millis for range queries.
+
+        ZonedDateTime utcStartTime = convertToUtc(session.getStartTime());
+        ZonedDateTime utcEndTime = convertToUtc(session.getEndTime());
+
+        data.put("start_time", utcStartTime.toString());
+        data.put("end_time", utcEndTime.toString());
         data.put("duration_seconds", session.getDuration().toSeconds());
-        data.put("start_time_timestamp", session.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli());
-        data.put("end_time_timestamp", session.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli());
+        data.put("start_time_timestamp", utcStartTime.toInstant().toEpochMilli());
+        data.put("end_time_timestamp", utcEndTime.toInstant().toEpochMilli());
 
         try {
             ApiFuture<DocumentReference> result = studySessionRef.add(data);
@@ -72,13 +82,7 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
             DocumentSnapshot document = future.get();
 
             if (document.exists()) {
-                String startTimeStr = document.getString("start_time");
-                String endTimeStr = document.getString("end_time");
-
-                return studySessionFactory.create(
-                        document.getId(),
-                        java.time.LocalDateTime.parse(startTimeStr),
-                        java.time.LocalDateTime.parse(endTimeStr));
+                return createStudySessionFromDocument(document);
             } else {
                 return null;
             }
@@ -99,15 +103,7 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
             for (QueryDocumentSnapshot document : documents) {
-                String startTimeStr = document.getString("start_time");
-                String endTimeStr = document.getString("end_time");
-
-                StudySession session = studySessionFactory.create(
-                        document.getId(),
-                        java.time.LocalDateTime.parse(startTimeStr),
-                        java.time.LocalDateTime.parse(endTimeStr));
-
-                sessions.add(session);
+                sessions.add(createStudySessionFromDocument(document));
             }
 
             return sessions;
@@ -117,13 +113,14 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
     }
 
     public List<StudySession> getStudySessionsInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
-
         CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
                 .document(userId)
                 .collection(STUDY_SESSIONS_COLLECTION);
 
-        long startTimeStamp = startTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-        long endTimeStamp = endTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+        ZonedDateTime startTimeUtc = convertToUtc(startTime);
+        ZonedDateTime endTimeUtc = convertToUtc(endTime);
+        long startTimeStamp = startTimeUtc.toInstant().toEpochMilli();
+        long endTimeStamp = endTimeUtc.toInstant().toEpochMilli();
 
         Query query = studySessionRef
                 .whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)
@@ -134,32 +131,55 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
         try {
             List<StudySession> sessions = new ArrayList<>();
             for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-                Long startTimestamp = document.getLong("start_time_timestamp");
-                Long endTimestamp = document.getLong("end_time_timestamp");
-
-                if (startTimestamp != null && endTimestamp != null) {
-                    LocalDateTime sessionStart = LocalDateTime.ofInstant(
-                            java.time.Instant.ofEpochMilli(startTimestamp),
-                            java.time.ZoneOffset.UTC
-                    );
-
-                    LocalDateTime sessionEnd = LocalDateTime.ofInstant(
-                            java.time.Instant.ofEpochMilli(endTimestamp),
-                            java.time.ZoneOffset.UTC
-                    );
-
-                    StudySession session = studySessionFactory.create(
-                            document.getId(),
-                            sessionStart,
-                            sessionEnd);
-
-                    sessions.add(session);
-                }
+                sessions.add(createStudySessionFromDocument(document));
             }
 
             return sessions;
         } catch (Exception e) {
             throw new RuntimeException("Error retrieving study sessions: " + e.getMessage());
         }
+    }
+
+    /**
+     * Create a StudySession entity from a Firestore DocumentSnapshot.
+     * 
+     * @param document the document with the study session data
+     * @return the study session entity
+     */
+    private StudySession createStudySessionFromDocument(DocumentSnapshot document) {
+        String startTimeStr = document.getString("start_time");
+        String endTimeStr = document.getString("end_time");
+
+        ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
+        ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
+
+        return studySessionFactory.create(
+                document.getId(),
+                convertToLocalDateTime(startZoned),
+                convertToLocalDateTime(endZoned));
+    }
+
+    /**
+     * Return the UTC equivalent of a LocalDateTime in the system default timezone.
+     * 
+     * @param localDateTime the LocalDateTime to convert
+     * @return the ZonedDateTime in UTC
+     */
+    private ZonedDateTime convertToUtc(LocalDateTime localDateTime) {
+        ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
+        ZonedDateTime utcZoned = ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
+        return utcZoned;
+    }
+
+    /**
+     * Return the LocalDateTime equivalent of a ZonedDateTime in the system default
+     * timezone.
+     * 
+     * @param zonedDateTime the ZonedDateTime to convert
+     * @return the LocalDateTime in the system default timezone
+     */
+    private LocalDateTime convertToLocalDateTime(ZonedDateTime zonedDateTime) {
+        ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
+        return localZoned.toLocalDateTime();
     }
 }

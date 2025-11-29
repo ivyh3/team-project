@@ -52,11 +52,6 @@ class StartStudySessionTest {
             }
 
             @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                fail("Changing the session type is unexpected.");
-            }
-
-            @Override
             public void refreshFileOptions(List<String> fileOptions) {
                 fail("Refreshing file options is unexpected.");
             }
@@ -105,11 +100,6 @@ class StartStudySessionTest {
             }
 
             @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                fail("Changing the session type is unexpected.");
-            }
-
-            @Override
             public void refreshFileOptions(List<String> fileOptions) {
                 fail("Refreshing file options is unexpected.");
             }
@@ -118,42 +108,6 @@ class StartStudySessionTest {
         StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter, database);
         interactor.execute(inputData);
 
-    }
-
-    @Test
-    void changeSessionTypeTest() {
-        StartStudySessionOutputBoundary successPresenter = new StartStudySessionOutputBoundary() {
-
-            @Override
-            public void startStudySession(StartStudySessionOutputData outputData) {
-                fail("Starting the session is unexpected.");
-            }
-
-            @Override
-            public void prepareErrorView(String errorMessage) {
-                fail("An error is unexpected:" + errorMessage);
-            }
-
-            @Override
-            public void abortStudySessionConfig() {
-                fail("Aborting the config is unexpected.");
-            }
-
-            @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                // Assert that the correct session type will be set
-                assertEquals(StudySessionConfigState.SessionType.VARIABLE, sessionType);
-            }
-
-            @Override
-            public void refreshFileOptions(List<String> fileOptions) {
-                fail("Refreshing file options is unexpected.");
-            }
-        };
-
-        StartStudySessionInputBoundary interactor = new StartStudySessionInteractor(successPresenter,
-                new InMemoryDatabase());
-        interactor.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
     }
 
     @Test
@@ -173,11 +127,6 @@ class StartStudySessionTest {
             @Override
             public void abortStudySessionConfig() {
                 // Nothing to test here as no output data.
-            }
-
-            @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                fail("Changing the session type is unexpected.");
             }
 
             @Override
@@ -222,11 +171,6 @@ class StartStudySessionTest {
             }
 
             @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                fail("Changing the session type is unexpected.");
-            }
-
-            @Override
             public void refreshFileOptions(List<String> fileOptions) {
                 fail("Refreshing file options is unexpected.");
             }
@@ -268,11 +212,6 @@ class StartStudySessionTest {
             @Override
             public void abortStudySessionConfig() {
                 fail("Aborting the config is unexpected.");
-            }
-
-            @Override
-            public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-                fail("Changing the session type is unexpected.");
             }
 
             @Override
