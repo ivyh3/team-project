@@ -24,7 +24,7 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     private FirebaseStudyQuizDataAccessObject quizDAO;
 
     public FirebaseMetricsDataAccessObject(FirebaseStudySessionDataAccessObject sessionDAO,
-            FirebaseStudyQuizDataAccessObject quizDAO) {
+                                           FirebaseStudyQuizDataAccessObject quizDAO) {
         this.sessionDAO = sessionDAO;
         this.quizDAO = quizDAO;
     }

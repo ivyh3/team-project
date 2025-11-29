@@ -15,7 +15,7 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     private final StartStudySessionDataAccessInterface fileDataAccessObject;
 
     public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter,
-            StartStudySessionDataAccessInterface fileRepository) {
+                                       StartStudySessionDataAccessInterface fileRepository) {
         this.presenter = presenter;
         this.fileDataAccessObject = fileRepository;
     }

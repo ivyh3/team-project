@@ -2,6 +2,7 @@ package use_case.end_study_session;
 
 import frameworks_drivers.database.InMemoryDatabase;
 import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionEndViewModel;
 import interface_adapter.view_model.StudySessionState;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,8 @@ class EndStudySessionTest {
         EndStudySessionDataAccessInterface sessionRepository = new InMemoryDatabase();
 
         EndStudySessionInputData inputData = new EndStudySessionInputData(
-                sessionState);
+                sessionState,
+                "test_user");
 
         EndStudySessionOutputBoundary presenter = new EndStudySessionOutputBoundary() {
             @Override
@@ -47,6 +49,7 @@ class EndStudySessionTest {
         EndStudySessionInteractor interactor = new EndStudySessionInteractor(presenter,
                 sessionRepository,
                 new StudySessionFactory());
+
         interactor.execute(inputData);
     }
 }

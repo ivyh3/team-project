@@ -32,7 +32,7 @@ public class QuizViewModel extends ViewModel<QuizState> {
     private List<Question> questions = new ArrayList<>();
 
     public QuizViewModel() {
-        super("studyQuiz");
+        super("quiz");
         setState(new QuizState());
     }
 
@@ -165,4 +165,29 @@ public class QuizViewModel extends ViewModel<QuizState> {
     public int getCurrentQuestionIndex() { return currentQuestionIndex; }
     public int getTotalQuestions() { return totalQuestions; }
     public int getScore() { return score; }
+
+    @Override
+    public void setState(QuizState state) {
+        // Update the ViewModel fields from the state
+        setCurrentQuestion(state.getQuestionText());
+        setCurrentOptions(state.getAnswerOptions());
+        setExplanation(state.getExplanation());
+        setScoreDisplay(state.getScore() + "/" + state.getTotalQuestions());
+        setQuizComplete(state.isQuizComplete());
+    }
+
+    @Override
+    public QuizState getState() {
+        return new QuizState(
+                currentQuestion,          // from ViewModel
+                currentOptions,           // from ViewModel
+                currentQuestionIndex + 1, // question number
+                totalQuestions,
+                explanation,
+                score,
+                false,                    // showingExplanation
+                quizComplete,
+                ""                        // errorMessage
+        );
+    }
 }

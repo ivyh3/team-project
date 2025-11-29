@@ -124,4 +124,9 @@ public class InMemoryDatabase implements StartStudySessionDataAccessInterface, E
     public List<String> getAllUserFiles(String userId) {
         return new ArrayList<>(fileStore.keySet());
     }
+
+    @Override
+    public List<String> getFilesForUser(String userId) {
+        return new ArrayList<>(fileStore.keySet());
+    }
 }

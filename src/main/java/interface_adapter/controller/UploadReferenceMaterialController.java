@@ -4,45 +4,28 @@ import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
 import use_case.upload_reference_material.UploadReferenceMaterialInputData;
 
 import java.io.File;
-import java.util.Objects;
+import java.io.InputStream;
 
-/**
- * Controller for the Upload Reference Material use case.
- * Collects user input and delegates the request to the interactor.
- */
 public class UploadReferenceMaterialController {
 
     private final UploadReferenceMaterialInputBoundary interactor;
 
-    /**
-     * Constructs the controller with the given interactor.
-     *
-     * @param interactor the input boundary interactor
-     */
     public UploadReferenceMaterialController(UploadReferenceMaterialInputBoundary interactor) {
-        this.interactor = Objects.requireNonNull(interactor, "Interactor cannot be null");
+        this.interactor = interactor;
     }
 
-    /**
-     * Handles a request to upload a reference material file.
-     *
-     * @param userId the user ID (cannot be null or empty)
-     * @param file   the file to upload (cannot be null and must exist)
-     * @param prompt a description or prompt for the material (cannot be null or empty)
-     */
-    public void uploadReferenceMaterial(String userId, File file, String prompt) {
-        if (userId == null || userId.isEmpty()) {
-            throw new IllegalArgumentException("User ID cannot be null or empty");
-        }
-        if (file == null || !file.exists()) {
-            throw new IllegalArgumentException("File cannot be null and must exist");
-        }
-        if (prompt == null || prompt.isEmpty()) {
-            throw new IllegalArgumentException("Prompt cannot be null or empty");
-        }
+    // Change method signature
+    public void uploadReferenceMaterial(String userId, File file) {
+        if (userId == null || file == null) return;
+        interactor.execute(new UploadReferenceMaterialInputData(userId, file, null));
+    }
 
-        UploadReferenceMaterialInputData inputData = new UploadReferenceMaterialInputData(
-                userId, file, prompt);
-        interactor.execute(inputData);
+    // NEW: delete method
+    public void deleteReferenceMaterial(String userId, String fileName) {
+        try {
+            interactor.delete(userId, fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

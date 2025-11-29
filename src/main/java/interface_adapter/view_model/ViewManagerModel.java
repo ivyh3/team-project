@@ -12,7 +12,7 @@ public class ViewManagerModel extends ViewModel<String> {
 
     /**
      * Sets the currently active view. Will automatically fire property change.
-     * 
+     *
      * @param viewName The view name of the now active view.
      */
     public void setView(String viewName) {

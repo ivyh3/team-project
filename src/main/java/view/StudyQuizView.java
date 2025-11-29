@@ -14,7 +14,7 @@ import java.util.List;
  * Observes QuizViewModel and updates the UI automatically.
  * Does NOT hold business state or mutate ViewModel directly.
  */
-public class StudyQuizView extends StatefulView<QuizState> {
+public class StudyQuizView extends StatefulView<QuizState> implements PropertyChangeListener {
 
     private final QuizViewModel quizViewModel; // <-- add this field
 
@@ -30,6 +30,7 @@ public class StudyQuizView extends StatefulView<QuizState> {
     public StudyQuizView(QuizViewModel quizViewModel) {
         super("quiz", quizViewModel);
         this.quizViewModel = quizViewModel; // <-- assign constructor param to field
+        this.quizViewModel.addPropertyChangeListener(this);
 
         // --- Header ---
         JPanel header = new JPanel(new BorderLayout());
@@ -74,7 +75,7 @@ public class StudyQuizView extends StatefulView<QuizState> {
         this.add(mainPanel, BorderLayout.CENTER);
 
         // --- Observe ViewModel ---
-        this.quizViewModel.addPropertyChangeListener(new QuizViewModelObserver());
+        this.quizViewModel.addPropertyChangeListener(this);
     }
 
     // --- Bind user actions to controller callbacks ---
@@ -106,36 +107,34 @@ public class StudyQuizView extends StatefulView<QuizState> {
     }
 
     // --- PropertyChangeListener to update UI automatically ---
-    private class QuizViewModelObserver implements PropertyChangeListener {
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            SwingUtilities.invokeLater(() -> {
-                switch (evt.getPropertyName()) {
-                    case "currentQuestion":
-                        questionLabel.setText((String) evt.getNewValue());
-                        break;
-                    case "currentOptions":
-                        renderOptions((List<String>) evt.getNewValue());
-                        break;
-                    case "explanation":
-                        explanationArea.setText((String) evt.getNewValue());
-                        break;
-                    case "scoreDisplay":
-                        scoreLabel.setText((String) evt.getNewValue());
-                        break;
-                    case "submitEnabled":
-                        submitButton.setEnabled((Boolean) evt.getNewValue());
-                        break;
-                    case "nextEnabled":
-                        nextButton.setEnabled((Boolean) evt.getNewValue());
-                        break;
-                    case "quizComplete":
-                        boolean complete = (Boolean) evt.getNewValue();
-                        submitButton.setEnabled(!complete);
-                        nextButton.setEnabled(!complete);
-                        break;
-                }
-            });
-        }
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        SwingUtilities.invokeLater(() -> {
+            switch (evt.getPropertyName()) {
+                case "currentQuestion":
+                    questionLabel.setText((String) evt.getNewValue());
+                    break;
+                case "currentOptions":
+                    renderOptions((List<String>) evt.getNewValue());
+                    break;
+                case "explanation":
+                    explanationArea.setText((String) evt.getNewValue());
+                    break;
+                case "scoreDisplay":
+                    scoreLabel.setText((String) evt.getNewValue());
+                    break;
+                case "submitEnabled":
+                    submitButton.setEnabled((Boolean) evt.getNewValue());
+                    break;
+                case "nextEnabled":
+                    nextButton.setEnabled((Boolean) evt.getNewValue());
+                    break;
+                case "quizComplete":
+                    boolean complete = (Boolean) evt.getNewValue();
+                    submitButton.setEnabled(!complete);
+                    nextButton.setEnabled(!complete);
+                    break;
+            }
+        });
     }
 }

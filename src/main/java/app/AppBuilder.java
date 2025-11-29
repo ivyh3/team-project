@@ -4,45 +4,32 @@ import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
-import frameworks_drivers.database.InMemoryDatabase;
 import frameworks_drivers.firebase.*;
-import frameworks_drivers.gemini.GeminiDataAccessObject;
-import frameworks_drivers.gemini.GeminiQuizDataAccess;
-import interface_adapter.controller.ChangePasswordController;
+import interface_adapter.controller.*;
 import interface_adapter.presenter.*;
 import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.controller.LoginController;
 import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.controller.LogoutController;
-import interface_adapter.controller.SignupController;
 import interface_adapter.view_model.SignupViewModel;
 import repository.QuestionDataAccess;
-import use_case.change_password.ChangePasswordInputBoundary;
-import use_case.change_password.ChangePasswordInteractor;
-import use_case.change_password.ChangePasswordOutputBoundary;
-import use_case.generate_quiz.GenerateQuizInteractor;
-import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
-import use_case.logout.LogoutInputBoundary;
-import use_case.logout.LogoutInteractor;
-import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
+import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
+import use_case.upload_reference_material.UploadReferenceMaterialOutputBoundary;
 import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
+import use_case.start_study_session.StartStudySessionDataAccessInterface;
 import view.LoginView;
 import view.SignupView;
 import view.ViewManager;
 import view.InitialView;
 
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StartStudySessionController;
 import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
 import use_case.end_study_session.EndStudySessionInteractor;
-import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 
@@ -55,6 +42,7 @@ import view.SettingsView;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDateTime;
 
 public class AppBuilder {
     private final String APP_TITLE = "AI Study Companion";
@@ -70,11 +58,13 @@ public class AppBuilder {
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
     private StudyQuizView studyQuizView;
+    private UploadMaterialsView uploadMaterialsView;
 
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
     private QuizViewModel quizViewModel;
+    private UploadMaterialsViewModel uploadMaterialsViewModel;
 
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
@@ -223,8 +213,13 @@ public class AppBuilder {
                 studySessionViewModel,
                 viewManagerModel,
                 dashboardView.getViewName());
-        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                startStudySessionPresenter, fileDataAccessObject);
+
+        // NOTE: StartStudySessionInteractor currently expects:
+        //    StartStudySessionInteractor(StartStudySessionOutputBoundary, StartStudySessionDataAccessInterface)
+        // so pass exactly two arguments — presenter + the DAO implementing StartStudySessionDataAccessInterface.
+        StartStudySessionInteractor configStudySessionInteractor =
+                new StartStudySessionInteractor(startStudySessionPresenter, fileDataAccessObject);
+
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
                 configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
@@ -234,13 +229,6 @@ public class AppBuilder {
     public AppBuilder addUploadSessionMaterialsView() {
         UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
         cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
-
-        return this;
-    }
-
-    public AppBuilder addUploadMaterialsView() {
-        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
-        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
 
         return this;
     }
@@ -321,22 +309,36 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addUploadMaterialsView() {
+        UploadMaterialsViewModel uploadVM = new UploadMaterialsViewModel();
+        DashboardViewModel dashboardVM = new DashboardViewModel();
+        UploadMaterialsView uploadView = new UploadMaterialsView(dashboardVM, uploadVM);
+
+        UploadMaterialsPresenter presenter = new UploadMaterialsPresenter(uploadVM, dashboardVM, viewManagerModel);
+
+        UploadReferenceMaterialInteractor uploadReferenceMaterialInteractor = new UploadReferenceMaterialInteractor(fileDataAccessObject, presenter);
+        UploadReferenceMaterialController controller = new UploadReferenceMaterialController(uploadReferenceMaterialInteractor);
+
+        // Wire the controller to the view
+        uploadView.setUploadController(controller);
+
+        cardPanel.add(uploadView, uploadView.getViewName());
+        return this;
+    }
+
     public JFrame build() {
         final JFrame app = new JFrame(APP_TITLE);
         app.setSize(800, 600);
         app.setLayout(new BorderLayout());
 
         cardPanel.setPreferredSize(new Dimension(800, 600));
-
         app.add(cardPanel, BorderLayout.CENTER);
 
-        // Default view to dashboard view
-        // viewManagerModel.setView(dashboardView.getViewName());
+        // App should start at welcome page
         viewManagerModel.setView(initialView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         app.setVisible(true);
-
         return app;
     }
 }

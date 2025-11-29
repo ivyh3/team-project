@@ -10,4 +10,6 @@ public interface UploadReferenceMaterialInputBoundary {
      * @param inputData the input data for uploading reference material
      */
     void execute(UploadReferenceMaterialInputData inputData);
+
+    void delete(String userId, String fileName);
 }

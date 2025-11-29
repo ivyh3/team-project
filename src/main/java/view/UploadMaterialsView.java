@@ -1,7 +1,13 @@
 package view;
 
+import app.AppBuilder;
+import interface_adapter.controller.UploadReferenceMaterialController;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.UploadMaterialsViewModel;
+
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class UploadMaterialsView extends View {
 
@@ -9,21 +15,17 @@ public class UploadMaterialsView extends View {
     private final JButton deleteButton;
     private final JButton cancelButton;
     private final JList<String> materialsList;
-    private final JTextArea promptArea;
     private final DefaultListModel<String> listModel;
+    private UploadReferenceMaterialController uploadController;
+    private final DashboardViewModel dashboardViewModel;
+    private final UploadMaterialsViewModel uploadViewModel;
 
-    public UploadMaterialsView() {
+    public UploadMaterialsView(DashboardViewModel dashboardViewModel, UploadMaterialsViewModel uploadViewModel) {
         super("uploadMaterials");
+        this.dashboardViewModel = dashboardViewModel;
+        this.uploadViewModel = uploadViewModel;
 
         JPanel header = new ViewHeader("Upload Materials");
-
-        // Prompt panel
-        JPanel promptPanel = new JPanel();
-        JLabel promptLabel = new JLabel("Upload and manage your reference materials here.");
-        promptArea = new JTextArea(3, 30);
-        promptArea.setLineWrap(true);
-        promptPanel.add(promptLabel);
-        promptPanel.add(new JScrollPane(promptArea));
 
         // Upload button panel
         uploadButton = new JButton("Upload File");
@@ -44,7 +46,6 @@ public class UploadMaterialsView extends View {
         // Main panel
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.add(promptPanel);
         main.add(uploadButtonPanel);
         main.add(deletePanel);
 
@@ -56,35 +57,65 @@ public class UploadMaterialsView extends View {
         this.add(header, BorderLayout.NORTH);
         this.add(main, BorderLayout.CENTER);
         this.add(dashboard, BorderLayout.SOUTH);
+
+        // Observe ViewModel
+        uploadViewModel.addObserver(state -> SwingUtilities.invokeLater(() -> {
+            listModel.clear();
+            state.getUploadedMaterials().forEach(listModel::addElement);
+        }));
     }
 
-    // --- Public API for controller ---
+    // ------------- File chooser method -------------
+    public File openPdfChooser() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select PDF to upload");
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
 
-    public void addMaterial(String materialName) {
-        SwingUtilities.invokeLater(() -> listModel.addElement(materialName));
+        int result = chooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return chooser.getSelectedFile();
+        }
+        return null;
     }
 
-    public void removeMaterial(String materialName) {
-        SwingUtilities.invokeLater(() -> listModel.removeElement(materialName));
-    }
+    // --- Controller binding ---
+    public void setUploadController(UploadReferenceMaterialController controller) {
+        this.uploadController = controller;
 
-    public String[] getSelectedMaterials() {
-        return materialsList.getSelectedValuesList().toArray(new String[0]);
-    }
+        uploadButton.addActionListener(e -> {
+            File selectedPdf = openPdfChooser();
+            if (selectedPdf == null) return;
 
-    public String getPrompt() {
-        return promptArea.getText();
-    }
+            String userId = dashboardViewModel.getState().getUserId();
+            try {
+                uploadController.uploadReferenceMaterial(userId, selectedPdf);
+                // Update ViewModel so view refreshes
+                uploadViewModel.addMaterial(selectedPdf.getName());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Failed to upload file: " + ex.getMessage());
+            }
+        });
 
-    public void bindUploadAction(Runnable action) {
-        uploadButton.addActionListener(e -> action.run());
-    }
+        deleteButton.addActionListener(e -> {
+            String[] selected = materialsList.getSelectedValuesList().toArray(new String[0]);
+            if (selected.length == 0) {
+                JOptionPane.showMessageDialog(this, "Select a file to delete.");
+                return;
+            }
+            String userId = dashboardViewModel.getState().getUserId();
+            for (String fileName : selected) {
+                try {
+                    uploadController.deleteReferenceMaterial(userId, fileName);
+                    uploadViewModel.removeMaterial(fileName);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Failed to delete file: " + ex.getMessage());
+                }
+            }
+        });
 
-    public void bindDeleteAction(Runnable action) {
-        deleteButton.addActionListener(e -> action.run());
-    }
-
-    public void bindCancelAction(Runnable action) {
-        cancelButton.addActionListener(e -> action.run());
+        cancelButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
     }
 }

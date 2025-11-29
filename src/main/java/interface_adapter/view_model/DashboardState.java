@@ -1,12 +1,12 @@
 package interface_adapter.view_model;
 
-/**
- * The State information representing the logged-in user and dashboard data.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class DashboardState {
-    // I do not care at the moment.
     public static String userId = "";
     private String email = "";
+    private List<String> uploadedFiles = new ArrayList<>();
 
     public DashboardState(DashboardState copy) {
         userId = copy.userId;
@@ -33,5 +33,13 @@ public class DashboardState {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public List<String> getUploadedFiles() {
+        return uploadedFiles;
+    }
+
+    public void setUploadedFiles(List<String> uploadedFiles) {
+        this.uploadedFiles = uploadedFiles != null ? uploadedFiles : new ArrayList<>();
     }
 }

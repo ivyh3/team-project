@@ -10,7 +10,7 @@ import java.beans.PropertyChangeListener;
  * ViewModel which holds the state
  * that the StatefulView will rely on, and will listen to any changes in its
  * ViewModel.
- * 
+ *
  * @param <T> The type of state that the viewModel should hold.
  */
 public abstract class StatefulView<T> extends View implements PropertyChangeListener {

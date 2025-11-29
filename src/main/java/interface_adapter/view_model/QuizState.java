@@ -15,17 +15,30 @@ public final class QuizState {
     private final boolean quizComplete;
     private final String errorMessage;
 
-    // No-argument constructor with default values
+    public QuizState(
+            String questionText,
+            List<String> answerOptions,
+            int questionNumber,
+            int totalQuestions,
+            String explanation,
+            int score,
+            boolean showingExplanation,
+            boolean quizComplete,
+            String errorMessage
+    ) {
+        this.questionText = questionText;
+        this.answerOptions = List.copyOf(answerOptions);
+        this.questionNumber = questionNumber;
+        this.totalQuestions = totalQuestions;
+        this.explanation = explanation;
+        this.score = score;
+        this.showingExplanation = showingExplanation;
+        this.quizComplete = quizComplete;
+        this.errorMessage = errorMessage;
+    }
+
     public QuizState() {
-        this.questionText = "";
-        this.answerOptions = Collections.emptyList();
-        this.questionNumber = 0;
-        this.totalQuestions = 0;
-        this.explanation = "";
-        this.score = 0;
-        this.showingExplanation = false;
-        this.quizComplete = false;
-        this.errorMessage = "";
+        this("", Collections.emptyList(), 0, 0, "", 0, false, false, "");
     }
 
     // Getters only — immutable

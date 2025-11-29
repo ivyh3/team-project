@@ -11,4 +11,3 @@ public class DashboardViewModel extends ViewModel<DashboardState> {
         setState(new DashboardState());
     }
 }
-

@@ -1,22 +1,25 @@
 package use_case.upload_reference_material;
 
-/**
- * Output data for the Upload Reference Material use case.
- */
 public class UploadReferenceMaterialOutputData {
-    private final String filename;
+    private final String fileName;
     private final String storagePath;
+    private final String prompt;
 
-    public UploadReferenceMaterialOutputData(String filename, String storagePath) {
-        this.filename = filename;
+    public UploadReferenceMaterialOutputData(String fileName, String storagePath, String prompt) {
+        this.fileName = fileName;
         this.storagePath = storagePath;
+        this.prompt = prompt;
     }
 
-    public String getFilename() {
-        return filename;
+    public String getFileName() {
+        return fileName;
     }
 
     public String getStoragePath() {
         return storagePath;
+    }
+
+    public String getPrompt() {
+        return prompt;
     }
 }

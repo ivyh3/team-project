@@ -48,8 +48,8 @@ public class Main {
             AppBuilder appBuilder = new AppBuilder();
             JFrame app = appBuilder
                     .addInitialView()
-                    .addLoginView()
                     .addSignupView()
+                    .addLoginView()
                     .addDashboardView()
                     .addSignupUseCase()
                     .addLoginUseCase()
@@ -59,7 +59,6 @@ public class Main {
                     // .addLogoutUseCase()
                     // .addChooseStudySessionView()
                     .addUploadSessionMaterialsView()
-                    .addUploadMaterialsView()
                     .addStudySessionView()
                     .addStudySessionEndView()
                     .addEndStudySessionUseCase()
@@ -71,6 +70,7 @@ public class Main {
                     .addStudyMetricsView()
                     .addStudySessionConfigView()
                     .addConfigStudySessionUseCase()
+                    .addUploadMaterialsView()
                     .build();
 
             app.pack();

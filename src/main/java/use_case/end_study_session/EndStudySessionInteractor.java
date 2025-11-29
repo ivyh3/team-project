@@ -13,7 +13,7 @@ public class EndStudySessionInteractor implements EndStudySessionInputBoundary {
     private final StudySessionFactory studySessionFactory;
 
     public EndStudySessionInteractor(EndStudySessionOutputBoundary presenter,
-            EndStudySessionDataAccessInterface sessionDataAccessObject, StudySessionFactory studySessionFactory) {
+                                     EndStudySessionDataAccessInterface sessionDataAccessObject, StudySessionFactory studySessionFactory) {
         this.presenter = presenter;
         this.sessionDataAccessObject = sessionDataAccessObject;
         this.studySessionFactory = studySessionFactory;
