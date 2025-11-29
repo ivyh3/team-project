@@ -35,7 +35,6 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         for (StudySession session : sessions) {
             dailyStudyDurations.merge(DayOfWeek.from(session.getStartTime()), session.getDuration(), Duration::plus);
         }
-        System.out.println(dailyStudyDurations); // debugging
 
         // retrieve the average quiz scores
         Map<DayOfWeek, Float> sumMap = new EnumMap<>(DayOfWeek.class);
@@ -54,7 +53,6 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
             int count = countMap.get(day);
             averageQuizScores.put(day, sum / count);
         }
-        System.out.println(averageQuizScores); // debugging
 
         ViewStudyMetricsOutputData outputData = new ViewStudyMetricsOutputData(
                 dailyStudyDurations,
