@@ -1,16 +1,18 @@
 package view;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 
 /**
  * Abstract class for a View. Views are named JPanels.
  */
 public abstract class View extends JPanel {
-    protected String viewName;
     private static final int PADDING = 20;
+    private final String viewName;
 
-    public View(String viewName) {
+    protected View(String viewName) {
         this.viewName = viewName;
 
         this.setLayout(new BorderLayout());

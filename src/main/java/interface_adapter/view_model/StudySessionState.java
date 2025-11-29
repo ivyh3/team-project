@@ -16,8 +16,12 @@ public class StudySessionState {
 
     public StudySessionState(StudySessionConfigState config, LocalDateTime startTime) {
         this.sessionType = config.getSessionType();
-        this.targetDurationMinutes = sessionType == StudySessionConfigState.SessionType.FIXED ?
-                config.getTotalTargetDurationMinutes() : 0;
+        if (sessionType == StudySessionConfigState.SessionType.FIXED) {
+            this.targetDurationMinutes = config.getTotalTargetDurationMinutes();
+        }
+        else {
+            this.targetDurationMinutes = 0;
+        }
         this.startTime = startTime;
         this.prompt = config.getPrompt();
         this.referenceFile = config.getReferenceFile();
@@ -51,11 +55,13 @@ public class StudySessionState {
      * @return The remaining duration (if fixed session), or Duration.ZERO (if variable session).
      */
     public Duration getRemainingDuration() {
-        if (sessionType == StudySessionConfigState.SessionType.VARIABLE) return Duration.ZERO;
+        if (sessionType == StudySessionConfigState.SessionType.VARIABLE) {
+            return Duration.ZERO;
+        }
 
-        LocalDateTime targetEndTime = startTime.plusMinutes(targetDurationMinutes);
+        final LocalDateTime targetEndTime = startTime.plusMinutes(targetDurationMinutes);
 
-        Duration remaining = Duration.between(LocalDateTime.now(), targetEndTime);
+        final Duration remaining = Duration.between(LocalDateTime.now(), targetEndTime);
 
         if (remaining.isNegative()) {
             return Duration.ZERO;
@@ -99,14 +105,14 @@ public class StudySessionState {
 
     @Override
     public String toString() {
-        return "StudySessionState{" +
-                "sessionType=" + sessionType +
-                ", startTime=" + startTime +
-                ", targetDurationMinutes=" + targetDurationMinutes +
-                ", isActive=" + isActive +
-                ", prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                '}';
+        return "StudySessionState{"
+            + "sessionType=" + sessionType
+            + ", startTime=" + startTime
+            + ", targetDurationMinutes=" + targetDurationMinutes
+            + ", isActive=" + isActive
+            + ", prompt='" + prompt + '\''
+            + ", referenceFile='" + referenceFile + '\''
+            + '}';
     }
 
     public StudySessionConfigState.SessionType getSessionType() {

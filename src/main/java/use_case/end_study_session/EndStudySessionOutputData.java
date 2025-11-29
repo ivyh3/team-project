@@ -1,8 +1,8 @@
 package use_case.end_study_session;
 
-import interface_adapter.view_model.StudySessionState;
-
 import java.time.LocalDateTime;
+
+import interface_adapter.view_model.StudySessionState;
 
 /**
  * Output data for the study session.

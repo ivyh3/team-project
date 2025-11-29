@@ -1,6 +1,10 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.*;
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionState;
+import interface_adapter.view_model.StudySessionViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.start_study_session.StartStudySessionOutputBoundary;
 import use_case.start_study_session.StartStudySessionOutputData;
 
@@ -14,9 +18,9 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     private final String dashboardViewName;
 
     public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel,
-            StudySessionViewModel studySessionViewModel,
-            ViewManagerModel viewManagerModel,
-            String dashboardViewName) {
+                                      StudySessionViewModel studySessionViewModel,
+                                      ViewManagerModel viewManagerModel,
+                                      String dashboardViewName) {
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
         this.viewManagerModel = viewManagerModel;
