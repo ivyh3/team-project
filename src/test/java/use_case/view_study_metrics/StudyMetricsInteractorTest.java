@@ -1,8 +1,6 @@
  package use_case.view_study_metrics;
 
- import entity.StudyQuiz;
- import entity.StudySession;
- import entity.User;
+ import entity.*;
  import org.junit.jupiter.api.BeforeEach;
  import org.junit.jupiter.api.Test;
  import org.mockito.ArgumentCaptor;
@@ -32,23 +30,23 @@
          user = new User("userid", "name@gmail.com", LocalDateTime.now());
      }
 
+     // check durations make sense when there are multiple sessions, one session, or zero sessions in a day
      @Test
-     // check durations make sense when there are multiple sessions in a day
-     void dailyStudyDurationsMultipleSessionsTest() {
-         LocalDateTime Sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
+     void dailyStudyDurationsTest() {
+         StudySessionFactory studySessionFactory = new StudySessionFactory();
+         LocalDateTime sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
          List<StudySession> testSessions = new ArrayList<>();
 
-         testSessions.add(createTestSession("s1", Sunday.plusDays(0), Sunday.plusDays(0).plusMinutes(30)));
-         testSessions.add(createTestSession("s2", Sunday.plusDays(0), Sunday.plusDays(0).plusMinutes(30)));
-         testSessions.add(createTestSession("s3", Sunday.plusDays(1), Sunday.plusDays(1).plusMinutes(90)));
-         testSessions.add(createTestSession("s4", Sunday.plusDays(2), Sunday.plusDays(2).plusMinutes(120)));
+         testSessions.add(studySessionFactory.create("s1", sunday.plusDays(0), sunday.plusDays(0).plusMinutes(30)));
+         testSessions.add(studySessionFactory.create("s2", sunday.plusDays(0), sunday.plusDays(0).plusMinutes(30)));
+         testSessions.add(studySessionFactory.create("s3", sunday.plusDays(1), sunday.plusDays(1).plusMinutes(90)));
 
-         when(metricsDAO.getSessionsPerWeek(user.getUserId(), Sunday))
+         when(metricsDAO.getSessionsPerWeek(user.getUserId(), sunday))
                  .thenReturn(testSessions);
-         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), Sunday))
+         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), sunday))
                  .thenReturn(new ArrayList<>());
 
-         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), Sunday);
+         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), sunday);
          interactor.execute(inputData);
 
          ArgumentCaptor<ViewStudyMetricsOutputData> captor =
@@ -60,23 +58,19 @@
 
          assertEquals(Duration.ofMinutes(60), dailyDurations.get(DayOfWeek.SUNDAY));
          assertEquals(Duration.ofMinutes(90), dailyDurations.get(DayOfWeek.MONDAY));
-         assertEquals(Duration.ofMinutes(120), dailyDurations.get(DayOfWeek.TUESDAY));
          assertNull(dailyDurations.get(DayOfWeek.WEDNESDAY));
      }
 
-     void dailyStudyDurationsEmptyTest() {
-         // TODO: write the test, should be zero and empty
-     }
-
+     // check average scores make sense when there are multiple quizzes, one quiz, or zero quizzes in a day
      @Test
-     // check average scores make sense when there are multiple quizzes in a day
-     void averageQuizScoresMultipleQuizzesTest() {
+     void averageQuizScoresTest() {
+         StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
          LocalDateTime sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
          List<StudyQuiz> testQuizzes = new ArrayList<>();
 
-         testQuizzes.add(createTestQuiz("q1", 0.8f, sunday.plusDays(0), sunday.plusDays(0)));
-         testQuizzes.add(createTestQuiz("q2", 0.9f, sunday.plusDays(0), sunday.plusDays(0)));
-         testQuizzes.add(createTestQuiz("q3", 0.7f, sunday.plusDays(1), sunday.plusDays(1)));
+         testQuizzes.add(studyQuizFactory.create("q1", 0.8f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(studyQuizFactory.create("q2", 0.9f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(studyQuizFactory.create("q3", 0.7f, sunday.plusDays(1), sunday.plusDays(1)));
 
          when(metricsDAO.getSessionsPerWeek(user.getUserId(), sunday))
                  .thenReturn(new ArrayList<>());
@@ -97,24 +91,4 @@
          assertEquals(70f, averageScores.get(DayOfWeek.MONDAY), 0.01);
          assertNull(averageScores.get(DayOfWeek.TUESDAY));
      }
-
-     void averageQuizScoresEmptyTest() {
-         // TODO: write the test, should be zero and empty
-     }
-
-
-     // helpers
-     private StudySession createTestSession(String id, LocalDateTime startTime, LocalDateTime endTime) {
-         return new StudySession(id, startTime, endTime);
-     }
-
-     private StudyQuiz createTestQuiz(String id, float score, LocalDateTime startTime, LocalDateTime endTime) {
-         return new StudyQuiz(
-                 id,
-                 score,
-                 startTime,
-                 endTime
-         );
-     }
-
  }

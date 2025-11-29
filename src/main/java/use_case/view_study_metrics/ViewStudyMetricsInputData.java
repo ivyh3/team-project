@@ -1,6 +1,5 @@
 package use_case.view_study_metrics;
 import java.time.LocalDateTime;
-import entity.User;
 /**
  * Input data for the View Study Metrics use case.
  */

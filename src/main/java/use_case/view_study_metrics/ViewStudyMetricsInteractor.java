@@ -2,7 +2,6 @@ package use_case.view_study_metrics;
 
 import entity.StudyQuiz;
 import entity.StudySession;
-import entity.User;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -65,8 +64,6 @@ public class ViewStudyMetricsInteractor implements ViewStudyMetricsInputBoundary
         );
 
         outputBoundary.prepareSuccessView(outputData);
-
-        // TODO: Prepare success or *failure* view
     }
 }
 
