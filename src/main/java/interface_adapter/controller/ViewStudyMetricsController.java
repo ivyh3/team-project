@@ -19,13 +19,11 @@ public class ViewStudyMetricsController {
     
     /**
      * Executes the view study metrics use case.
-//     * @param userId the user
-     * @param week the time filter (e.g., "week", "month", "all")
+     * @param week the Sunday expected
      */
     public void execute(LocalDateTime week) {
-        String userId = dashboardViewModel.getState().getUserId();
-        System.out.println("User: " + userId);
-        ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(userId, week);
+        final String userId = dashboardViewModel.getState().getUserId();
+        final ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(userId, week);
         interactor.execute(inputData);
     }
 }

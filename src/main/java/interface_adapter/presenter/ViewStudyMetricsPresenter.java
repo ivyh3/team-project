@@ -9,22 +9,22 @@ import use_case.view_study_metrics.ViewStudyMetricsOutputData;
  * Formats output data and updates the MetricsViewModel.
  */
 public class ViewStudyMetricsPresenter implements ViewStudyMetricsOutputBoundary {
-	private final MetricsViewModel viewModel;
+    private final MetricsViewModel viewModel;
 
-	public ViewStudyMetricsPresenter(MetricsViewModel viewModel) {
-		this.viewModel = viewModel;
-	}
+    public ViewStudyMetricsPresenter(MetricsViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
 
-	@Override
-	public void prepareSuccessView(ViewStudyMetricsOutputData outputData) {
-		viewModel.setDailyStudyDurations(outputData.getDailyStudyDurations());
-		viewModel.setStartDate(outputData.getStartDate());
-		viewModel.setAverageQuizScores(outputData.getAverageQuizScores());
-		viewModel.setErrorMessage("");
-	}
+    @Override
+    public void prepareSuccessView(ViewStudyMetricsOutputData outputData) {
+        viewModel.setDailyStudyDurations(outputData.getDailyStudyDurations());
+        viewModel.setStartDate(outputData.getStartDate());
+        viewModel.setAverageQuizScores(outputData.getAverageQuizScores());
+        viewModel.setErrorMessage("");
+    }
 
-	@Override
-	public void prepareFailView(String error) {
-		viewModel.setErrorMessage(error);
-	}
+    @Override
+    public void prepareFailView(String error) {
+        viewModel.setErrorMessage(error);
+    }
 }

@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-// JfreeChart to create a dual axis line chart
+
+import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -27,7 +28,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
     private final ViewStudyMetricsController controller;
 
     private ChartPanel chartPanel;
-    private JPanel main;
+    private final JPanel main;
     private LocalDateTime startDate;
 
     public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller) {
@@ -35,18 +36,37 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         this.viewModel = viewModel;
         this.controller = controller;
 
-        int daysSinceSunday = LocalDateTime.now().getDayOfWeek().getValue() % 7;
+        final int daysSinceSunday = LocalDateTime.now().getDayOfWeek().getValue() % 7;
         this.startDate = LocalDateTime.now().minusDays(daysSinceSunday).toLocalDate().atStartOfDay();
 
         viewModel.addPropertyChangeListener(this);
 
-
-        JPanel header = new ViewHeader("Study Metrics");
+        final JPanel header = new ViewHeader("Study Metrics");
         this.add(header, BorderLayout.NORTH);
 
-        JPanel subheading = new JPanel();
-        JButton lastWeekButton = new JButton("< Last Week");
-        JButton nextWeekButton = new JButton("Next Week >");
+        final JPanel subheading = getWeekPanel();
+        this.add(subheading, BorderLayout.CENTER);
+
+        main = new JPanel();
+        main.setLayout(new BorderLayout());
+        updateChart();
+
+        final JPanel returnPanel = new JPanel();
+        final JButton returnButton = new JButton("Return");
+        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
+        returnPanel.add(returnButton);
+
+        main.add(returnPanel, BorderLayout.SOUTH);
+        this.add(main, BorderLayout.SOUTH);
+
+        SwingUtilities.invokeLater(this::loadMetrics);
+    }
+
+    @NotNull
+    private JPanel getWeekPanel() {
+        final JPanel result = new JPanel();
+        final JButton lastWeekButton = new JButton("< Last Week");
+        final JButton nextWeekButton = new JButton("Next Week >");
 
         lastWeekButton.addActionListener(e -> {
             startDate = startDate.minusDays(7);
@@ -58,99 +78,88 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
             loadMetrics();
         });
 
-        subheading.add(lastWeekButton);
-        subheading.add(nextWeekButton);
-        this.add(subheading, BorderLayout.CENTER);
-
-        main = new JPanel();
-        main.setLayout(new BorderLayout());
-
-        updateChart();
-
-        JPanel returnPanel = new JPanel();
-        JButton returnButton = new JButton("Return");
-        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
-        returnPanel.add(returnButton);
-
-        main.add(returnPanel, BorderLayout.SOUTH);
-        this.add(main, BorderLayout.SOUTH);
-
-        SwingUtilities.invokeLater(this::loadMetrics); // TODO: no clue why but this doesn't load until the last week/
-                                                        // next week buttons are pressed
-
+        result.add(lastWeekButton);
+        result.add(nextWeekButton);
+        return result;
     }
 
-    public void loadMetrics() {controller.execute(startDate);}
+    /**
+     * Helper method to load metrics based on the start date of the week.
+     */
+    public void loadMetrics() {
+        controller.execute(startDate);
+    }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String propertyName = evt.getPropertyName();
+        final String propertyName = evt.getPropertyName();
 
         if ("dailyStudyDurations".equals(propertyName) || "averageQuizScores".equals(propertyName)) {
             updateChart();
         }
-
         if ("startDate".equals(propertyName)) {
             this.startDate = viewModel.getStartDate();
             updateChart();
         }
-
         if ("errorMessage".equals(propertyName)) {
-            String error = viewModel.getErrorMessage();
+            final String error = viewModel.getErrorMessage();
             if (!error.isEmpty()) {
                 JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
+    /**
+     * Helper method to create the chart with the proper data.
+     */
     private void updateChart() {
         if (chartPanel != null) {
             main.remove(chartPanel);
         }
 
         // study durations
-        DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
+        final DefaultCategoryDataset leftDataset = new DefaultCategoryDataset();
 
-        Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
+        final Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
+        final DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                                  DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
         for (DayOfWeek day : days) {
-            Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
-            double hours = (double) duration.getSeconds() / 3600;
+            final Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
+            final double hours = (double) duration.getSeconds() / 3600;
             leftDataset.addValue(hours, "Study Duration", day);
         }
-        String dateRange = formatDateRange(startDate);
+        final String dateRange = formatDateRange();
 
-        JFreeChart chart = ChartFactory.createLineChart(
+        final JFreeChart chart = ChartFactory.createLineChart(
                 dateRange,
                 "",
                 "Hours Studied",
                 leftDataset
         );
 
-        CategoryPlot plot = chart.getCategoryPlot();
+        final CategoryPlot plot = chart.getCategoryPlot();
 
-        LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
+        final LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
         leftRenderer.setSeriesShapesVisible(0, true);
         leftRenderer.setSeriesPaint(0, new Color(1.0f, 0.0f, 0.0f, 0.5f));
         leftRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
         plot.setRenderer(0, leftRenderer);
 
         // quiz scores
-        DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
+        final DefaultCategoryDataset rightDataset = new DefaultCategoryDataset();
 
-        Map<DayOfWeek, Float> quizScores = viewModel.getAverageQuizScores();
+        final Map<DayOfWeek, Float> quizScores = viewModel.getAverageQuizScores();
         for (DayOfWeek day : days) {
-            Float score = quizScores.getOrDefault(day, 0f);
+            final Float score = quizScores.getOrDefault(day, 0f);
             rightDataset.addValue(score, "Quiz Score", day);
         }
 
         plot.setDataset(1, rightDataset);
-        NumberAxis rightAxis = new NumberAxis("Quiz Score (%)");
+        final NumberAxis rightAxis = new NumberAxis("Quiz Score (%)");
         plot.setRangeAxis(1, rightAxis);
         plot.mapDatasetToRangeAxis(1, 1);
-        LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
+        final LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
         rightRenderer.setSeriesShapesVisible(0, true);
         rightRenderer.setSeriesPaint(0, new Color(0.0f, 0.0f, 1.0f, 0.5f));
         rightRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
@@ -167,10 +176,11 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
     /**
      * Helper method to format date range for chart title.
+     * @return the date range formatted as a string
      */
-    private String formatDateRange(LocalDateTime startDate) {
-        LocalDateTime endDate = startDate.plusDays(6);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private String formatDateRange() {
+        final LocalDateTime endDate = startDate.plusDays(6);
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return "Week of " + startDate.format(formatter) + " to " + endDate.format(formatter);
     }
 }

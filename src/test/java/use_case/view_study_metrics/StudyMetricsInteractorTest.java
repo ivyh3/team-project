@@ -16,7 +16,7 @@
  import static org.junit.jupiter.api.Assertions.assertNull;
  import static org.mockito.Mockito.*;
 
- public class StudyMetricsInteractorTest {
+ class StudyMetricsInteractorTest {
      private ViewStudyMetricsInteractor interactor;
      private ViewStudyMetricsDataAccessInterface metricsDAO;
      private ViewStudyMetricsOutputBoundary presenter;

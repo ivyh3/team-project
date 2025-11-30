@@ -21,10 +21,16 @@ public class ViewStudyMetricsOutputData {
         this.startDate = startDate;
     }
     
-    public Map<DayOfWeek, Duration> getDailyStudyDurations() {return dailyStudyDurations;}
+    public Map<DayOfWeek, Duration> getDailyStudyDurations() {
+        return dailyStudyDurations;
+    }
     
-    public Map<DayOfWeek, Float> getAverageQuizScores() {return averageQuizScores;}
+    public Map<DayOfWeek, Float> getAverageQuizScores() {
+        return averageQuizScores;
+    }
 
-    public LocalDateTime getStartDate() {return startDate; }
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
 }
 
