@@ -8,12 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * ViewModel for the Schedule Session view.
+ * Stores the state and data that the schedule session view needs to display.
+ */
 public class ScheduleSessionViewModel {
     private final PropertyChangeSupport support;
     private final List<ScheduledSession> scheduledSessions;
 
     private String statusMessage;
-    private String errorMessage;  // <-- add this
+    private String errorMessage;
 
     public ScheduleSessionViewModel() {
         this.support = new PropertyChangeSupport(this);

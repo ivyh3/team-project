@@ -9,6 +9,8 @@ import com.github.lgooddatepicker.components.TimePicker;
 import frameworks_drivers.firebase.FirebaseScheduledSessionDataAccessObject;
 import entity.ScheduledSessionFactory;
 import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
+import interface_adapter.presenter.ScheduleStudySessionPresenter;
+import use_case.schedule_study_session.ScheduleStudySessionInteractor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,7 +39,12 @@ public class ScheduleSessionView extends View {
 
         this.viewModel = new ScheduleSessionViewModel();
         this.dataAccess = new FirebaseScheduledSessionDataAccessObject(new ScheduledSessionFactory(), "testUser");
-        this.controller = new ScheduleStudySessionController(viewModel);
+
+        ScheduleStudySessionPresenter presenter = new ScheduleStudySessionPresenter(viewModel);
+        ScheduleStudySessionInteractor interactor =
+                new ScheduleStudySessionInteractor(dataAccess, presenter);
+
+        this.controller = new ScheduleStudySessionController(interactor);
 
         sessionList = new JList<>();
         sessionList.setCellRenderer(new SessionCellRenderer());
@@ -215,8 +222,7 @@ public class ScheduleSessionView extends View {
                 String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
                     String sessionId = java.util.UUID.randomUUID().toString();
-                    ScheduledSession session = new ScheduledSession(sessionId, start, end, title);
-                    controller.addSession(session); // persist to database
+                    controller.execute("testUser", start, end, title);
 
                     updateSessionListForSelectedDate(); // refresh list for selected date
                 }

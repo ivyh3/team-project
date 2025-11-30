@@ -1,17 +1,31 @@
 package interface_adapter.controller;
 
-import entity.ScheduledSession;
-import interface_adapter.view_model.ScheduleSessionViewModel;
+import use_case.schedule_study_session.ScheduleStudySessionInputBoundary;
+import use_case.schedule_study_session.ScheduleStudySessionInputData;
 
+import java.time.LocalDateTime;
+
+/**
+ * Controller for the Schedule Study Session use case.
+ */
 public class ScheduleStudySessionController {
-    private final ScheduleSessionViewModel viewModel;
+    private final ScheduleStudySessionInputBoundary interactor;
 
-    public ScheduleStudySessionController(ScheduleSessionViewModel viewModel) {
-        this.viewModel = viewModel;
+    public ScheduleStudySessionController(ScheduleStudySessionInputBoundary interactor) {
+        this.interactor = interactor;
     }
-
-    public void addSession(ScheduledSession session) {
-        viewModel.addScheduledSession(session);
-        viewModel.setStatusMessage("Session scheduled successfully!");
+    
+    /**
+     * Executes the schedule study session use case.
+     * @param userId the user ID
+     * @param startTime the start time
+     * @param endTime the end time
+     * @param title the topic of the study session
+     */
+    public void execute(String userId, LocalDateTime startTime,
+                       LocalDateTime endTime, String title) {
+        ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
+            userId, startTime, endTime, title);
+        interactor.execute(inputData);
     }
 }

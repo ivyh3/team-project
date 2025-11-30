@@ -32,8 +32,8 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
         this.signupViewModel = signupViewModel;
         signupViewModel.addPropertyChangeListener(this);
 
-        //final JLabel title = new JLabel(SignupViewModel.TITLE_LABEL);
-        //title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // final JLabel title = new JLabel(SignupViewModel.TITLE_LABEL);
+        // title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         final LabelTextPanel usernameInfo = new LabelTextPanel(
                 new JLabel(SignupViewModel.USERNAME_LABEL), usernameInputField);
@@ -60,20 +60,17 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
                             signupController.execute(
                                     currentState.getUsername(),
                                     currentState.getPassword(),
-                                    currentState.getRepeatPassword()
-                            );
+                                    currentState.getRepeatPassword());
                         }
                     }
-                }
-        );
+                });
 
         toLogin.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         signupController.switchToLoginView();
                     }
-                }
-        );
+                });
 
         cancel.addActionListener(this);
 
@@ -83,7 +80,7 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        //this.add(title);
+        // this.add(title);
         this.add(usernameInfo);
         this.add(passwordInfo);
         this.add(repeatPasswordInfo);

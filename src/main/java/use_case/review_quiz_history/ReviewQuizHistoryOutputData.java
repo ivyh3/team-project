@@ -8,13 +8,12 @@ import java.util.List;
  */
 public class ReviewQuizHistoryOutputData {
     private final List<StudyQuiz> quizzes;
-    
+
     public ReviewQuizHistoryOutputData(List<StudyQuiz> quizzes) {
         this.quizzes = quizzes;
     }
-    
+
     public List<StudyQuiz> getQuizzes() {
         return quizzes;
     }
 }
-

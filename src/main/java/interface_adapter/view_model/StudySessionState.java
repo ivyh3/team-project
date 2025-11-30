@@ -1,6 +1,5 @@
 package interface_adapter.view_model;
 
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 

@@ -20,8 +20,6 @@ public class VariableSessionView extends View {
         durationLabel.setFont(new Font(null, Font.BOLD, 52));
         durationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-
-
         JButton finalizeSession = new JButton("Finalize Session");
         finalizeSession.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("studySessionEnd");

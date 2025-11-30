@@ -18,8 +18,8 @@ public class LogoutPresenter implements LogoutOutputBoundary {
     private LoginViewModel loginViewModel;
 
     public LogoutPresenter(ViewManagerModel viewManagerModel,
-                          LoggedInViewModel loggedInViewModel,
-                           LoginViewModel loginViewModel) {
+            LoggedInViewModel loggedInViewModel,
+            LoginViewModel loginViewModel) {
         // TODO: assign to the three instance variables.
         this.loggedInViewModel = loggedInViewModel;
         this.viewManagerModel = viewManagerModel;
@@ -46,7 +46,8 @@ public class LogoutPresenter implements LogoutOutputBoundary {
 
         // TODO: have prepareSuccessView update the LoginState
         // 1. get the LoginState out of the appropriate View Model,
-        // 2. set the username in the state to be the username of the user that just logged out,
+        // 2. set the username in the state to be the username of the user that just
+        // logged out,
         // 3. firePropertyChanged so that the View that is listening is updated.
 
         // On success, switch to the login view.

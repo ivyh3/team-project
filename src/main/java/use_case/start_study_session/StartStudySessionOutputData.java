@@ -4,7 +4,6 @@ import interface_adapter.view_model.StudySessionConfigState;
 
 import java.time.LocalDateTime;
 
-
 public class StartStudySessionOutputData {
     private final StudySessionConfigState config;
     private final LocalDateTime startTime;
@@ -17,6 +16,7 @@ public class StartStudySessionOutputData {
     public StudySessionConfigState getConfig() {
         return config;
     }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
