@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 
 /**
  * State for the StudySessionEndView.
- *
  * Includes the prompt and references used, along with duration information.
  */
 public class StudySessionEndState {
@@ -39,12 +38,12 @@ public class StudySessionEndState {
         this.referenceFile = referenceFile;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
     public LocalDateTime getStartTime() {
         return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
     public LocalDateTime getEndTime() {
@@ -65,12 +64,12 @@ public class StudySessionEndState {
 
     @Override
     public String toString() {
-        return "StudySessionEndState{" +
-                "prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+        return "StudySessionEndState{"
+            + "prompt='" + prompt + '\''
+            + ", referenceFile='" + referenceFile + '\''
+            + ", startTime=" + startTime
+            + ", endTime=" + endTime
+            + ", duration=" + duration
+            + '}';
     }
 }

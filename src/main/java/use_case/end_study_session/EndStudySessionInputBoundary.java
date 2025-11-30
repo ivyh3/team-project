@@ -1,6 +1,5 @@
 package use_case.end_study_session;
 
-
 /**
  * Input boundary for ending a study session.
  */
