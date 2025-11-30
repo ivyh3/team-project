@@ -3,6 +3,10 @@ package interface_adapter.view_model;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+/**
+ * State for the StudySessionEndView.
+ * Includes the prompt and references used, along with duration information.
+ */
 public class StudySessionEndState {
     private String prompt;
     private String referenceFile;
@@ -34,8 +38,20 @@ public class StudySessionEndState {
         this.referenceFile = referenceFile;
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public Duration getDuration() {
@@ -48,12 +64,12 @@ public class StudySessionEndState {
 
     @Override
     public String toString() {
-        return "StudySessionEndState{" +
-                "prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+        return "StudySessionEndState{"
+            + "prompt='" + prompt + '\''
+            + ", referenceFile='" + referenceFile + '\''
+            + ", startTime=" + startTime
+            + ", endTime=" + endTime
+            + ", duration=" + duration
+            + '}';
     }
 }

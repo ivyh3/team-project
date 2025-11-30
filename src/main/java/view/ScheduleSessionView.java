@@ -11,6 +11,7 @@ import entity.ScheduledSessionFactory;
 import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
 import interface_adapter.presenter.ScheduleStudySessionPresenter;
 import use_case.schedule_study_session.ScheduleStudySessionInteractor;
+import interface_adapter.view_model.DashboardViewModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,17 +35,17 @@ public class ScheduleSessionView extends View {
     private JPanel header;
     private JLabel headerTitle;
 
-    public ScheduleSessionView() {
+    public ScheduleSessionView(DashboardViewModel dashboardViewModel) {
         super("scheduleSession");
 
         this.viewModel = new ScheduleSessionViewModel();
-        this.dataAccess = new FirebaseScheduledSessionDataAccessObject(new ScheduledSessionFactory(), "testUser");
+        this.dataAccess = new FirebaseScheduledSessionDataAccessObject(new ScheduledSessionFactory());
 
         ScheduleStudySessionPresenter presenter = new ScheduleStudySessionPresenter(viewModel);
         ScheduleStudySessionInteractor interactor =
                 new ScheduleStudySessionInteractor(dataAccess, presenter);
 
-        this.controller = new ScheduleStudySessionController(interactor);
+        this.controller = new ScheduleStudySessionController(interactor, dashboardViewModel);
 
         sessionList = new JList<>();
         sessionList.setCellRenderer(new SessionCellRenderer());
@@ -220,7 +221,7 @@ public class ScheduleSessionView extends View {
                 String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
                     // schedule via clean architecture
-                    controller.execute("testUser", start, end, title);
+                    controller.execute(start, end, title);
 
                     // refresh list only if scheduled session is on currently selected day
                     if (pickedDate.equals(selectedDate)) {

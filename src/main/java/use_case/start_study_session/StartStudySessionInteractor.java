@@ -1,55 +1,59 @@
 package use_case.start_study_session;
 
-import interface_adapter.view_model.StudySessionConfigState;
-import interface_adapter.view_model.StudySessionConfigState.SessionType;
-import interface_adapter.view_model.StudySessionState;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigState.SessionType;
+
+/**
+ * The interactor for the start study session use case.
+ */
 public class StartStudySessionInteractor implements StartStudySessionInputBoundary {
     private final StartStudySessionOutputBoundary presenter;
-    // private ReferenceFilesDataAccessInterface referenceFilesDataAccessObject
-    private final List<String> files = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf",
-            "pdf.pdf");
+    private final StartStudySessionDataAccessInterface fileDataAccessObject;
 
-    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter) {
+    public StartStudySessionInteractor(StartStudySessionOutputBoundary presenter,
+                                       StartStudySessionDataAccessInterface fileRepository) {
         this.presenter = presenter;
+        this.fileDataAccessObject = fileRepository;
     }
 
+    /**
+     * Executes start study session use case.
+     *
+     * @param inputData The input data
+     */
     @Override
     public void execute(StartStudySessionInputData inputData) {
-        StudySessionConfigState config = inputData.getConfig();
+        final StudySessionConfigState config = inputData.getConfig();
 
         // Validate.
         if (config.getSessionType() == null) {
             presenter.prepareErrorView("You need a session type selected.");
-            return;
-        } else if (config.getSessionType() == SessionType.FIXED
-                && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
-            presenter.prepareErrorView("Please study a bit more seriously (time can't be zero)!");
-            return;
-        } else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
-            presenter.prepareErrorView("Please select a reference file.");
-            return;
-        } else if (!checkIfFileExists(config.getReferenceFile())) {
-            presenter.prepareErrorView("Reference file does not exist in storage..? Use another one.");
-            return;
-        } else if (config.getPrompt() == null || config.getPrompt().isEmpty()) {
-            presenter.prepareErrorView("Please provide a prompt describing what to study.");
-            return;
         }
-
-        // Passed all validation checks. Start the study session.
-        StartStudySessionOutputData outputData = new StartStudySessionOutputData(
+        else if (config.getSessionType() == SessionType.FIXED
+            && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
+            presenter.prepareErrorView("Please study a bit more seriously (time can't be zero)!");
+        }
+        else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
+            presenter.prepareErrorView("Please select a reference file.");
+        }
+        else if (!checkIfFileExists(config.getReferenceFile())) {
+            presenter.prepareErrorView("Reference file does not exist in storage..? Use another one.");
+        }
+        else if (config.getPrompt() == null || config.getPrompt().isEmpty()) {
+            presenter.prepareErrorView("Please provide a prompt describing what to study.");
+        }
+        else {
+            // Passed all validation checks. Start the study session.
+            final StartStudySessionOutputData outputData = new StartStudySessionOutputData(
                 config,
                 LocalDateTime.now());
 
-        // TODO: Have two seperate views for study sessions, and I guess would need two
-        // view model state classes then
-        presenter.startStudySession(outputData);
+            presenter.startStudySession(outputData);
+        }
     }
 
     @Override
@@ -57,13 +61,32 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         presenter.abortStudySessionConfig();
     }
 
-    @Override
-    public void setSessionType(SessionType sessionType) {
-        presenter.setSessionType(sessionType);
+    /**
+     * Check if the given file resource exists in storage.
+     *
+     * @param file The file to check.
+     * @return whether the file exists.
+     */
+    private boolean checkIfFileExists(String file) {
+        // TODO: MMake User ID handling, well, real
+        return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
     }
 
-    private boolean checkIfFileExists(String file) {
-        return true; // Temporary.
+    // TODO: Either remove this and move this to navigation from dashboard to config
+    // view, or
+    // make sure this is called when the config view is opened somehow.
+    @Override
+    public void refreshFileOptions() {
+
+        // TODO: Use real user ID
+        List<String> fileOptions = fileDataAccessObject.getAllUserFiles(DashboardState.userId);
+        if (fileOptions == null || fileOptions.isEmpty()) {
+            presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
+            presenter.abortStudySessionConfig();
+        }
+        else {
+            presenter.refreshFileOptions(fileOptions);
+        }
     }
 
 }

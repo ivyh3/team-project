@@ -1,6 +1,4 @@
 package use_case.view_study_metrics;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
@@ -8,24 +6,19 @@ import java.time.LocalDateTime;
  */
 public class ViewStudyMetricsInputData {
     private final String userId;
-    private final String courseId;
-    private final String timeFilter; // TODO: change to LocalDateTime
-
-    public ViewStudyMetricsInputData(String userId, String courseId, String timeFilter) {
+    private final LocalDateTime week;
+    
+    public ViewStudyMetricsInputData(String userId, LocalDateTime week) {
         this.userId = userId;
-        this.courseId = courseId;
-        this.timeFilter = timeFilter;
+        this.week = week;
     }
-
-    public String getUserId() {
+    
+    public String getUser() {
         return userId;
     }
 
-    public String getCourseId() {
-        return courseId;
-    }
-
-    public String getTimeFilter() {
-        return timeFilter;
+    public LocalDateTime getWeek() {
+        return week;
     }
 }
+

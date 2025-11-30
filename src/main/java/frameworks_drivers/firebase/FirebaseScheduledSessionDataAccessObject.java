@@ -35,23 +35,21 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
     private static final String SCHEDULED_SESSION_COLLECTION = "scheduledSessions";
     private final Firestore firestore;
     private final ScheduledSessionFactory scheduledSessionFactory;
-    private final String userId;
 
-    public FirebaseScheduledSessionDataAccessObject(ScheduledSessionFactory scheduledSessionFactory,  String userId) {
+    public FirebaseScheduledSessionDataAccessObject(ScheduledSessionFactory scheduledSessionFactory) {
         this.scheduledSessionFactory = scheduledSessionFactory;
         this.firestore = FirestoreClient.getFirestore();
-        this.userId = userId;
-    }
-    @Override
-    public void saveSession(ScheduledSession session) {
-        addScheduledSession(userId, session);  // call your existing DAO method
     }
 
     @Override
-    public List<ScheduledSession> getAllSessions() {
-        return getScheduledSessions(userId);  // call your existing DAO method
+    public void saveSession(String userId, ScheduledSession session) {
+        addScheduledSession(userId, session);
     }
 
+    @Override
+    public List<ScheduledSession> getAllSessions(String userId) {
+        return getScheduledSessions(userId);
+    }
     /**
      * Adds a scheduled study session.
      *

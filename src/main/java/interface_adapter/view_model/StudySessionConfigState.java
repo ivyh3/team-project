@@ -1,12 +1,16 @@
 package interface_adapter.view_model;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * State for configuring a study session.
+ */
 public class StudySessionConfigState {
+    private static final int MIN_PER_HOUR = 60;
     // Todo: need this to be brought from somewhere.
-    private List<String> fileOptions = Arrays.asList("mat223.pdf", "longer_textbook_name_adfasdf.pdf", "csc222.pdf",
-            "pdf.pdf");
+    private List<String> fileOptions;
     private SessionType sessionType;
     private Integer targetDurationHours;
     private Integer targetDurationMinutes;
@@ -18,9 +22,9 @@ public class StudySessionConfigState {
         this.sessionType = SessionType.VARIABLE;
         this.targetDurationMinutes = 0;
         this.targetDurationHours = 0;
-
+        this.fileOptions = new ArrayList<>();
         this.prompt = "";
-        this.referenceFile = !fileOptions.isEmpty() ? fileOptions.get(0) : "";
+        this.referenceFile = "";
     }
 
     public SessionType getSessionType() {
@@ -31,6 +35,11 @@ public class StudySessionConfigState {
         this.sessionType = sessionType;
     }
 
+    /**
+     * Get the minutes COMPONENT of the target duration, not the total.
+     *
+     * @return The minutes portion of total study target duration.
+     */
     public Integer getTargetDurationMinutes() {
         return targetDurationMinutes;
     }
@@ -39,10 +48,17 @@ public class StudySessionConfigState {
         this.targetDurationMinutes = targetDurationMinutes;
     }
 
+    /**
+     * Return the TOTAL amount of time set as the target, in minutes.
+     *
+     * @return The total amount of time set as the target duration.
+     */
     public Integer getTotalTargetDurationMinutes() {
-        int mins = this.targetDurationMinutes == null ? 0 : this.targetDurationMinutes;
-        int hours = this.targetDurationHours == null ? 0 : this.targetDurationHours;
-        return mins + hours * 60;
+        final int mins;
+        mins = Objects.requireNonNullElse(this.targetDurationMinutes, 0);
+        final int hours;
+        hours = Objects.requireNonNullElse(this.targetDurationHours, 0);
+        return mins + hours * MIN_PER_HOUR;
     }
 
     public String getPrompt() {
@@ -69,6 +85,11 @@ public class StudySessionConfigState {
         this.fileOptions = fileOptions;
     }
 
+    /**
+     * Return the hours COMPONENT of the target duration, not the total.
+     *
+     * @return The hours portion of the total study target duration.
+     */
     public Integer getTargetDurationHours() {
         return targetDurationHours;
     }
@@ -85,13 +106,13 @@ public class StudySessionConfigState {
         this.error = error;
     }
 
-    public enum SessionType {
-        FIXED,
-        VARIABLE
-    }
-
+    /**
+     * Return a copy of this state.
+     *
+     * @return A copy of this state.
+     */
     public StudySessionConfigState copy() {
-        StudySessionConfigState copy = new StudySessionConfigState();
+        final StudySessionConfigState copy = new StudySessionConfigState();
         copy.setFileOptions(this.fileOptions);
         copy.setSessionType(this.sessionType);
         copy.setTargetDurationMinutes(this.targetDurationMinutes);
@@ -103,14 +124,22 @@ public class StudySessionConfigState {
 
     @Override
     public String toString() {
-        return "StudySessionConfigState{" +
-                "sessionType=" + sessionType +
-                ", fileOptions=" + fileOptions +
-                ", sessionType=" + sessionType +
-                ", targetDurationMinutes=" + targetDurationMinutes +
-                ", targetDurationHours=" + targetDurationHours +
-                ", prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                '}';
+        return "StudySessionConfigState{"
+            + "sessionType=" + sessionType
+            + ", fileOptions=" + fileOptions
+            + ", sessionType=" + sessionType
+            + ", targetDurationMinutes=" + targetDurationMinutes
+            + ", targetDurationHours=" + targetDurationHours
+            + ", prompt='" + prompt + '\''
+            + ", referenceFile='" + referenceFile + '\''
+            + '}';
+    }
+
+    /**
+     * Enum for the two possible configurable session types.
+     */
+    public enum SessionType {
+        FIXED,
+        VARIABLE
     }
 }

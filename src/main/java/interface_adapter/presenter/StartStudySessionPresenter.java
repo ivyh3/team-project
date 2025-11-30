@@ -1,21 +1,30 @@
 package interface_adapter.presenter;
 
-import app.AppBuilder;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigViewModel;
 import interface_adapter.view_model.StudySessionState;
 import interface_adapter.view_model.StudySessionViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.start_study_session.StartStudySessionOutputBoundary;
 import use_case.start_study_session.StartStudySessionOutputData;
 
+/**
+ * Presenter for the start study session use case.
+ */
 public class StartStudySessionPresenter implements StartStudySessionOutputBoundary {
-    StudySessionConfigViewModel studySessionConfigViewModel;
-    StudySessionViewModel studySessionViewModel;
+    private final StudySessionConfigViewModel studySessionConfigViewModel;
+    private final StudySessionViewModel studySessionViewModel;
+    private final ViewManagerModel viewManagerModel;
+    private final String dashboardViewName;
 
     public StartStudySessionPresenter(StudySessionConfigViewModel studySessionConfigViewModel,
-            StudySessionViewModel studySessionViewModel) {
+                                      StudySessionViewModel studySessionViewModel,
+                                      ViewManagerModel viewManagerModel,
+                                      String dashboardViewName) {
         this.studySessionConfigViewModel = studySessionConfigViewModel;
         this.studySessionViewModel = studySessionViewModel;
+        this.viewManagerModel = viewManagerModel;
+        this.dashboardViewName = dashboardViewName;
     }
 
     @Override
@@ -28,11 +37,15 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     public void startStudySession(StartStudySessionOutputData outputData) {
         // Prepare study session view state with set config
         studySessionViewModel.setState(new StudySessionState(outputData.getConfig(), outputData.getStartTime()));
+        studySessionViewModel.firePropertyChange();
 
-        studySessionConfigViewModel.setState(new StudySessionConfigState()); // Reset state
+        // Reset config view state to default
+        studySessionConfigViewModel.setState(new StudySessionConfigState());
+        studySessionConfigViewModel.firePropertyChange();
 
         // Navigate to study session view
-        AppBuilder.viewManagerModel.setView(studySessionViewModel.getViewName());
+        viewManagerModel.setView(studySessionViewModel.getViewName());
+        viewManagerModel.firePropertyChange();
 
     }
 
@@ -40,16 +53,16 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
     public void abortStudySessionConfig() {
         // Reset config state.
         studySessionConfigViewModel.setState(new StudySessionConfigState());
+        studySessionConfigViewModel.firePropertyChange();
 
         // Navigate back to the dashboard.
-        // TODO: MAke the presenter contain reference to the dashboard view/viewmodel
-        AppBuilder.viewManagerModel.setView("dashboard");
+        viewManagerModel.setView(dashboardViewName);
+        viewManagerModel.firePropertyChange();
     }
 
     @Override
-    public void setSessionType(StudySessionConfigState.SessionType sessionType) {
-        studySessionConfigViewModel.getState().setSessionType(sessionType);
-
-        studySessionConfigViewModel.firePropertyChange();
+    public void refreshFileOptions(java.util.List<String> fileOptions) {
+        studySessionConfigViewModel.getState().setFileOptions(fileOptions);
+        studySessionConfigViewModel.firePropertyChange("fileOptions");
     }
 }

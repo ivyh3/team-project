@@ -4,6 +4,6 @@ import java.util.List;
 import entity.ScheduledSession;
 
 public interface ScheduleStudySessionDataAccessInterface {
-    void saveSession(ScheduledSession session);
-    List<ScheduledSession> getAllSessions();
+    void saveSession(String userId, ScheduledSession session);
+    List<ScheduledSession> getAllSessions(String userId);
 }

@@ -1,119 +1,108 @@
 package app;
 
-// TODO: PUT EVERYTHING IN THE PROPER PLACE
-import frameworks_drivers.TEMP.FileUserDataAccessObject;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+
+import entity.StudyQuizFactory;
+import entity.StudySessionFactory;
 import entity.UserFactory;
-import interface_adapter.controller.ChangePasswordController;
-import interface_adapter.presenter.ChangePasswordPresenter;
-import interface_adapter.view_model.LoggedInViewModel;
+import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
+import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
+import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
+import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
+import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
+import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.LoginController;
-import interface_adapter.presenter.LoginPresenter;
-import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.controller.LogoutController;
-import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.controller.SignupController;
+import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.presenter.EndStudySessionPresenter;
+import interface_adapter.presenter.LoginPresenter;
 import interface_adapter.presenter.SignupPresenter;
+import interface_adapter.presenter.StartStudySessionPresenter;
+import interface_adapter.presenter.ViewStudyMetricsPresenter;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.MetricsViewModel;
+import interface_adapter.view_model.SettingsViewModel;
 import interface_adapter.view_model.SignupViewModel;
-import interface_adapter.view_model.InitialViewModel;
-import use_case.change_password.ChangePasswordInputBoundary;
-import use_case.change_password.ChangePasswordInteractor;
-import use_case.change_password.ChangePasswordOutputBoundary;
+import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionEndViewModel;
+import interface_adapter.view_model.StudySessionViewModel;
+import interface_adapter.view_model.ViewManagerModel;
+import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
-import use_case.logout.LogoutInputBoundary;
-import use_case.logout.LogoutInteractor;
-import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import view.LoggedInView;
-import view.LoginView;
-import view.SignupView;
-import view.ViewManager;
-import view.InitialView;
-
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.presenter.StartStudySessionPresenter;
-import interface_adapter.presenter.EndStudySessionPresenter;
-import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
-import use_case.end_study_session.EndStudySessionInteractor;
-import interface_adapter.controller.ViewStudyMetricsController;
-import interface_adapter.view_model.MetricsViewModel;
-import interface_adapter.presenter.ViewStudyMetricsPresenter;
+import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
-//import interface_adapter.repository.StudySessionRepository;
-//import interface_adapter.repository.StudyQuizRepository;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.ViewManagerModel;
-import view.*;
+import view.DashboardView;
+import view.FileManagerView;
+import view.InitialView;
+import view.LoginView;
+import view.QuizHistoryView;
+import view.ScheduleSessionView;
 import view.SettingsView;
-
-import javax.swing.*;
-import java.awt.*;
+import view.SignupView;
+import view.StudyMetricsView;
+import view.StudyQuizView;
+import view.StudySessionConfigView;
+import view.StudySessionEndView;
+import view.StudySessionView;
+import view.UploadMaterialsView;
+import view.UploadSessionMaterialsView;
+import view.ViewManager;
 
 public class AppBuilder {
-    private final String appTitle = "AI Study Companion";
-
+    public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
+    // TODO: Sort things out.
+    final UserFactory userFactory = new UserFactory();
+    final StudySessionFactory studySessionFactory = new StudySessionFactory();
+    final StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
+    final FirebaseStudySessionDataAccessObject studySessionDataAccessObject = new FirebaseStudySessionDataAccessObject(
+        studySessionFactory);
+    final FirebaseStudyQuizDataAccessObject quizDataAccessObject = new FirebaseStudyQuizDataAccessObject(
+        studyQuizFactory);
+    final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(
+        userFactory);
+    final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
+    private final String APP_TITLE = "AI Study Companion";
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
-
-    public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
-
-    // final TestDataAccessObject testDataAccessObject = new TestDataAccessObject();
-
     private DashboardView dashboardView;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
-
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
-
-    // TODO: Sort things out.
-    final UserFactory userFactory = new UserFactory();
-    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
     private LoginViewModel loginViewModel;
-    private LoggedInViewModel loggedInViewModel;
-    private LoggedInView loggedInView;
+    private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
-    private InitialViewModel initialViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
     }
 
     public AppBuilder addInitialView() {
-        // Create the InitialViewModel and InitialView
-        initialViewModel = new InitialViewModel();
-        initialView = new InitialView(initialViewModel);
+        // Create the InitialView (no ViewModel needed - it has no state)
+        initialView = new InitialView();
 
         // Add the InitialView to the CardLayout
         cardPanel.add(initialView, initialView.getViewName());
-
-        // Attach ActionListeners for the buttons
-        initialView.addLoginButtonListener(e -> {
-            // Switch to LoginView
-            if (loginView != null) {
-                viewManagerModel.setState(loginView.getViewName());
-                viewManagerModel.firePropertyChange();
-            }
-        });
-
-        initialView.addSignupButtonListener(e -> {
-            // Switch to SignupView
-            if (signupView != null) {
-                viewManagerModel.setState(signupView.getViewName());
-                viewManagerModel.firePropertyChange();
-            }
-        });
 
         return this;
     }
@@ -132,18 +121,11 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addLoggedInView() {
-        loggedInViewModel = new LoggedInViewModel();
-        loggedInView = new LoggedInView(loggedInViewModel);
-        cardPanel.add(loggedInView, loggedInView.getViewName());
-        return this;
-    }
-
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
-                signupViewModel, loginViewModel);
+            signupViewModel, dashboardViewModel);
         final SignupInputBoundary userSignupInteractor = new SignupInteractor(
-                userDataAccessObject, signupOutputBoundary, userFactory);
+            userDataAccessObject, signupOutputBoundary);
 
         SignupController controller = new SignupController(userSignupInteractor);
         signupView.setSignupController(controller);
@@ -152,45 +134,51 @@ public class AppBuilder {
 
     public AppBuilder addLoginUseCase() {
         final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+            dashboardViewModel, loginViewModel);
         final LoginInputBoundary loginInteractor = new LoginInteractor(
-                userDataAccessObject, loginOutputBoundary);
+            userDataAccessObject, loginOutputBoundary);
 
         LoginController loginController = new LoginController(loginInteractor);
         loginView.setLoginController(loginController);
         return this;
     }
 
-    public AppBuilder addChangePasswordUseCase() {
-        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
-                loggedInViewModel);
+    // public AppBuilder addChangePasswordUseCase() {
+    // final ChangePasswordOutputBoundary changePasswordOutputBoundary = new
+    // ChangePasswordPresenter(viewManagerModel,
+    // dashboardViewModel);
 
-        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
-                changePasswordOutputBoundary, userFactory);
+    // final ChangePasswordInputBoundary changePasswordInteractor = new
+    // ChangePasswordInteractor(userDataAccessObject,
+    // changePasswordOutputBoundary, userFactory);
 
-        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
-        loggedInView.setChangePasswordController(changePasswordController);
-        return this;
-    }
+    // ChangePasswordController changePasswordController = new
+    // ChangePasswordController(changePasswordInteractor);
+    // dashboardView.setChangePasswordController(changePasswordController);
+    // return this;
+    // }
 
     /**
      * Adds the Logout Use Case to the application.
-     * 
+     *
      * @return this builder
      */
-    public AppBuilder addLogoutUseCase() {
-        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+    // public AppBuilder addLogoutUseCase() {
+    // final LogoutOutputBoundary logoutOutputBoundary = new
+    // LogoutPresenter(viewManagerModel,
+    // dashboardViewModel, loginViewModel);
 
-        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+    // final LogoutInputBoundary logoutInteractor = new
+    // LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
 
-        final LogoutController logoutController = new LogoutController(logoutInteractor);
-        loggedInView.setLogoutController(logoutController);
-        return this;
-    }
-
+    // final LogoutController logoutController = new
+    // LogoutController(logoutInteractor);
+    // dashboardView.setLogoutController(logoutController);
+    // return this;
+    // }
     public AppBuilder addDashboardView() {
-        dashboardView = new DashboardView();
+        dashboardViewModel = new DashboardViewModel();
+        dashboardView = new DashboardView(dashboardViewModel);
 
         cardPanel.add(dashboardView, dashboardView.getViewName());
 
@@ -223,11 +211,14 @@ public class AppBuilder {
 
     public AppBuilder addConfigStudySessionUseCase() {
         StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
-                studySessionConfigViewModel, studySessionViewModel);
+            studySessionConfigViewModel,
+            studySessionViewModel,
+            viewManagerModel,
+            dashboardView.getViewName());
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                startStudySessionPresenter);
+            startStudySessionPresenter, fileDataAccessObject);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
-                configStudySessionInteractor);
+            configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -246,12 +237,6 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addVariableSessionView() {
-        VariableSessionView variableSessionView = new VariableSessionView();
-        cardPanel.add(variableSessionView, variableSessionView.getViewName());
-        return this;
-    }
-
     public AppBuilder addStudySessionEndView() {
         studySessionEndViewModel = new StudySessionEndViewModel();
         studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
@@ -260,9 +245,13 @@ public class AppBuilder {
     }
 
     public AppBuilder addEndStudySessionUseCase() {
-        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(studySessionViewModel,
-                studySessionEndViewModel);
-        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter);
+        EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(
+            studySessionViewModel,
+            studySessionEndViewModel,
+            viewManagerModel);
+        EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter,
+            studySessionDataAccessObject,
+            studySessionFactory);
         EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
@@ -287,7 +276,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addScheduleSessionView() {
-        ScheduleSessionView scheduleSessionView = new ScheduleSessionView();
+        ScheduleSessionView scheduleSessionView = new ScheduleSessionView(dashboardViewModel);
         cardPanel.add(scheduleSessionView, scheduleSessionView.getViewName());
         return this;
     }
@@ -296,32 +285,19 @@ public class AppBuilder {
         MetricsViewModel metricsViewModel = new MetricsViewModel();
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
-        // TODO: Replace with actual DAO implementations
-        // StudySessionRepository sessionRepository = new StudySessionRepository();
-        // StudyQuizRepository quizRepository = new StudyQuizRepository();
+        ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
+                studySessionDataAccessObject, quizDataAccessObject);
+        ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
-        // Create Interactor
-        ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
-                presenter);
-
-        // Create Controller
-        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
-
-        // Create View with ViewModel and Controller
+        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor, dashboardViewModel);
         StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
 
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
         return this;
     }
 
-    public AppBuilder addChooseStudySessionView() {
-        ChooseStudySessionView chooseStudySessionView = new ChooseStudySessionView();
-        cardPanel.add(chooseStudySessionView, chooseStudySessionView.getViewName());
-        return this;
-    }
-
     public JFrame build() {
-        final JFrame app = new JFrame(appTitle);
+        final JFrame app = new JFrame(APP_TITLE);
         app.setSize(800, 600);
         app.setLayout(new BorderLayout());
 
@@ -330,7 +306,7 @@ public class AppBuilder {
         app.add(cardPanel, BorderLayout.CENTER);
 
         // Default view to dashboard view
-        viewManagerModel.setView(dashboardView.getViewName());
+        viewManagerModel.setView(initialView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         app.setVisible(true);

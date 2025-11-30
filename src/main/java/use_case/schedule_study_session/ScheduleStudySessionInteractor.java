@@ -24,7 +24,7 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
                 inputData.getTitle()
         );
 
-        dataAccess.saveSession(session);
+        dataAccess.saveSession(inputData.getUserId(), session);
         ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(session);
         outputBoundary.prepareSuccessView(outputData);
     }
