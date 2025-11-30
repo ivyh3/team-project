@@ -18,13 +18,6 @@ public interface StartStudySessionInputBoundary {
     void abortStudySessionConfig();
 
     /**
-     * Set the currently selected session type.
-     * @param sessionType the session type to choose.
-     */
-    void setSessionType(StudySessionConfigState.SessionType sessionType);
-
-
-    /**
      * Refresh the list of file options available to the user.
      */    
     void refreshFileOptions();

@@ -31,12 +31,7 @@ public class ViewModel<T> {
     }
 
     public void setState(T state) {
-
         this.state = state;
-
-        // I don't know why this doesn't fire a property change on state update
-        // by default... so I just added it
-        firePropertyChange();
     }
 
     /**

@@ -224,13 +224,10 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
                 return;
 
             SessionType sessionType = choice.equals(VARIABLE_SESSION) ? SessionType.VARIABLE : SessionType.FIXED;
+            // Apparently as per the prof, I can bypass the CA engine for this because no logic is being done.
+            // Must fire property change for UI to update.
             viewModel.getState().setSessionType(sessionType);
-
-            // Must make the presenter fire property changed so the view can react and
-            // show the duration selector if needed.
-            if (startStudySessionController != null) {
-                startStudySessionController.setSessionType(sessionType);
-            }
+            viewModel.firePropertyChange();
         });
 
         fileSelector.addActionListener(e -> {
