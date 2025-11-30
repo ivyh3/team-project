@@ -105,22 +105,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
-     * Creates a document in Firestore for the given user ID.
-     * Creates a placeholder file to establish the folder structure.
-     *
-     * @param userId the user ID to create a folder for
-     */
-
-    private void createUserDocument(String userId) throws InterruptedException, ExecutionException {
-        // Create Firestore document for user
-        Map<String, Object> userData = new HashMap<>();
-        firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .set(userData)
-                .get(); // blocking call to ensure write completes
-    }
-
-    /**
      * Verifies if the given password matches the password of a user with the given
      * email.
      *
@@ -197,5 +181,20 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     @Override
     public void setCurrentUsername(String username) {
 
+    }
+
+    /**
+     * Creates a empty document in Firestore for the given user ID.
+     *
+     * @param userId the user ID to create a folder for
+     */
+
+    private void createUserDocument(String userId) throws InterruptedException, ExecutionException {
+        // Create empty Firestore document for user
+        Map<String, Object> userData = new HashMap<>();
+        firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .set(userData)
+                .get(); // blocking call to ensure write completes
     }
 }
