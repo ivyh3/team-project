@@ -3,7 +3,6 @@ package use_case.start_study_session;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
 
@@ -28,7 +27,7 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     @Override
     public void execute(StartStudySessionInputData inputData) {
         final StudySessionConfigState config = inputData.getConfig();
-
+        final String userId = inputData.getUserId();
         // Validate.
         if (config.getSessionType() == null) {
             presenter.prepareErrorView("You need a session type selected.");
@@ -40,7 +39,7 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
             presenter.prepareErrorView("Please select a reference file.");
         }
-        else if (!checkIfFileExists(config.getReferenceFile())) {
+        else if (!checkIfFileExists(userId, config.getReferenceFile())) {
             presenter.prepareErrorView("Reference file does not exist in storage..? Use another one.");
         }
         else if (config.getPrompt() == null || config.getPrompt().isEmpty()) {
@@ -64,22 +63,22 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     /**
      * Check if the given file resource exists in storage.
      *
-     * @param file The file to check.
+     * @param userId The id of the current user
+     * @param file   The file to check.
      * @return whether the file exists.
      */
-    private boolean checkIfFileExists(String file) {
-        // TODO: MMake User ID handling, well, real
-        return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
+    private boolean checkIfFileExists(String userId, String file) {
+        return fileDataAccessObject.fileExistsByName(userId, file);
     }
 
     // TODO: Either remove this and move this to navigation from dashboard to config
     // view, or
     // make sure this is called when the config view is opened somehow.
     @Override
-    public void refreshFileOptions() {
+    public void refreshFileOptions(String userId) {
 
         // TODO: Use real user ID
-        List<String> fileOptions = fileDataAccessObject.getAllUserFiles(DashboardState.userId);
+        final List<String> fileOptions = fileDataAccessObject.getAllUserFiles(userId);
         if (fileOptions == null || fileOptions.isEmpty()) {
             presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
             presenter.abortStudySessionConfig();

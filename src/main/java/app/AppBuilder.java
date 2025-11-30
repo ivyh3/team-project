@@ -4,10 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 import entity.UserFactory;
@@ -61,6 +57,10 @@ import view.StudySessionView;
 import view.UploadMaterialsView;
 import view.UploadSessionMaterialsView;
 import view.ViewManager;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 public class AppBuilder {
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
@@ -218,7 +218,7 @@ public class AppBuilder {
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
             startStudySessionPresenter, fileDataAccessObject);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
-            configStudySessionInteractor);
+            configStudySessionInteractor, dashboardViewModel);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -252,7 +252,8 @@ public class AppBuilder {
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter,
             studySessionDataAccessObject,
             studySessionFactory);
-        EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
+        EndStudySessionController endStudySessionController =
+            new EndStudySessionController(endStudySessionInteractor, dashboardViewModel);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
     }
@@ -286,7 +287,7 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
-                studySessionDataAccessObject, quizDataAccessObject);
+            studySessionDataAccessObject, quizDataAccessObject);
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor, dashboardViewModel);
