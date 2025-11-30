@@ -24,6 +24,11 @@ import interface_adapter.controller.ViewStudyMetricsController;
 import interface_adapter.view_model.MetricsViewModel;
 
 public class StudyMetricsView extends View implements PropertyChangeListener {
+    public static final int DAYS_IN_A_WEEK = 7;
+    public static final int SECONDS_IN_AN_HOUR = 3600;
+    public static final int WIDTH = 350;
+    public static final int HEIGHT = 450;
+    public static final float OPACITY = 0.5f;
     private final MetricsViewModel viewModel;
     private final ViewStudyMetricsController controller;
 
@@ -69,12 +74,12 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         final JButton nextWeekButton = new JButton("Next Week >");
 
         lastWeekButton.addActionListener(e -> {
-            startDate = startDate.minusDays(7);
+            startDate = startDate.minusDays(DAYS_IN_A_WEEK);
             loadMetrics();
         });
 
         nextWeekButton.addActionListener(e -> {
-            startDate = startDate.plusDays(7);
+            startDate = startDate.plusDays(DAYS_IN_A_WEEK);
             loadMetrics();
         });
 
@@ -126,7 +131,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
                                   DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
         for (DayOfWeek day : days) {
             final Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
-            final double hours = (double) duration.getSeconds() / 3600;
+            final double hours = (double) duration.getSeconds() / SECONDS_IN_AN_HOUR;
             leftDataset.addValue(hours, "Study Duration", day);
         }
         final String dateRange = formatDateRange();
@@ -142,7 +147,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         final LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
         leftRenderer.setSeriesShapesVisible(0, true);
-        leftRenderer.setSeriesPaint(0, new Color(1.0f, 0.0f, 0.0f, 0.5f));
+        leftRenderer.setSeriesPaint(0, new Color(1.0f, 0.0f, 0.0f, OPACITY));
         leftRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
         plot.setRenderer(0, leftRenderer);
 
@@ -161,12 +166,12 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
         plot.mapDatasetToRangeAxis(1, 1);
         final LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
         rightRenderer.setSeriesShapesVisible(0, true);
-        rightRenderer.setSeriesPaint(0, new Color(0.0f, 0.0f, 1.0f, 0.5f));
+        rightRenderer.setSeriesPaint(0, new Color(0.0f, 0.0f, 1.0f, OPACITY));
         rightRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
         plot.setRenderer(1, rightRenderer);
 
         chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(350, 450));
+        chartPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
         main.add(chartPanel, BorderLayout.CENTER);
 
