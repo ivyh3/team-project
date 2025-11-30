@@ -18,7 +18,7 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
 	@Override
     public void execute(ScheduleStudySessionInputData inputData) {
         ScheduledSession session = new ScheduledSession(
-                inputData.getUserId(),
+                null,
                 inputData.getStartTime(),
                 inputData.getEndTime(),
                 inputData.getTitle()
