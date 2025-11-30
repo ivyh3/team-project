@@ -48,7 +48,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class AppBuilder {
-    private final String appTitle = "My title";
+    private final String appTitle = "AI Study Companion";
 
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();

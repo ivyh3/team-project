@@ -1,27 +1,31 @@
 package use_case.schedule_study_session;
 
-import frameworks_drivers.google_calendar.GoogleCalendarService;
+import entity.ScheduledSession;
 
 /**
  * Interactor for the Schedule Study Session use case.
  */
 public class ScheduleStudySessionInteractor implements ScheduleStudySessionInputBoundary {
-	private final GoogleCalendarService calendarService;
-	private final ScheduleStudySessionOutputBoundary outputBoundary;
+    private final ScheduleStudySessionDataAccessInterface dataAccess;
+    private final ScheduleStudySessionOutputBoundary outputBoundary;
 
-	public ScheduleStudySessionInteractor(GoogleCalendarService calendarService,
+	public ScheduleStudySessionInteractor(ScheduleStudySessionDataAccessInterface dataAccess,
 			ScheduleStudySessionOutputBoundary outputBoundary) {
-		this.calendarService = calendarService;
+		this.dataAccess = dataAccess;
 		this.outputBoundary = outputBoundary;
 	}
 
 	@Override
-	public void execute(ScheduleStudySessionInputData inputData) {
-		// TODO: Implement the business logic for scheduling a study session
-		// 1. Validate start and end times
-		// 2. Create StudySession entity
-		// 3. Save to repository
-		// 4. If syncWithCalendar, create calendar event
-		// 5. Prepare success or failure view
-	}
+    public void execute(ScheduleStudySessionInputData inputData) {
+        ScheduledSession session = new ScheduledSession(
+                inputData.getUserId(),
+                inputData.getStartTime(),
+                inputData.getEndTime(),
+                inputData.getTitle()
+        );
+
+        dataAccess.saveSession(session);
+        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(session);
+        outputBoundary.prepareSuccessView(outputData);
+    }
 }

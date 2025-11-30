@@ -1,38 +1,15 @@
 package use_case.schedule_study_session;
 
-import java.time.LocalDateTime;
+import entity.ScheduledSession;
 
-/**
- * Output data for the Schedule Study Session use case.
- */
 public class ScheduleStudySessionOutputData {
-    private final String sessionId;
-    private final LocalDateTime startTime;
-    private final LocalDateTime endTime;
-    private final String calendarEventId;
-    
-    public ScheduleStudySessionOutputData(String sessionId, LocalDateTime startTime, 
-                                         LocalDateTime endTime, String calendarEventId) {
-        this.sessionId = sessionId;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.calendarEventId = calendarEventId;
+    private final ScheduledSession session;
+
+    public ScheduleStudySessionOutputData(ScheduledSession session) {
+        this.session = session;
     }
-    
-    public String getSessionId() {
-        return sessionId;
-    }
-    
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-    
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-    
-    public String getCalendarEventId() {
-        return calendarEventId;
+
+    public ScheduledSession getSession() {
+        return session;
     }
 }
-

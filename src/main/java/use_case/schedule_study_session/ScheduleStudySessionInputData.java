@@ -11,15 +11,17 @@ public class ScheduleStudySessionInputData {
     private final LocalDateTime startTime;
     private final LocalDateTime endTime;
     private final boolean syncWithCalendar;
+    private final String title;
     
     public ScheduleStudySessionInputData(String userId, String courseId, 
                                         LocalDateTime startTime, LocalDateTime endTime,
-                                        boolean syncWithCalendar) {
+                                        boolean syncWithCalendar, String title) {
         this.userId = userId;
         this.courseId = courseId;
         this.startTime = startTime;
         this.endTime = endTime;
         this.syncWithCalendar = syncWithCalendar;
+        this.title = title;
     }
     
     public String getUserId() {
@@ -41,5 +43,7 @@ public class ScheduleStudySessionInputData {
     public boolean isSyncWithCalendar() {
         return syncWithCalendar;
     }
+
+    public String getTitle() { return title; }
 }
 
