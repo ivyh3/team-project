@@ -71,7 +71,6 @@ public class ScheduleSessionViewModel {
     public List<ScheduledSession> getSessionsForDate(LocalDate date) {
         return scheduledSessions.stream()
                 .filter(s -> s.getStartTime().toLocalDate().equals(date))
-                .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
                 .collect(Collectors.toList());
     }
 

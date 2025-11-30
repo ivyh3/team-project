@@ -33,6 +33,7 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
     public static final String END_TIME_TIMESTAMP = "end_time_timestamp";
     private static final String USERS_COLLECTION = "users";
     private static final String SCHEDULED_SESSION_COLLECTION = "scheduledSessions";
+    private static final String TITLE = "title";
     private final Firestore firestore;
     private final ScheduledSessionFactory scheduledSessionFactory;
 
@@ -42,8 +43,8 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
     }
 
     @Override
-    public void saveSession(String userId, ScheduledSession session) {
-        addScheduledSession(userId, session);
+    public ScheduledSession saveSession(String userId, ScheduledSession session) {
+        return addScheduledSession(userId, session);
     }
 
     @Override
@@ -75,6 +76,7 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
         data.put(END_TIME, utcEndTime.toString());
         data.put(START_TIME_TIMESTAMP, utcStartTime.toInstant().toEpochMilli());
         data.put(END_TIME_TIMESTAMP, utcEndTime.toInstant().toEpochMilli());
+        data.put(TITLE, session.getTitle());
 
         try {
             final ApiFuture<DocumentReference> result = scheduledSessionRef.add(data);
@@ -222,6 +224,7 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
     private ScheduledSession createScheduledSessionFromDocument(DocumentSnapshot document) {
         final String startTimeStr = document.getString(START_TIME);
         final String endTimeStr = document.getString(END_TIME);
+        final String title = document.getString(TITLE);
 
         if (startTimeStr == null || endTimeStr == null) {
             throw new RuntimeException("Invalid start time or end time in document");
@@ -234,7 +237,7 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
                 document.getId(),
                 convertToLocalDateTime(startZoned),
                 convertToLocalDateTime(endZoned),
-                "Default Title");
+                title != null ? title : "Untitled");
     }
 
     /**

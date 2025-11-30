@@ -26,6 +26,7 @@ public class ScheduleSessionView extends View {
     private final ScheduleStudySessionController controller;
     private final ScheduleSessionViewModel viewModel;
     private final ScheduleStudySessionDataAccessInterface dataAccess;
+    private final DashboardViewModel dashboardViewModel;
 
     private final JList<String> sessionList;
     private final java.util.List<JButton> dayButtons = new java.util.ArrayList<>();
@@ -40,6 +41,7 @@ public class ScheduleSessionView extends View {
 
         this.viewModel = new ScheduleSessionViewModel();
         this.dataAccess = new FirebaseScheduledSessionDataAccessObject(new ScheduledSessionFactory());
+        this.dashboardViewModel = dashboardViewModel;
 
         ScheduleStudySessionPresenter presenter = new ScheduleStudySessionPresenter(viewModel);
         ScheduleStudySessionInteractor interactor =
@@ -56,7 +58,7 @@ public class ScheduleSessionView extends View {
 
         // header
         headerTitle = new JLabel();
-        headerTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        headerTitle.setFont(new Font("Arial", Font.BOLD, 24));
         header = new JPanel();
         header.add(headerTitle);
         updateHeader(selectedDate);
@@ -167,7 +169,9 @@ public class ScheduleSessionView extends View {
         add(centerPanel, BorderLayout.CENTER);
         add(main, BorderLayout.SOUTH);
 
-        selectDay(selectedDate.getDayOfWeek().getValue() - 1); // highlight Monday button when arrows clicked
+        selectDay(selectedDate.getDayOfWeek().getValue() - 1); // highlight correct day
+        SwingUtilities.invokeLater(this::loadSessionsFromDatabase); // load sessions
+
     }
 
     // highlight day button when clicked
@@ -220,7 +224,7 @@ public class ScheduleSessionView extends View {
             if (end.isAfter(start)) {
                 String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
-                    // schedule via clean architecture
+
                     controller.execute(start, end, title);
 
                     // refresh list only if scheduled session is on currently selected day
@@ -246,6 +250,17 @@ public class ScheduleSessionView extends View {
                 .collect(Collectors.toList());
 
         sessionList.setListData(displayStrings.toArray(new String[0])); // update session list
+    }
+
+    // get study sessions from Firebase
+    private void loadSessionsFromDatabase() {
+        String userId = dashboardViewModel.getState().getUserId();
+        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
+        for (ScheduledSession session : sessions) {
+            viewModel.addScheduledSession(session);
+        }
+
+        selectDay(selectedDate.getDayOfWeek().getValue() - 1); // refresh the current selected day
     }
 
 }

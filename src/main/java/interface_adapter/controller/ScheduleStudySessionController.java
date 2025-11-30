@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
  */
 public class ScheduleStudySessionController {
     private final ScheduleStudySessionInputBoundary interactor;
-    private final DashboardViewModel dashboardVm;
+    private final DashboardViewModel dashboardViewModel;
 
     public ScheduleStudySessionController(
             ScheduleStudySessionInputBoundary interactor,
             DashboardViewModel dashboardVm) {
         this.interactor = interactor;
-        this.dashboardVm = dashboardVm;
+        this.dashboardViewModel = dashboardVm;
     }
     /**
      * Executes the schedule study session use case.
@@ -26,12 +26,10 @@ public class ScheduleStudySessionController {
      * @param title the topic of the study session
      */
     public void execute(LocalDateTime startTime, LocalDateTime endTime, String title) {
-        String userId = dashboardVm.getState().getUserId();
+        String userId = dashboardViewModel.getState().getUserId();
 
         ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
-                userId, startTime, endTime, title
-        );
-
+                userId, startTime, endTime, title);
         interactor.execute(inputData);
     }
 }
