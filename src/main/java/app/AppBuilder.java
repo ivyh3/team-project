@@ -4,7 +4,6 @@ import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 // TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
-import frameworks_drivers.database.InMemoryDatabase;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
@@ -53,7 +52,6 @@ import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 
 //import interface_adapter.repository.StudySessionRepository;
 //import interface_adapter.repository.StudyQuizRepository;
-import interface_adapter.view_model.SettingsViewModel;
 import interface_adapter.view_model.ViewManagerModel;
 import view.*;
 import view.SettingsView;
@@ -98,6 +96,9 @@ public class AppBuilder {
     private LoginViewModel loginViewModel;
     private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
+
+    private SettingsView settingsView;
+    private SettingsViewModel settingsViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -149,39 +150,33 @@ public class AppBuilder {
         return this;
     }
 
-    // public AppBuilder addChangePasswordUseCase() {
-    // final ChangePasswordOutputBoundary changePasswordOutputBoundary = new
-    // ChangePasswordPresenter(viewManagerModel,
-    // dashboardViewModel);
+    public AppBuilder addChangePasswordUseCase() {
+        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
+                dashboardViewModel, settingsViewModel);
 
-    // final ChangePasswordInputBoundary changePasswordInteractor = new
-    // ChangePasswordInteractor(userDataAccessObject,
-    // changePasswordOutputBoundary, userFactory);
+        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
+                changePasswordOutputBoundary);
 
-    // ChangePasswordController changePasswordController = new
-    // ChangePasswordController(changePasswordInteractor);
-    // dashboardView.setChangePasswordController(changePasswordController);
-    // return this;
-    // }
+        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
+        settingsView.setChangePasswordController(changePasswordController);
+        return this;
+    }
 
     /**
      * Adds the Logout Use Case to the application.
      *
      * @return this builder
      */
-    // public AppBuilder addLogoutUseCase() {
-    // final LogoutOutputBoundary logoutOutputBoundary = new
-    // LogoutPresenter(viewManagerModel,
-    // dashboardViewModel, loginViewModel);
+    public AppBuilder addLogoutUseCase() {
+        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
+                dashboardViewModel);
 
-    // final LogoutInputBoundary logoutInteractor = new
-    // LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(logoutOutputBoundary);
 
-    // final LogoutController logoutController = new
-    // LogoutController(logoutInteractor);
-    // dashboardView.setLogoutController(logoutController);
-    // return this;
-    // }
+        final LogoutController logoutController = new LogoutController(logoutInteractor);
+        settingsView.setLogoutController(logoutController);
+        return this;
+    }
 
     public AppBuilder addDashboardView() {
         dashboardViewModel = new DashboardViewModel();
@@ -193,8 +188,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addSettingsView() {
-        SettingsViewModel settingsViewModel = new SettingsViewModel();
-        SettingsView settingsView = new SettingsView(settingsViewModel);
+        settingsViewModel = new SettingsViewModel();
+        settingsView = new SettingsView(settingsViewModel, dashboardViewModel);
 
         cardPanel.add(settingsView, settingsView.getViewName());
 
@@ -328,7 +323,6 @@ public class AppBuilder {
         app.add(cardPanel, BorderLayout.CENTER);
 
         // Default view to dashboard view
-        // viewManagerModel.setView(dashboardView.getViewName());
         viewManagerModel.setView(initialView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

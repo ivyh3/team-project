@@ -1,14 +1,12 @@
 package frameworks_drivers.firebase;
 
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 import com.google.firebase.cloud.FirestoreClient;
-import com.google.firebase.cloud.StorageClient;
 import entity.UserFactory;
 import okhttp3.*;
 import com.google.gson.JsonObject;
@@ -154,33 +152,40 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
-     * Updates the system to record this user's password.
+     * Updates the user's password using Firebase Admin SDK.
      *
-     * @param user the user whose password is to be updated
+     * @param userId      the user ID whose password is to be updated
+     * @param newPassword the new password
      */
     @Override
-    public void changePassword(User user) {
+    public void changePassword(String userId, String newPassword) {
+        try {
+            UpdateRequest request = new UpdateRequest(userId)
+                    .setPassword(newPassword);
 
+            firebaseAuth.updateUser(request);
+            System.out.println("Successfully updated password for user: " + userId);
+        } catch (FirebaseAuthException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            throw new RuntimeException("Failed to update password: " + e.getMessage());
+        }
     }
 
     /**
-     * Returns the username of the current user of the application.
+     * Gets the email for a given user ID.
      *
-     * @return the username of the current user
+     * @param userId the user ID
+     * @return the user's email
      */
     @Override
-    public String getCurrentUsername() {
-        return "";
-    }
-
-    /**
-     * Sets the username indicating who is the current user of the application.
-     *
-     * @param username the new current username
-     */
-    @Override
-    public void setCurrentUsername(String username) {
-
+    public String getEmailByUserId(String userId) {
+        try {
+            UserRecord userRecord = firebaseAuth.getUser(userId);
+            return userRecord.getEmail();
+        } catch (FirebaseAuthException e) {
+            System.err.println("Error getting user email: " + e.getMessage());
+            throw new RuntimeException("Failed to get user email: " + e.getMessage());
+        }
     }
 
     /**

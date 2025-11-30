@@ -1,8 +1,13 @@
 package interface_adapter.view_model;
 
-public class SettingsViewModel extends ViewModel<Boolean> {
+/**
+ * The View Model for the Settings View.
+ */
+public class SettingsViewModel extends ViewModel<SettingsState> {
+
     public SettingsViewModel() {
         super("settings");
-        this.setState(Boolean.FALSE);
+        setState(new SettingsState());
     }
 }
+

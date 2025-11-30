@@ -53,6 +53,9 @@ public class LoginView extends StatefulView<LoginState> {
 
         returnButton = new JButton("Return");
         returnButton.addActionListener(e -> {
+            // Clear form when navigating away
+            viewModel.setState(new LoginState());
+            viewModel.firePropertyChange();
             AppBuilder.viewManagerModel.setView("initial");
         });
         buttons.add(returnButton);
@@ -118,6 +121,15 @@ public class LoginView extends StatefulView<LoginState> {
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
             final LoginState state = (LoginState) evt.getNewValue();
+
+            // Clear input fields if state has been reset
+            if (state.getEmail().isEmpty()) {
+                emailInputField.setText("");
+            }
+            if (state.getPassword().isEmpty()) {
+                passwordInputField.setText("");
+            }
+
             // Display error message if present
             if (state.getEmailError() != null && !state.getEmailError().isEmpty()) {
                 loginErrorField.setText(state.getEmailError());

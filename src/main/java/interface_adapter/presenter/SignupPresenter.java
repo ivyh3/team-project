@@ -1,10 +1,6 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.SignupState;
-import interface_adapter.view_model.SignupViewModel;
-import interface_adapter.view_model.ViewManagerModel;
-import interface_adapter.view_model.DashboardState;
-import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.*;
 import use_case.signup.SignupOutputBoundary;
 import use_case.signup.SignupOutputData;
 
@@ -33,6 +29,10 @@ public class SignupPresenter implements SignupOutputBoundary {
         dashboardState.setEmail(response.getEmail());
         dashboardViewModel.setState(dashboardState);
         dashboardViewModel.firePropertyChange();
+
+        // Clear signup form fields
+        signupViewModel.setState(new SignupState());
+        signupViewModel.firePropertyChange();
 
         // Switch to the dashboard view
         viewManagerModel.setState(dashboardViewModel.getViewName());

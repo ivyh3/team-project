@@ -3,8 +3,6 @@ package interface_adapter.presenter;
 import interface_adapter.view_model.ViewManagerModel;
 import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.LoginState;
-import interface_adapter.view_model.LoginViewModel;
 import use_case.logout.LogoutOutputBoundary;
 import use_case.logout.LogoutOutputData;
 
@@ -15,14 +13,11 @@ public class LogoutPresenter implements LogoutOutputBoundary {
 
     private DashboardViewModel dashboardViewModel;
     private ViewManagerModel viewManagerModel;
-    private LoginViewModel loginViewModel;
 
     public LogoutPresenter(ViewManagerModel viewManagerModel,
-            DashboardViewModel dashboardViewModel,
-            LoginViewModel loginViewModel) {
+            DashboardViewModel dashboardViewModel) {
         this.dashboardViewModel = dashboardViewModel;
         this.viewManagerModel = viewManagerModel;
-        this.loginViewModel = loginViewModel;
     }
 
     @Override
@@ -34,8 +29,8 @@ public class LogoutPresenter implements LogoutOutputBoundary {
         dashboardViewModel.setState(dashboardState);
         dashboardViewModel.firePropertyChange();
 
-        // Switch to the login view
-        this.viewManagerModel.setState(loginViewModel.getViewName());
+        // Switch to the initial view (logged out state)
+        this.viewManagerModel.setState("initial");
         this.viewManagerModel.firePropertyChange();
     }
 }
