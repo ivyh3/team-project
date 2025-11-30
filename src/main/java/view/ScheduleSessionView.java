@@ -213,18 +213,19 @@ public class ScheduleSessionView extends View {
         // get selected date and times when user clicks ok
         if (option == JOptionPane.OK_OPTION) {
             LocalDate pickedDate = datePicker.getDate();
-            selectedDate = pickedDate;
             LocalDateTime start = LocalDateTime.of(pickedDate, startTimePicker.getTime());
             LocalDateTime end = LocalDateTime.of(pickedDate, endTimePicker.getTime());
 
-            // prompt user to enter session topic if end time is after start time
             if (end.isAfter(start)) {
                 String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
-                    String sessionId = java.util.UUID.randomUUID().toString();
+                    // schedule via clean architecture
                     controller.execute("testUser", start, end, title);
 
-                    updateSessionListForSelectedDate(); // refresh list for selected date
+                    // refresh list only if scheduled session is on currently selected day
+                    if (pickedDate.equals(selectedDate)) {
+                        updateSessionListForSelectedDate();
+                    }
                 }
             }
         }
