@@ -298,14 +298,11 @@ public class AppBuilder {
         MetricsViewModel metricsViewModel = new MetricsViewModel();
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
-        // TODO: Replace with actual DAO implementations
         ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
                 studySessionDataAccessObject, quizDataAccessObject);
-        // Create Interactor
-        ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(
-                metricsDAO, presenter);
+        ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
-        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
+        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor, dashboardViewModel);
         StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
 
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
