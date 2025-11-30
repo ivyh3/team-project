@@ -60,7 +60,6 @@ public class Main {
                     .addStudySessionView()
                     .addStudySessionEndView()
                     .addEndStudySessionUseCase()
-                    .addVariableSessionView()
                     .addStudyQuizView()
                     .addFileManagerView()
                     .addQuizHistoryView()
