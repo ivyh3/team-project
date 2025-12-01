@@ -134,8 +134,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         final Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        final DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                                  DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
+        final DayOfWeek[] days = { DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY };
         for (DayOfWeek day : days) {
             final Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
             final double hours = (double) duration.getSeconds() / SECONDS_IN_AN_HOUR;
@@ -147,8 +147,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
                 dateRange,
                 "",
                 "Hours Studied",
-                leftDataset
-        );
+                leftDataset);
 
         final CategoryPlot plot = chart.getCategoryPlot();
         final NumberAxis leftAxis = (NumberAxis) plot.getRangeAxis();
@@ -192,6 +191,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
     /**
      * Helper method to format date range for chart title.
+     * 
      * @return the date range formatted as a string
      */
     private String formatDateRange() {

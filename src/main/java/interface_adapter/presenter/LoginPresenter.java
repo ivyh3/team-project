@@ -1,10 +1,6 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.LoginState;
-import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.view_model.ViewManagerModel;
-import interface_adapter.view_model.DashboardState;
-import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.*;
 import use_case.login.LoginOutputBoundary;
 import use_case.login.LoginOutputData;
 
@@ -36,6 +32,7 @@ public class LoginPresenter implements LoginOutputBoundary {
 
         // Clear everything from the LoginViewModel's state
         loginViewModel.setState(new LoginState());
+        loginViewModel.firePropertyChange();
 
         // Switch to the dashboard view
         this.viewManagerModel.setState(dashboardViewModel.getViewName());

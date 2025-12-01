@@ -52,11 +52,9 @@ public class Main {
                     .addDashboardView()
                     .addSignupUseCase()
                     .addLoginUseCase()
-                    // TODO: Sort out later.
                     .addSettingsView()
-                    // .addChangePasswordUseCase()
-                    // .addLogoutUseCase()
-                    // .addChooseStudySessionView()
+                    .addChangePasswordUseCase()
+                    .addLogoutUseCase()
                     .addUploadSessionMaterialsView()
                     .addUploadMaterialsView()
                     .addStudySessionView()

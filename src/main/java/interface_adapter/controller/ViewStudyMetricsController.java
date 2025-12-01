@@ -13,15 +13,15 @@ public class ViewStudyMetricsController {
     public ViewStudyMetricsController(ViewStudyMetricsInputBoundary interactor) {
         this.interactor = interactor;
     }
-    
+
     /**
      * Executes the view study metrics use case.
+     * 
      * @param userId the user id
-     * @param week the Sunday expected
+     * @param week   the Sunday expected
      */
     public void execute(String userId, LocalDateTime week) {
         final ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(userId, week);
         interactor.execute(inputData);
     }
 }
-
