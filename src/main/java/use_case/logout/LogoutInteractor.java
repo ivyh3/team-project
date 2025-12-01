@@ -15,7 +15,7 @@ public class LogoutInteractor implements LogoutInputBoundary {
     public void execute() {
         // No server-side action needed for logout
         // Just notify the presenter to clear state and navigate
-        LogoutOutputData outputData = new LogoutOutputData();
+        final LogoutOutputData outputData = new LogoutOutputData();
         logoutPresenter.prepareSuccessView(outputData);
     }
 }

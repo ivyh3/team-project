@@ -1,22 +1,5 @@
 package frameworks_drivers.firebase;
 
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
-import com.google.firebase.auth.UserRecord.CreateRequest;
-import com.google.firebase.auth.UserRecord.UpdateRequest;
-import com.google.firebase.cloud.FirestoreClient;
-import entity.UserFactory;
-import okhttp3.*;
-import com.google.gson.JsonObject;
-import app.Config;
-import entity.User;
-import use_case.change_password.ChangePasswordUserDataAccessInterface;
-import use_case.login.LoginUserDataAccessInterface;
-import use_case.logout.LogoutUserDataAccessInterface;
-import use_case.signup.SignupUserDataAccessInterface;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -24,6 +7,27 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import app.Config;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
+import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
+import com.google.firebase.cloud.FirestoreClient;
+import com.google.gson.JsonObject;
+import entity.User;
+import entity.UserFactory;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import use_case.change_password.ChangePasswordUserDataAccessInterface;
+import use_case.login.LoginUserDataAccessInterface;
+import use_case.logout.LogoutUserDataAccessInterface;
+import use_case.signup.SignupUserDataAccessInterface;
 
 /**
  * Firebase Data Access Object for User entities.
@@ -35,12 +39,12 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         ChangePasswordUserDataAccessInterface,
         LogoutUserDataAccessInterface {
     private static final String USERS_COLLECTION = "users";
+    private static final String FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts";
     private final Firestore firestore;
     private final UserFactory userFactory;
     private final FirebaseAuth firebaseAuth;
     private final OkHttpClient client;
     private final String firebaseWebApiKey;
-    private static final String FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts";
 
     public FirebaseUserDataAccessObject(UserFactory userFactory) {
         this.userFactory = userFactory;
@@ -58,19 +62,23 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public User getUser(String email) {
+        User result;
         try {
-            UserRecord userRecord = this.firebaseAuth.getUserByEmail(email);
+            final UserRecord userRecord = this.firebaseAuth.getUserByEmail(email);
 
-            long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp(); // in milliseconds
-            LocalDateTime createdAt = LocalDateTime.ofInstant(
+            // createdTimestamp is in milliseconds
+            final long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp();
+            final LocalDateTime createdAt = LocalDateTime.ofInstant(
                     Instant.ofEpochMilli(createdTimestamp),
                     ZoneId.systemDefault());
 
-            return userFactory.create(userRecord.getUid(), email, createdAt);
-        } catch (FirebaseAuthException e) {
-            System.err.println("Error getting user: " + e.getMessage());
-            return null;
+            result = userFactory.create(userRecord.getUid(), email, createdAt);
         }
+        catch (FirebaseAuthException event) {
+            System.err.println("Error getting user: " + event.getMessage());
+            result = null;
+        }
+        return result;
     }
 
     /**
@@ -82,23 +90,28 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public void createUser(String email, String password) {
-        CreateRequest createUserRequest = new CreateRequest()
+        final CreateRequest createUserRequest = new CreateRequest()
                 .setEmail(email)
                 .setEmailVerified(false)
                 .setPassword(password)
                 .setDisabled(false);
 
         try {
-            UserRecord userRecord = firebaseAuth.createUser(createUserRequest);
-            String userId = userRecord.getUid();
+            final UserRecord userRecord = firebaseAuth.createUser(createUserRequest);
+            final String userId = userRecord.getUid();
 
             createUserDocument(userId);
 
             System.out.println("Successfully created new user: " + userId);
-        } catch (FirebaseAuthException e) {
-            System.err.println("Error creating user: " + e.getMessage());
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("Error creating Firestore document: " + e.getMessage());
+        }
+        catch (FirebaseAuthException event) {
+            System.err.println("Error creating user: " + event.getMessage());
+        }
+        catch (ExecutionException event) {
+            System.err.println("Execution error creating Firestore document: " + event.getMessage());
+        }
+        catch (InterruptedException event) {
+            System.err.println("Interruption error creating Firestore document: " + event.getMessage());
         }
     }
 
@@ -113,26 +126,29 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public boolean verifyPassword(String email, String password) {
+        boolean result;
         // Build request body
-        JsonObject requestBody = new JsonObject();
+        final JsonObject requestBody = new JsonObject();
         requestBody.addProperty("email", email);
         requestBody.addProperty("password", password);
         requestBody.addProperty("returnSecureToken", true);
 
-        String url = FIREBASE_AUTH_URL + ":signInWithPassword?key=" + firebaseWebApiKey;
+        final String url = FIREBASE_AUTH_URL + ":signInWithPassword?key=" + firebaseWebApiKey;
 
-        RequestBody body = RequestBody.create(
+        final RequestBody body = RequestBody.create(
                 requestBody.toString(),
                 MediaType.parse("application/json"));
 
-        Request request = new Request.Builder().url(url).post(body).build();
+        final Request request = new Request.Builder().url(url).post(body).build();
 
         try (Response response = client.newCall(request).execute()) {
-            return response.isSuccessful();
-        } catch (IOException e) {
-            System.err.println("Error signing in: " + e.getMessage());
-            return false;
+            result = response.isSuccessful();
         }
+        catch (IOException event) {
+            System.err.println("Error signing in: " + event.getMessage());
+            result = false;
+        }
+        return result;
     }
 
     /**
@@ -143,12 +159,15 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public boolean existsByEmail(String email) {
+        boolean result;
         try {
             firebaseAuth.getUserByEmail(email);
-            return true;
-        } catch (FirebaseAuthException e) {
-            return false;
+            result = true;
         }
+        catch (FirebaseAuthException event) {
+            result = false;
+        }
+        return result;
     }
 
     /**
@@ -160,14 +179,14 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     @Override
     public void changePassword(String userId, String newPassword) {
         try {
-            UpdateRequest request = new UpdateRequest(userId)
+            final UpdateRequest request = new UpdateRequest(userId)
                     .setPassword(newPassword);
 
             firebaseAuth.updateUser(request);
             System.out.println("Successfully updated password for user: " + userId);
-        } catch (FirebaseAuthException e) {
-            System.err.println("Error updating password: " + e.getMessage());
-            throw new RuntimeException("Failed to update password: " + e.getMessage());
+        }
+        catch (FirebaseAuthException event) {
+            System.err.println("Error updating password: " + event.getMessage());
         }
     }
 
@@ -179,27 +198,32 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public String getEmailByUserId(String userId) {
+        String result = "";
         try {
-            UserRecord userRecord = firebaseAuth.getUser(userId);
-            return userRecord.getEmail();
-        } catch (FirebaseAuthException e) {
-            System.err.println("Error getting user email: " + e.getMessage());
-            throw new RuntimeException("Failed to get user email: " + e.getMessage());
+            final UserRecord userRecord = firebaseAuth.getUser(userId);
+            result = userRecord.getEmail();
         }
+        catch (FirebaseAuthException event) {
+            System.err.println("Error getting user email: " + event.getMessage());
+        }
+        return result;
     }
 
     /**
-     * Creates a empty document in Firestore for the given user ID.
+     * Creates an empty document in Firestore for the given user ID.
      *
      * @param userId the user ID to create a folder for
+     * @throws InterruptedException if the request fails
+     * @throws ExecutionException if the request fails
      */
 
     private void createUserDocument(String userId) throws InterruptedException, ExecutionException {
         // Create empty Firestore document for user
-        Map<String, Object> userData = new HashMap<>();
+        final Map<String, Object> userData = new HashMap<>();
+        // blocking call to ensure write completes
         firestore.collection(USERS_COLLECTION)
                 .document(userId)
                 .set(userData)
-                .get(); // blocking call to ensure write completes
+                .get();
     }
 }

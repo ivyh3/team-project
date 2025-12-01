@@ -1,6 +1,10 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.*;
+import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.LoginState;
+import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.login.LoginOutputBoundary;
 import use_case.login.LoginOutputData;
 

@@ -1,7 +1,6 @@
 package use_case.login;
 
 import entity.User;
-import utils.ValidationUtils;
 
 /**
  * The Login Interactor.
@@ -23,15 +22,17 @@ public class LoginInteractor implements LoginInputBoundary {
 
         if ("".equals(email)) {
             loginPresenter.prepareFailView("Email cannot be empty");
-            // } else if (!ValidationUtils.isValidEmail(email)) {
-            // loginPresenter.prepareFailView("Invalid email format");
-        } else if ("".equals(password)) {
+        }
+        else if ("".equals(password)) {
             loginPresenter.prepareFailView("Password cannot be empty");
-        } else if (!userDataAccessObject.existsByEmail(email)) {
+        }
+        else if (!userDataAccessObject.existsByEmail(email)) {
             loginPresenter.prepareFailView(email + ": Account does not exist.");
-        } else if (!userDataAccessObject.verifyPassword(email, password)) {
+        }
+        else if (!userDataAccessObject.verifyPassword(email, password)) {
             loginPresenter.prepareFailView("Incorrect password for \"" + email + "\".");
-        } else {
+        }
+        else {
             final User user = userDataAccessObject.getUser(email);
 
             final LoginOutputData loginOutputData = new LoginOutputData(user.getUserId(), user.getEmail());
