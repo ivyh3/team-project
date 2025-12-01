@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
@@ -18,7 +19,6 @@ import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
-
 import entity.StudySession;
 import entity.StudySessionFactory;
 import use_case.end_study_session.EndStudySessionDataAccessInterface;
@@ -27,6 +27,11 @@ import use_case.end_study_session.EndStudySessionDataAccessInterface;
  * Firebase Data Access Object for StudySession entities.
  */
 public class FirebaseStudySessionDataAccessObject implements EndStudySessionDataAccessInterface {
+    public static final String START_TIME = "start_time";
+    public static final String END_TIME = "end_time";
+    public static final String DURATION_SECONDS = "duration_seconds";
+    public static final String START_TIME_TIMESTAMP = "start_time_timestamp";
+    public static final String END_TIME_TIMESTAMP = "end_time_timestamp";
     private static final String USERS_COLLECTION = "users";
     private static final String STUDY_SESSIONS_COLLECTION = "studySessions";
     private final Firestore firestore;
@@ -37,149 +42,181 @@ public class FirebaseStudySessionDataAccessObject implements EndStudySessionData
         this.firestore = FirestoreClient.getFirestore();
     }
 
+    /**
+     * Adds a study session to the firebase.
+     *
+     * @param userId  The user id associated with the study session
+     * @param session The study session to save.
+     * @return The StudySession entity with its firebaseID included
+     */
     public StudySession addStudySession(String userId, StudySession session) {
-        CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .collection(STUDY_SESSIONS_COLLECTION);
+        final CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(STUDY_SESSIONS_COLLECTION);
 
-        Map<String, Object> data = new HashMap<>();
+        final Map<String, Object> data = new HashMap<>();
 
         // Store times as an ISO string in UTC tz
         // Store duration in seconds.
         // Store epoch millis for range queries.
 
-        ZonedDateTime utcStartTime = convertToUtc(session.getStartTime());
-        ZonedDateTime utcEndTime = convertToUtc(session.getEndTime());
+        final ZonedDateTime utcStartTime = convertToUtc(session.getStartTime());
+        final ZonedDateTime utcEndTime = convertToUtc(session.getEndTime());
 
-        data.put("start_time", utcStartTime.toString());
-        data.put("end_time", utcEndTime.toString());
-        data.put("duration_seconds", session.getDuration().toSeconds());
-        data.put("start_time_timestamp", utcStartTime.toInstant().toEpochMilli());
-        data.put("end_time_timestamp", utcEndTime.toInstant().toEpochMilli());
+        data.put(START_TIME, utcStartTime.toString());
+        data.put(END_TIME, utcEndTime.toString());
+        data.put(DURATION_SECONDS, session.getDuration().toSeconds());
+        data.put(START_TIME_TIMESTAMP, utcStartTime.toInstant().toEpochMilli());
+        data.put(END_TIME_TIMESTAMP, utcEndTime.toInstant().toEpochMilli());
 
         try {
-            ApiFuture<DocumentReference> result = studySessionRef.add(data);
+            final ApiFuture<DocumentReference> result = studySessionRef.add(data);
 
-            String documentId = result.get().getId();
+            final String documentId = result.get().getId();
 
             return studySessionFactory.create(
-                    documentId,
-                    session.getStartTime(),
-                    session.getEndTime());
-        } catch (Exception e) {
-            throw new RuntimeException("Error adding study session: " + e.getMessage());
+                documentId,
+                session.getStartTime(),
+                session.getEndTime());
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error adding study session: " + err.getMessage());
         }
     }
 
+    /**
+     * Gets a StudySession Entity from storage given its ID.
+     *
+     * @param userId    The user id to look for
+     * @param sessionId The session id to look for
+     * @return The StudySession entity with the given sessionID, null if does not exist
+     */
     public StudySession getStudySessionById(String userId, String sessionId) {
-        DocumentReference sessionRef = firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .collection(STUDY_SESSIONS_COLLECTION)
-                .document(sessionId);
+        final DocumentReference sessionRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(STUDY_SESSIONS_COLLECTION)
+            .document(sessionId);
 
         try {
-            ApiFuture<DocumentSnapshot> future = sessionRef.get();
-            DocumentSnapshot document = future.get();
+            final ApiFuture<DocumentSnapshot> future = sessionRef.get();
+            final DocumentSnapshot document = future.get();
 
             if (document.exists()) {
                 return createStudySessionFromDocument(document);
-            } else {
+            }
+            else {
                 return null;
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving study session: " + e.getMessage());
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study session: " + err.getMessage());
         }
     }
 
+    /**
+     * Gets all study sessions for a user.
+     *
+     * @param userId The user to look at
+     * @return List of StudySession entities for all the sessions the user had
+     */
     public List<StudySession> getStudySessions(String userId) {
-        CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .collection(STUDY_SESSIONS_COLLECTION);
+        final CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(STUDY_SESSIONS_COLLECTION);
 
-        List<StudySession> sessions = new ArrayList<>();
+        final List<StudySession> sessions = new ArrayList<>();
 
         try {
-            ApiFuture<QuerySnapshot> future = studySessionRef.get();
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            final ApiFuture<QuerySnapshot> future = studySessionRef.get();
+            final List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
             for (QueryDocumentSnapshot document : documents) {
                 sessions.add(createStudySessionFromDocument(document));
             }
 
             return sessions;
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving study sessions: " + e.getMessage());
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study sessions: " + err.getMessage());
         }
     }
 
+    /**
+     * Get the study sessions that STARTED within the given range.
+     *
+     * @param userId    The userID
+     * @param startTime The start time of the range
+     * @param endTime   The end time of the range
+     * @return List of StudySession entities which started within the given range.
+     */
     public List<StudySession> getStudySessionsInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
-        CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .collection(STUDY_SESSIONS_COLLECTION);
+        final CollectionReference studySessionRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(STUDY_SESSIONS_COLLECTION);
 
-        ZonedDateTime startTimeUtc = convertToUtc(startTime);
-        ZonedDateTime endTimeUtc = convertToUtc(endTime);
-        long startTimeStamp = startTimeUtc.toInstant().toEpochMilli();
-        long endTimeStamp = endTimeUtc.toInstant().toEpochMilli();
+        final ZonedDateTime startTimeUtc = convertToUtc(startTime);
+        final ZonedDateTime endTimeUtc = convertToUtc(endTime);
+        final long startTimeStamp = startTimeUtc.toInstant().toEpochMilli();
+        final long endTimeStamp = endTimeUtc.toInstant().toEpochMilli();
 
-        Query query = studySessionRef
-                .whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)
-                .whereLessThan("start_time_timestamp", endTimeStamp);
+        final Query query = studySessionRef
+            .whereGreaterThanOrEqualTo(START_TIME_TIMESTAMP, startTimeStamp)
+            .whereLessThan(START_TIME_TIMESTAMP, endTimeStamp);
 
-        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        final ApiFuture<QuerySnapshot> querySnapshot = query.get();
 
         try {
-            List<StudySession> sessions = new ArrayList<>();
+            final List<StudySession> sessions = new ArrayList<>();
             for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
                 sessions.add(createStudySessionFromDocument(document));
             }
 
             return sessions;
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving study sessions: " + e.getMessage());
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study sessions: " + err.getMessage());
         }
     }
 
     /**
      * Create a StudySession entity from a Firestore DocumentSnapshot.
-     * 
+     *
      * @param document the document with the study session data
      * @return the study session entity
      */
     private StudySession createStudySessionFromDocument(DocumentSnapshot document) {
-        String startTimeStr = document.getString("start_time");
-        String endTimeStr = document.getString("end_time");
+        final String startTimeStr = document.getString(START_TIME);
+        final String endTimeStr = document.getString(END_TIME);
 
-        ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
-        ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
+        final ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
+        final ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
 
         return studySessionFactory.create(
-                document.getId(),
-                convertToLocalDateTime(startZoned),
-                convertToLocalDateTime(endZoned));
+            document.getId(),
+            convertToLocalDateTime(startZoned),
+            convertToLocalDateTime(endZoned));
     }
 
     /**
      * Return the UTC equivalent of a LocalDateTime in the system default timezone.
-     * 
+     *
      * @param localDateTime the LocalDateTime to convert
      * @return the ZonedDateTime in UTC
      */
     private ZonedDateTime convertToUtc(LocalDateTime localDateTime) {
-        ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime utcZoned = ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
-        return utcZoned;
+        final ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
+        return ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
     }
 
     /**
      * Return the LocalDateTime equivalent of a ZonedDateTime in the system default
      * timezone.
-     * 
+     *
      * @param zonedDateTime the ZonedDateTime to convert
      * @return the LocalDateTime in the system default timezone
      */
     private LocalDateTime convertToLocalDateTime(ZonedDateTime zonedDateTime) {
-        ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
+        final ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
         return localZoned.toLocalDateTime();
     }
 }

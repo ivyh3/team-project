@@ -1,7 +1,6 @@
 package use_case.change_password;
 
 import entity.User;
-import entity.UserFactory;
 
 /**
  * The Change Password Interactor.
@@ -9,28 +8,53 @@ import entity.UserFactory;
 public class ChangePasswordInteractor implements ChangePasswordInputBoundary {
     private final ChangePasswordUserDataAccessInterface userDataAccessObject;
     private final ChangePasswordOutputBoundary userPresenter;
-    private final UserFactory userFactory;
 
     public ChangePasswordInteractor(ChangePasswordUserDataAccessInterface changePasswordDataAccessInterface,
-            ChangePasswordOutputBoundary changePasswordOutputBoundary,
-            UserFactory userFactory) {
+            ChangePasswordOutputBoundary changePasswordOutputBoundary) {
         this.userDataAccessObject = changePasswordDataAccessInterface;
         this.userPresenter = changePasswordOutputBoundary;
-        this.userFactory = userFactory;
     }
 
     @Override
     public void execute(ChangePasswordInputData changePasswordInputData) {
-        if ("".equals(changePasswordInputData.getPassword())) {
+        final String userId = changePasswordInputData.getUserId();
+        final String oldPassword = changePasswordInputData.getOldPassword();
+        final String newPassword = changePasswordInputData.getNewPassword();
+        final String confirmPassword = changePasswordInputData.getConfirmPassword();
+
+        // Validate inputs
+        if ("".equals(oldPassword)) {
+            userPresenter.prepareFailView("Current password cannot be empty");
+        }
+        else if ("".equals(newPassword)) {
             userPresenter.prepareFailView("New password cannot be empty");
-        } else {
-            final User user = userFactory.create(changePasswordInputData.getUsername(),
-                    changePasswordInputData.getPassword());
+        }
+        else if ("".equals(confirmPassword)) {
+            userPresenter.prepareFailView("Confirm password cannot be empty");
+        }
+        else if (!newPassword.equals(confirmPassword)) {
+            userPresenter.prepareFailView("New passwords do not match");
+        }
+        else if (newPassword.length() < 6) {
+            userPresenter.prepareFailView("New password must be at least 6 characters");
+        }
+        else if (oldPassword.equals(newPassword)) {
+            userPresenter.prepareFailView("New password must be different from current password");
+        }
+        else {
+            // Get user's email to verify old password
+            final User user = userDataAccessObject.getUserByUserId(userId);
 
-            userDataAccessObject.changePassword(user);
+            // Verify the old password
+            if (!userDataAccessObject.verifyPassword(user.getEmail(), oldPassword)) {
+                userPresenter.prepareFailView("Current password is incorrect");
+            }
+            else {
+                // Update to new password
+                userDataAccessObject.changePassword(userId, newPassword);
 
-            final ChangePasswordOutputData changePasswordOutputData = new ChangePasswordOutputData(user.getEmail());
-            userPresenter.prepareSuccessView(changePasswordOutputData);
+                userPresenter.prepareSuccessView(new ChangePasswordOutputData());
+            }
         }
     }
 }

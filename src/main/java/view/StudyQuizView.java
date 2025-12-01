@@ -147,7 +147,7 @@ public class StudyQuizView extends View {
                 float score = (float) correctAnswers / questions.size();
                 StudyQuiz quiz = new StudyQuizFactory().create(score,
                         LocalDateTime.now(), LocalDateTime.now());
-                quizDAO.addStudyQuiz(DashboardState.userId,
+                quizDAO.addStudyQuiz("JGioTqVXbwdu7plKFsMcjdCBwKf1",
                         quiz);
             }
         });

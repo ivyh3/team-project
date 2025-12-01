@@ -12,16 +12,11 @@ public class StudySession {
     private LocalDateTime endTime;
     private Duration duration;
 
-    // private String calendarEventId;
-    // private boolean syncCalendar;
-
     public StudySession(String id, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
         this.startTime = startTime;
         this.endTime = endTime;
         this.duration = Duration.between(startTime, endTime);
-        // this.status = "active";
-        // this.syncCalendar = false;
     }
 
     // Getters and setters
@@ -45,6 +40,12 @@ public class StudySession {
         return endTime;
     }
 
+    /**
+     * Sets the end time for this study session. Session duration is then calculated if
+     * both start and end time exist.
+     *
+     * @param endTime The end time for the start session
+     */
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
         if (startTime != null && endTime != null) {
@@ -62,27 +63,11 @@ public class StudySession {
 
     @Override
     public String toString() {
-        return "StudySession{" +
-                "id='" + id + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+        return "StudySession{"
+            + "id='" + id + '\''
+            + ", startTime=" + startTime
+            + ", endTime=" + endTime
+            + ", duration=" + duration
+            + '}';
     }
-
-    // public String getCalendarEventId() {
-    // return calendarEventId;
-    // }
-
-    // public void setCalendarEventId(String calendarEventId) {
-    // this.calendarEventId = calendarEventId;
-    // }
-
-    // public boolean isSyncCalendar() {
-    // return syncCalendar;
-    // }
-
-    // public void setSyncCalendar(boolean syncCalendar) {
-    // this.syncCalendar = syncCalendar;
-    // }
 }

@@ -1,5 +1,6 @@
 package interface_adapter.controller;
 
+import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.StudySessionConfigState;
 import use_case.start_study_session.StartStudySessionInputBoundary;
 import use_case.start_study_session.StartStudySessionInputData;
@@ -17,10 +18,12 @@ public class StartStudySessionController {
     /**
      * Attempts to start a study session with the current config.
      *
+     * @param userId the current state
      * @param state The current configuration
      */
-    public void execute(StudySessionConfigState state) {
+    public void execute(String userId, StudySessionConfigState state) {
         final StartStudySessionInputData inputData = new StartStudySessionInputData(
+            userId,
             state.copy());
         interactor.execute(inputData);
     }
@@ -34,8 +37,10 @@ public class StartStudySessionController {
 
     /**
      * Refresh the file options that are available.
+     *
+     * @param userId The User ID
      */
-    public void refreshFileOptions() {
-        interactor.refreshFileOptions();
+    public void refreshFileOptions(String userId) {
+        interactor.refreshFileOptions(userId);
     }
 }

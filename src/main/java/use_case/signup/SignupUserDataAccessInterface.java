@@ -19,9 +19,9 @@ public interface SignupUserDataAccessInterface {
      * Returns the user with the given email.
      *
      * @param email the email to look up
-     * @return the user with the given email
+     * @return the User object with the given email
      */
-    User getUser(String email);
+    User getUserByEmail(String email);
 
     /**
      * Creates a new user with the given email and password.

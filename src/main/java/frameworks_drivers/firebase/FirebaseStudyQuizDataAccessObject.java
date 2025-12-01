@@ -1,6 +1,5 @@
 package frameworks_drivers.firebase;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -9,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
@@ -19,177 +19,217 @@ import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
-
 import entity.StudyQuiz;
 import entity.StudyQuizFactory;
 
-// TODO: Fix this AI generated code up (although I probably wouldn't do much better...)
 /**
  * Data access object for StudyQuiz entities.
  */
 public class FirebaseStudyQuizDataAccessObject {
-	private static final String USERS_COLLECTION = "users";
-	private static final String QUIZZES_COLLECTION = "studyQuizzes";
-	private final Firestore firestore;
-	private final StudyQuizFactory studyQuizFactory;
+    public static final String START_TIME = "start_time";
+    public static final String END_TIME = "end_time";
+    public static final String DURATION_SECONDS = "duration_seconds";
+    public static final String SCORE = "score";
+    public static final String START_TIME_TIMESTAMP = "start_time_timestamp";
+    public static final String END_TIME_TIMESTAMP = "end_time_timestamp";
+    private static final String USERS_COLLECTION = "users";
+    private static final String QUIZZES_COLLECTION = "studyQuizzes";
+    private final Firestore firestore;
+    private final StudyQuizFactory studyQuizFactory;
 
-	public FirebaseStudyQuizDataAccessObject(StudyQuizFactory studyQuizFactory) {
-		this.studyQuizFactory = studyQuizFactory;
-		this.firestore = FirestoreClient.getFirestore();
-	}
+    public FirebaseStudyQuizDataAccessObject(StudyQuizFactory studyQuizFactory) {
+        this.studyQuizFactory = studyQuizFactory;
+        this.firestore = FirestoreClient.getFirestore();
+    }
 
-	public StudyQuiz addStudyQuiz(String userId, StudyQuiz quiz) {
-		CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
-				.document(userId)
-				.collection(QUIZZES_COLLECTION);
+    /**
+     * Adds a StudyQuiz entity to the firebase.
+     *
+     * @param userId The USer ID
+     * @param quiz   The StudyQuiz to add
+     * @return The StudyQuiz added, including its ID
+     */
+    public StudyQuiz addStudyQuiz(String userId, StudyQuiz quiz) {
+        final CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(QUIZZES_COLLECTION);
 
-		Map<String, Object> data = new HashMap<>();
+        final Map<String, Object> data = new HashMap<>();
 
-		// Store times as ISO strings in utc and as epoch millis for range queries.
-		ZonedDateTime utcStartTime = convertToUtc(quiz.getStartTime());
-		ZonedDateTime utcEndTime = convertToUtc(quiz.getEndTime());
+        // Store times as ISO strings in utc and as epoch millis for range queries.
+        final ZonedDateTime utcStartTime = convertToUtc(quiz.getStartTime());
+        final ZonedDateTime utcEndTime = convertToUtc(quiz.getEndTime());
 
-		data.put("start_time", utcStartTime.toString());
-		data.put("end_time", utcEndTime.toString());
-		data.put("duration_seconds", quiz.getDuration().toSeconds());
-		data.put("score", quiz.getScore());
-		data.put("start_time_timestamp", utcStartTime.toInstant().toEpochMilli());
-		data.put("end_time_timestamp", utcEndTime.toInstant().toEpochMilli());
+        data.put(START_TIME, utcStartTime.toString());
+        data.put(END_TIME, utcEndTime.toString());
+        data.put(DURATION_SECONDS, quiz.getDuration().toSeconds());
+        data.put(SCORE, quiz.getScore());
+        data.put(START_TIME_TIMESTAMP, utcStartTime.toInstant().toEpochMilli());
+        data.put(END_TIME_TIMESTAMP, utcEndTime.toInstant().toEpochMilli());
 
-		try {
-			ApiFuture<DocumentReference> result = quizzesRef.add(data);
-			String documentId = result.get().getId();
+        try {
+            final ApiFuture<DocumentReference> result = quizzesRef.add(data);
+            final String documentId = result.get().getId();
 
-			return studyQuizFactory.create(
-					documentId,
-					quiz.getScore(),
-					quiz.getStartTime(),
-					quiz.getEndTime());
-		} catch (Exception e) {
-			throw new RuntimeException("Error adding study quiz: " + e.getMessage(), e);
-		}
-	}
+            return studyQuizFactory.create(
+                documentId,
+                quiz.getScore(),
+                quiz.getStartTime(),
+                quiz.getEndTime());
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error adding study quiz: " + err.getMessage(), err);
+        }
+    }
 
-	public StudyQuiz getStudyQuizById(String userId, String quizId) {
-		DocumentReference quizRef = firestore.collection(USERS_COLLECTION)
-				.document(userId)
-				.collection(QUIZZES_COLLECTION)
-				.document(quizId);
+    /**
+     * Gets a StudyQuiz entity based on the given quizID.
+     *
+     * @param userId The user ID
+     * @param quizId The QuizID
+     * @return The StudyQuiz entity with the given ID or null if does not exist
+     */
+    public StudyQuiz getStudyQuizById(String userId, String quizId) {
+        final DocumentReference quizRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(QUIZZES_COLLECTION)
+            .document(quizId);
 
-		try {
-			ApiFuture<DocumentSnapshot> future = quizRef.get();
-			DocumentSnapshot document = future.get();
+        try {
+            final ApiFuture<DocumentSnapshot> future = quizRef.get();
+            final DocumentSnapshot document = future.get();
 
-			if (document.exists()) {
-				return createStudyQuizFromDocument(document);
-			} else {
-				return null;
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Error retrieving study quiz: " + e.getMessage(), e);
-		}
-	}
+            if (document.exists()) {
+                return createStudyQuizFromDocument(document);
+            }
+            else {
+                return null;
+            }
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study quiz: " + err.getMessage(), err);
+        }
+    }
 
-	public List<StudyQuiz> getStudyQuizzes(String userId) {
-		CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
-				.document(userId)
-				.collection(QUIZZES_COLLECTION);
+    /**
+     * Gets all study quizzes for a user.
+     *
+     * @param userId The userID
+     * @return List of all StudyQuizzes that the user had
+     */
+    public List<StudyQuiz> getStudyQuizzes(String userId) {
+        final CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(QUIZZES_COLLECTION);
 
-		List<StudyQuiz> quizzes = new ArrayList<>();
+        final List<StudyQuiz> quizzes = new ArrayList<>();
 
-		try {
-			ApiFuture<QuerySnapshot> future = quizzesRef.get();
-			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+        try {
+            final ApiFuture<QuerySnapshot> future = quizzesRef.get();
+            final List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-			for (QueryDocumentSnapshot document : documents) {
-				quizzes.add(createStudyQuizFromDocument(document));
-			}
+            for (QueryDocumentSnapshot document : documents) {
+                quizzes.add(createStudyQuizFromDocument(document));
+            }
 
-			return quizzes;
-		} catch (Exception e) {
-			throw new RuntimeException("Error retrieving study quizzes: " + e.getMessage(), e);
-		}
-	}
+            return quizzes;
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study quizzes: " + err.getMessage(), err);
+        }
+    }
 
-	public List<StudyQuiz> getStudyQuizzesInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
+    /**
+     * Gets the study quizzes that STARTED within the given time range.
+     *
+     * @param userId    The user ID
+     * @param startTime The start time of the range
+     * @param endTime   The end time of the range
+     * @return The list of StudyQuizzes within the range
+     */
+    public List<StudyQuiz> getStudyQuizzesInRange(String userId, LocalDateTime startTime, LocalDateTime endTime) {
 
-		CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
-				.document(userId)
-				.collection(QUIZZES_COLLECTION);
+        final CollectionReference quizzesRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection(QUIZZES_COLLECTION);
 
-		ZonedDateTime utcStartTime = convertToUtc(startTime);
-		ZonedDateTime utcEndTime = convertToUtc(endTime);
+        final ZonedDateTime utcStartTime = convertToUtc(startTime);
+        final ZonedDateTime utcEndTime = convertToUtc(endTime);
 
-		long startTimeStamp = utcStartTime.toInstant().toEpochMilli();
-		long endTimeStamp = utcEndTime.toInstant().toEpochMilli();
+        final long startTimeStamp = utcStartTime.toInstant().toEpochMilli();
+        final long endTimeStamp = utcEndTime.toInstant().toEpochMilli();
 
-		Query query = quizzesRef
-				.whereGreaterThanOrEqualTo("start_time_timestamp", startTimeStamp)
-				.whereLessThan("start_time_timestamp", endTimeStamp);
+        final Query query = quizzesRef
+            .whereGreaterThanOrEqualTo(START_TIME_TIMESTAMP, startTimeStamp)
+            .whereLessThan(START_TIME_TIMESTAMP, endTimeStamp);
 
-		ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        final ApiFuture<QuerySnapshot> querySnapshot = query.get();
 
-		try {
-			List<StudyQuiz> quizzes = new ArrayList<>();
-			for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
-				quizzes.add(createStudyQuizFromDocument(document));
-			}
+        try {
+            final List<StudyQuiz> quizzes = new ArrayList<>();
+            for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+                quizzes.add(createStudyQuizFromDocument(document));
+            }
 
-			return quizzes;
-		} catch (Exception e) {
-			throw new RuntimeException("Error retrieving study quizzes: " + e.getMessage(), e);
-		}
-	}
+            return quizzes;
+        }
+        catch (InterruptedException | ExecutionException err) {
+            throw new RuntimeException("Error retrieving study quizzes: " + err.getMessage(), err);
+        }
+    }
 
-	/**
-	 * Create a StudyQuiz entity from a Firestore DocumentSnapshot.
-	 * 
-	 * @param document the document with the study quiz data
-	 * @return the study quiz entity
-	 */
-	private StudyQuiz createStudyQuizFromDocument(DocumentSnapshot document) {
-		String startTimeStr = document.getString("start_time");
-		String endTimeStr = document.getString("end_time");
+    /**
+     * Create a StudyQuiz entity from a Firestore DocumentSnapshot.
+     *
+     * @param document the document with the study quiz data
+     * @return the study quiz entity
+     */
+    private StudyQuiz createStudyQuizFromDocument(DocumentSnapshot document) {
+        final String startTimeStr = document.getString(START_TIME);
+        final String endTimeStr = document.getString(END_TIME);
 
-		ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
-		ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
+        final ZonedDateTime startZoned = ZonedDateTime.parse(startTimeStr);
+        final ZonedDateTime endZoned = ZonedDateTime.parse(endTimeStr);
 
-		LocalDateTime startTime = convertToLocalDateTime(startZoned);
-		LocalDateTime endTime = convertToLocalDateTime(endZoned);
+        final LocalDateTime startTime = convertToLocalDateTime(startZoned);
+        final LocalDateTime endTime = convertToLocalDateTime(endZoned);
 
-		Double scoreDouble = document.getDouble("score");
-		float score = scoreDouble != null ? scoreDouble.floatValue() : 0f;
+        final Double scoreDouble = document.getDouble(SCORE);
+        final float score;
+        if (scoreDouble != null) {
+            score = scoreDouble.floatValue();
+        }
+        else {
+            score = 0f;
+        }
 
-		StudyQuiz quiz = studyQuizFactory.create(
-				document.getId(),
-				score,
-				startTime,
-				endTime);
+        return studyQuizFactory.create(
+            document.getId(),
+            score,
+            startTime,
+            endTime);
+    }
 
-		return quiz;
-	}
+    /**
+     * Return the UTC equivalent of a LocalDateTime in the system default timezone.
+     *
+     * @param localDateTime the LocalDateTime to convert
+     * @return the ZonedDateTime in UTC
+     */
+    private ZonedDateTime convertToUtc(LocalDateTime localDateTime) {
+        final ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
+        return ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
+    }
 
-	/**
-	 * Return the UTC equivalent of a LocalDateTime in the system default timezone.
-	 * 
-	 * @param localDateTime the LocalDateTime to convert
-	 * @return the ZonedDateTime in UTC
-	 */
-	private ZonedDateTime convertToUtc(LocalDateTime localDateTime) {
-		ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-		ZonedDateTime utcZoned = ldtZoned.withZoneSameInstant(ZoneOffset.UTC);
-		return utcZoned;
-	}
-
-	/**
-	 * Return the LocalDateTime equivalent of a ZonedDateTime in the system default
-	 * timezone.
-	 * 
-	 * @param zonedDateTime the ZonedDateTime to convert
-	 * @return the LocalDateTime in the system default timezone
-	 */
-	private LocalDateTime convertToLocalDateTime(ZonedDateTime zonedDateTime) {
-		ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
-		return localZoned.toLocalDateTime();
-	}
+    /**
+     * Return the LocalDateTime equivalent of a ZonedDateTime in the system default
+     * timezone.
+     *
+     * @param zonedDateTime the ZonedDateTime to convert
+     * @return the LocalDateTime in the system default timezone
+     */
+    private LocalDateTime convertToLocalDateTime(ZonedDateTime zonedDateTime) {
+        final ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
+        return localZoned.toLocalDateTime();
+    }
 }

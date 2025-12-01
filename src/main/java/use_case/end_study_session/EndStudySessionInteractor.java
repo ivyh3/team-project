@@ -38,8 +38,7 @@ public class EndStudySessionInteractor implements EndStudySessionInputBoundary {
             sessionState.getStartTime(),
             endTime);
 
-        // TODO: MAke User ID handling, well, real
-        final StudySession savedSession = sessionDataAccessObject.addStudySession(DashboardState.userId, session);
+        final StudySession savedSession = sessionDataAccessObject.addStudySession(inputData.getUserId(), session);
         final String sessionId = savedSession.getId();
 
         final EndStudySessionOutputData outputData = new EndStudySessionOutputData(

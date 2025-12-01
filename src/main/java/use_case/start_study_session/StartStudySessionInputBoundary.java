@@ -18,6 +18,8 @@ public interface StartStudySessionInputBoundary {
 
     /**
      * Refresh the list of file options available to the user.
+     *
+     * @param userId The userID for the user
      */
-    void refreshFileOptions();
+    void refreshFileOptions(String userId);
 }

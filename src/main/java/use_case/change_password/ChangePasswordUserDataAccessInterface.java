@@ -8,9 +8,27 @@ import entity.User;
 public interface ChangePasswordUserDataAccessInterface {
 
     /**
-     * Updates the system to record this user's password.
+     * Verifies the user's current password.
      * 
-     * @param user the user whose password is to be updated
+     * @param email    the user's email
+     * @param password the password to verify
+     * @return true if the password is correct, false otherwise
      */
-    void changePassword(User user);
+    boolean verifyPassword(String email, String password);
+
+    /**
+     * Updates the user's password.
+     * 
+     * @param userId      the user ID whose password is to be updated
+     * @param newPassword the new password
+     */
+    void changePassword(String userId, String newPassword);
+
+    /**
+     * Gets the User object for a given user ID.
+     * 
+     * @param userId the user ID
+     * @return the User object with the given user ID
+     */
+    User getUserByUserId(String userId);
 }
