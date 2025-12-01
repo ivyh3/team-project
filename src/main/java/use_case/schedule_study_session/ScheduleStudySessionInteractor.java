@@ -28,9 +28,9 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
         String formattedStartTime = session.getStartTime().toString();
         String formattedEndTime = session.getEndTime().toString();
 
-        dataAccess.saveSession(inputData.getUserId(), session);
+        String sessionId = dataAccess.saveSession(inputData.getUserId(), session).getId();
         ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(
-                session.getId(),
+                sessionId,
                 session.getTitle(),
                 formattedStartTime,
                 formattedEndTime,
