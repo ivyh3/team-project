@@ -297,8 +297,8 @@ public class AppBuilder {
                 studySessionDataAccessObject, quizDataAccessObject);
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
-        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor, dashboardViewModel);
-        StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
+        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
+        StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller, dashboardViewModel);
 
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
         return this;

@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import interface_adapter.view_model.DashboardViewModel;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -29,17 +30,22 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
     public static final int WIDTH = 350;
     public static final int HEIGHT = 450;
     public static final float OPACITY = 0.5f;
+    public static final double PERFECT_SCORE = 100.0;
+
     private final MetricsViewModel viewModel;
     private final ViewStudyMetricsController controller;
+    private final DashboardViewModel dashboardViewModel;
 
     private ChartPanel chartPanel;
     private final JPanel main;
     private LocalDateTime startDate;
 
-    public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller) {
+    public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller,
+                            DashboardViewModel dashboardViewModel) {
         super("studyMetrics");
         this.viewModel = viewModel;
         this.controller = controller;
+        this.dashboardViewModel = dashboardViewModel;
 
         final int daysSinceSunday = LocalDateTime.now().getDayOfWeek().getValue() % 7;
         this.startDate = LocalDateTime.now().minusDays(daysSinceSunday).toLocalDate().atStartOfDay();
@@ -92,7 +98,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
      * Helper method to load metrics based on the start date of the week.
      */
     public void loadMetrics() {
-        controller.execute(startDate);
+        final String userId = dashboardViewModel.getState().getUserId();
+        controller.execute(userId, startDate);
     }
 
     @Override
@@ -143,6 +150,9 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
                 leftDataset);
 
         final CategoryPlot plot = chart.getCategoryPlot();
+        final NumberAxis leftAxis = (NumberAxis) plot.getRangeAxis();
+        leftAxis.setAutoRange(true);
+        leftAxis.setLowerBound(0.0);
 
         final LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
         leftRenderer.setSeriesShapesVisible(0, true);
@@ -161,6 +171,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         plot.setDataset(1, rightDataset);
         final NumberAxis rightAxis = new NumberAxis("Quiz Score (%)");
+        rightAxis.setRange(0.0, PERFECT_SCORE);
         plot.setRangeAxis(1, rightAxis);
         plot.mapDatasetToRangeAxis(1, 1);
         final LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
