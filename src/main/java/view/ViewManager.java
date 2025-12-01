@@ -27,8 +27,6 @@ public class ViewManager implements PropertyChangeListener {
     @Override
     public void propertyChange(PropertyChangeEvent event) {
         if (event.getPropertyName().equals("state")) {
-            System.out.println(event.getNewValue());
-
             final String viewModelName = (String) event.getNewValue();
             cardLayout.show(views, viewModelName);
         }

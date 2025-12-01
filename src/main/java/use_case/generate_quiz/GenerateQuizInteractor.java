@@ -59,10 +59,6 @@ public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
                     input.getPrompt(),
                     NUM_QUESTIONS);
 
-            for (Question question : questions) {
-                System.out.println(question);
-            }
-
             if (questions.isEmpty()) {
                 presenter.prepareFailView("Oops, no questions were generated!");
                 return;

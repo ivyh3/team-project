@@ -60,24 +60,34 @@ public class StudyQuizView extends StatefulView<QuizState> {
 
     private void goToNextQuestion() {
         // Already answered, nextquestion.
-        if (viewModel.getState().getCurrentQuestion().isAnswered()) {
-            if (viewModel.getState().isQuizComplete()) {
-                JOptionPane.showMessageDialog(this,
-                        String.format("You got %d out of %d correct", viewModel.getState().getNumCorrect(),
-                                viewModel.getState().getNumCorrect()),
-                        "Done!",
-                        JOptionPane.INFORMATION_MESSAGE);
-                // TODO: Temporary everything is temporary here bro
-                AppBuilder.viewManagerModel.setView("dashboard");
+        if (viewModel.getState().isQuizComplete()) {
+            JOptionPane.showMessageDialog(this,
+                    String.format("You got %d out of %d correct", viewModel.getState().getNumCorrect(),
+                            viewModel.getState().getNumQuestions()),
+                    "Done!",
+                    JOptionPane.INFORMATION_MESSAGE);
+            // TODO: Temporary everything is temporary here bro
+            AppBuilder.viewManagerModel.setView("dashboard");
+            return;
+        } else if (viewModel.getState().getCurrentQuestion() != null &&
+                viewModel.getState().getCurrentQuestion().isAnswered()) {
 
-            }
             viewModel.getState().nextQuestion();
-        }
-        // Did not answer yet, submit answer and show the explanation
-        for (int i = 0; i < optionButtons.length; i++) {
-            if (optionButtons[i].isSelected()) {
-                viewModel.getState().submitAnswer(i);
-                break;
+            viewModel.firePropertyChange();
+        } else {
+            // Did not answer yet, submit answer and show the explanation
+            boolean answered = false;
+            for (int i = 0; i < optionButtons.length; i++) {
+                if (optionButtons[i].isVisible() && optionButtons[i].isSelected()) {
+                    viewModel.getState().submitAnswer(i);
+                    viewModel.firePropertyChange();
+                    answered = true;
+                    break;
+                }
+            }
+            if (!answered) {
+                JOptionPane.showMessageDialog(this, "Please select an answer before proceeding.", "No Answer Selected",
+                        JOptionPane.WARNING_MESSAGE);
             }
         }
     }
@@ -85,12 +95,24 @@ public class StudyQuizView extends StatefulView<QuizState> {
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         AnswerableQuestion currentQuestion = viewModel.getState().getCurrentQuestion();
+        if (currentQuestion == null) {
+            return;
+        }
         questionLabel.setText(currentQuestion.getQuestionText());
         List<String> options = currentQuestion.getChoices();
+        // Hide all buttons first
         for (int i = 0; i < optionButtons.length; i++) {
-            optionButtons[i].setText(options.get(i));
+            if (i < options.size()) {
+                optionButtons[i].setText(options.get(i));
+                optionButtons[i].setVisible(true);
+            } else {
+                optionButtons[i].setVisible(false);
+            }
             optionButtons[i].setSelected(false);
+            optionButtons[i].setEnabled(!currentQuestion.isAnswered());
         }
+        optionsGroup.clearSelection();
+
         if (currentQuestion.isAnswered()) {
             String message;
             if (currentQuestion.isAnsweredCorrectly()) {

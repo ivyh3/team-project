@@ -21,14 +21,6 @@ public class QuizState {
         return questions;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
     public int getCurrentQuestionIndex() {
         return currentQuestionIndex;
     }
@@ -80,9 +72,5 @@ public class QuizState {
             return;
 
         current.setChosenIndex(selectedIndex);
-
-        // Violates SRP but makes life easier.
-        // AND I WANT LIFE TO BE EASEIER
-        nextQuestion();
     }
 }

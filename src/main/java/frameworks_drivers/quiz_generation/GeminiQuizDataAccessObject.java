@@ -33,7 +33,7 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
     @Override
     public List<Question> generateQuizBase64(String base64Pdf, String context, int numQuestions) {
         String prompt = new StringBuilder()
-                .append("You are a quiz generation AI. Generate simple multiple choice study questions. Make the questions fairly short. Each question has four options. Only one is correct. Only use plaintext, do not use markdown, do not use latex.\n")
+                .append("You are a quiz generation AI. Generate simple multiple choice study questions. Make the questions fairly short. Each question has four options. Only one is correct. Only use plaintext, do not use markdown, do not use latex. Generate questions based on what the user is studying.\n")
                 .append("The user says they are currently studying: ").append(context).append("\n")
                 .append("Number of Questions: ").append(numQuestions).append("\n")
                 .toString();
@@ -47,8 +47,9 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
             Map<String, Object> pdfPart = Map.of("inline_data", inlineData);
             Map<String, Object> promptPart = Map.of(
                     "text", prompt);
+            // FIX: Prompt must come first in the parts array!
             Map<String, Object> content = Map.of(
-                    "parts", List.of(pdfPart, promptPart));
+                    "parts", List.of(promptPart, pdfPart));
 
             // Updated JSON schema for quiz questions
             Map<String, Object> questionObjectSchema = Map.of(
@@ -101,8 +102,8 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
             HttpClient client = HttpClient.newHttpClient();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println(response.statusCode());
-            System.out.println(response.body());
+            // System.out.println(response.statusCode());
+            // System.out.println(response.body());
 
             // Parse and return questions using the new method
             return parseQuestionsFromGeminiResponse(response.body());
@@ -162,7 +163,7 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
         }
 
         String prompt = new StringBuilder()
-                .append("You are a quiz generation AI. Generate simple multiple choice study questions. Make the questions fairly short. Each question has four options. Only one is correct. Only use plaintext, do not use markdown, do not use latex.\n")
+                .append("You are a quiz generation AI. Generate simple multiple choice study questions. Make the questions fairly short. Each question has four options. Only one is correct. Only use plaintext, do not use markdown, do not use latex. Generate questions based on what the user is studying.\n")
                 .append("The user says they are currently studying: ").append(context).append("\n")
                 .append("Number of Questions: ").append(numQuestions).append("\n")
                 .toString();
@@ -205,6 +206,7 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
                     "file_data", Map.of(
                             "mime_type", "application/pdf",
                             "file_uri", fileUri));
+            // FIX: Prompt must come first in the parts array!
             Map<String, Object> content = Map.of(
                     "parts", List.of(promptPart, fileDataPart));
 
@@ -230,8 +232,8 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
             HttpClient client = HttpClient.newHttpClient();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println(response.statusCode());
-            System.out.println(response.body());
+            // System.out.println(response.statusCode());
+            // System.out.println(response.body());
 
             // Parse and return questions
             return parseQuestionsFromGeminiResponse(response.body());
@@ -309,93 +311,4 @@ public class GeminiQuizDataAccessObject implements GenerateQuizDataAccessInterfa
             return null;
         }
     }
-
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("=== Gemini Quiz Generator ===");
-        System.out.println(
-                "This tool will read 'alphafold.pdf', encode it as base64, and send it to the Gemini API to request quiz questions.");
-        System.out.println("You will be prompted to enter a study context and specify the number of questions.");
-        System.out.println();
-
-        // String pdfPath = "alphafold.pdf";
-        String pdfPath = "MIPS.pdf";
-        String base64Pdf = "";
-        try {
-            System.out.println("[INFO] Reading PDF file: " + pdfPath);
-            byte[] pdfBytes = Files.readAllBytes(Paths.get(pdfPath));
-            base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
-            System.out.println("[INFO] Encoded PDF to base64. Length: " + base64Pdf.length());
-        } catch (Exception e) {
-            System.out.println("[ERROR] Failed to read or encode the PDF file: " + e.getMessage());
-            scanner.close();
-            return;
-        }
-
-        System.out.print("Enter the study context (e.g., Physics): ");
-        String context = scanner.nextLine();
-        System.out.println("[INFO] Context set to: " + context);
-
-        System.out.print("Enter the number of questions: ");
-        int numQuestions = Integer.parseInt(scanner.nextLine());
-        System.out.println("[INFO] Number of questions requested: " + numQuestions);
-
-        System.out.println("\n[INFO] Sending request to Gemini API...");
-        GeminiQuizDataAccessObject dao = new GeminiQuizDataAccessObject();
-        List<Question> questions = dao.generateQuizBase64(base64Pdf, context, numQuestions);
-
-        System.out.println("\n[INFO] Request complete.");
-        System.out.println("Questions returned: " + questions.size());
-        if (questions.isEmpty()) {
-            System.out.println("[WARNING] No questions were returned. Check the API response above for errors.");
-        } else {
-            System.out.println("\n=== Extracted Questions ===");
-            int idx = 1;
-            for (Question q : questions) {
-                System.out.println("Question " + idx + ": " + q.getQuestion());
-                List<String> options = q.getOptions();
-                for (int i = 0; i < options.size(); i++) {
-                    System.out.println("  " + (i + 1) + ". " + options.get(i));
-                }
-                System.out.println("Correct Option: " + (q.getCorrectIndex() + 1));
-                System.out.println("Explanation: " + q.getExplanation());
-                System.out.println();
-                idx++;
-            }
-        }
-        scanner.close();
-        System.out.println("\n[INFO] Program finished.");
-    }
 }
-
-// // Build the JSON payload as per your requirements
-// Map<String, Object> payload = new HashMap<>();
-// Map<String, Object> inlineData = Map.of(
-// "mime_type", "application/pdf",
-// "data", base64Pdf);
-// Map<String, Object> pdfPart = Map.of("inline_data", inlineData);
-// Map<String, Object> promptPart = Map.of(
-// "text", "Summarize this PDF for a person who does not know much about its
-// contents.");
-// Map<String, Object> content = Map.of(
-// "parts", List.of(pdfPart, promptPart));
-// Map<String, Object> responseJsonSchema = Map.of(
-// "type", "object",
-// "properties", Map.of(
-// "title", Map.of(
-// "type", "string",
-// "description", "The title of the document."),
-// "abstract", Map.of(
-// "type", "string",
-// "description", "document abstract."),
-// "authors", Map.of(
-// "type", "array",
-// "items", Map.of(
-// "type", "string",
-// "description", "full name of authors"))));
-// Map<String, Object> generationConfig = Map.of(
-// "responseMimeType", "application/json",
-// "responseJsonSchema", responseJsonSchema);
-// payload.put("contents", List.of(content));
-// payload.put("generationConfig", generationConfig);
