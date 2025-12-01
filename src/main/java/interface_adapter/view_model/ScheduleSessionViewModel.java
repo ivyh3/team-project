@@ -1,6 +1,5 @@
 package interface_adapter.view_model;
 
-import entity.ScheduledSession;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.time.LocalDate;
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
  */
 public class ScheduleSessionViewModel {
     private final PropertyChangeSupport support;
-    public final List<ScheduledSession> scheduledSessions;
+    public final List<ScheduleSessionState> scheduledSessions;
 
     private String statusMessage;
     private String errorMessage;
@@ -28,13 +27,13 @@ public class ScheduleSessionViewModel {
         support.addPropertyChangeListener(listener);
     }
 
-    public List<ScheduledSession> getScheduledSessions() {
+    public List<ScheduleSessionState> getScheduledSessions() {
         return new ArrayList<>(scheduledSessions);
     }
 
-    public void addScheduledSession(ScheduledSession session) {
-        List<ScheduledSession> oldValue = new ArrayList<>(scheduledSessions);
-        this.scheduledSessions.add(session);
+    public void addScheduledSession(ScheduleSessionState sessionState) {
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        this.scheduledSessions.add(sessionState);
         support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
     }
 
@@ -64,19 +63,19 @@ public class ScheduleSessionViewModel {
 
     public String[] getSessionStrings() {
         return scheduledSessions.stream()
-                .map(ScheduledSession::toString)
+                .map(ScheduleSessionState::toString)
                 .toArray(String[]::new);
     }
 
-    public List<ScheduledSession> getSessionsForDate(LocalDate date) {
+    public List<ScheduleSessionState> getSessionsForDate(LocalDate date) {
         return scheduledSessions.stream()
                 .filter(s -> s.getStartTime().toLocalDate().equals(date))
                 .collect(Collectors.toList());
     }
 
-    public void removeScheduledSession(ScheduledSession session) {
-        List<ScheduledSession> oldValue = new ArrayList<>(scheduledSessions);
-        if (scheduledSessions.remove(session)) {
+    public void removeScheduledSession(ScheduleSessionState sessionState) {
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        if (scheduledSessions.remove(sessionState)) {
             support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
         }
     }
@@ -87,7 +86,7 @@ public class ScheduleSessionViewModel {
      * @return true if a session was removed, false otherwise.
      */
     public boolean removeScheduledSessionById(String sessionId) {
-        List<ScheduledSession> oldValue = new ArrayList<>(scheduledSessions);
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
 
         // Find and remove the session by ID
         boolean removed = scheduledSessions.removeIf(s -> s.getId().equals(sessionId));
@@ -97,5 +96,4 @@ public class ScheduleSessionViewModel {
         }
         return removed;
     }
-
 }

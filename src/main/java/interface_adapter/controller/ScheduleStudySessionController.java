@@ -43,4 +43,12 @@ public class ScheduleStudySessionController {
         DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData(userId, sessionId);
         interactor.delete(inputData);
     }
+
+    /**
+     * Triggers the Use Case to load all initial sessions.
+     * @param userId The ID of the currently logged-in user.
+     */
+    public void loadInitialSessions(String userId) {
+        interactor.executeLoad(userId);
+    }
 }

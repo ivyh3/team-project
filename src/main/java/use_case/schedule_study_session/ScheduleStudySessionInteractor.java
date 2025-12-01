@@ -1,6 +1,7 @@
 package use_case.schedule_study_session;
 
 import entity.ScheduledSession;
+import java.util.List;
 
 /**
  * Interactor for the Schedule Study Session use case.
@@ -24,8 +25,17 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
                 inputData.getTitle()
         );
 
+        String formattedStartTime = session.getStartTime().toString();
+        String formattedEndTime = session.getEndTime().toString();
+
         dataAccess.saveSession(inputData.getUserId(), session);
-        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(session);
+        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(
+                session.getId(),
+                session.getTitle(),
+                formattedStartTime,
+                formattedEndTime,
+                true
+        );
         outputBoundary.prepareSuccessView(outputData);
     }
 
@@ -37,7 +47,7 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
 
         if (sessionToDelete != null) {
 
-            dataAccess.deleteSession(inputData.getUserId(), sessionToDelete); // Calls the DAO delete method
+            dataAccess.deleteSession(inputData.getUserId(), sessionToDelete);
 
             DeleteScheduledSessionOutputData outputData = new DeleteScheduledSessionOutputData(
                     sessionToDelete.getId(),
@@ -47,5 +57,10 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
         } else {
             outputBoundary.prepareFailView("Session not found or already deleted.");
         }
+    }
+    @Override
+    public void executeLoad(String userId) {
+        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
+        outputBoundary.loadSessions(sessions);
     }
 }

@@ -2,30 +2,28 @@ package view;
 
 import app.AppBuilder;
 import interface_adapter.controller.ScheduleStudySessionController;
-import entity.ScheduledSession;
 import interface_adapter.view_model.ScheduleSessionViewModel;
-import com.github.lgooddatepicker.components.DatePicker;
-import com.github.lgooddatepicker.components.TimePicker;
-import frameworks_drivers.firebase.FirebaseScheduledSessionDataAccessObject;
-import entity.ScheduledSessionFactory;
-import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
-import interface_adapter.presenter.ScheduleStudySessionPresenter;
-import use_case.schedule_study_session.ScheduleStudySessionInteractor;
 import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.ScheduleSessionState;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.github.lgooddatepicker.components.DatePicker;
+import com.github.lgooddatepicker.components.TimePicker;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
-public class ScheduleSessionView extends View {
+public class ScheduleSessionView extends View implements PropertyChangeListener { // 💡 FIX 1: Implement PropertyChangeListener
 
     private final ScheduleStudySessionController controller;
     private final ScheduleSessionViewModel viewModel;
-    private final ScheduleStudySessionDataAccessInterface dataAccess;
     private final DashboardViewModel dashboardViewModel;
 
     private final JList<String> sessionList;
@@ -36,18 +34,17 @@ public class ScheduleSessionView extends View {
     private JPanel header;
     private JLabel headerTitle;
 
-    public ScheduleSessionView(DashboardViewModel dashboardViewModel) {
+    public ScheduleSessionView(ScheduleStudySessionController controller,
+                               ScheduleSessionViewModel viewModel,
+                               DashboardViewModel dashboardViewModel) {
         super("scheduleSession");
 
-        this.viewModel = new ScheduleSessionViewModel();
-        this.dataAccess = new FirebaseScheduledSessionDataAccessObject(new ScheduledSessionFactory());
+        this.controller = controller;
+        this.viewModel = viewModel;
         this.dashboardViewModel = dashboardViewModel;
 
-        ScheduleStudySessionPresenter presenter = new ScheduleStudySessionPresenter(viewModel);
-        ScheduleStudySessionInteractor interactor =
-                new ScheduleStudySessionInteractor(dataAccess, presenter);
-
-        this.controller = new ScheduleStudySessionController(interactor, dashboardViewModel);
+        // 💡 FIX 2: Subscribe to ViewModel changes immediately
+        this.viewModel.addPropertyChangeListener(this);
 
         sessionList = new JList<>();
         sessionList.setCellRenderer(new SessionCellRenderer());
@@ -145,12 +142,17 @@ public class ScheduleSessionView extends View {
             int selectedIndex = sessionList.getSelectedIndex(); // selected study session
             if (selectedIndex != -1) {
 
-                List<ScheduledSession> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
-                ScheduledSession sessionToDelete = sessionsForDate.get(selectedIndex);
-                controller.delete(sessionToDelete.getId());
+                List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
+
+                // 💡 FIX 5: Sessions need to be sorted for the index to match the display list index
+                sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
+
+                ScheduleSessionState sessionStateToDelete = sessionsForDate.get(selectedIndex);
+                controller.delete(sessionStateToDelete.getId());
+
+                // 💡 REVERT: Manually call update for immediate visual feedback
                 updateSessionListForSelectedDate();
             }
-
             // display message if user clicks delete button without selecting session to delete
             else {
                 JOptionPane.showMessageDialog(this, "Please select a session to delete.");
@@ -212,6 +214,13 @@ public class ScheduleSessionView extends View {
         // get selected date and times when user clicks ok
         if (option == JOptionPane.OK_OPTION) {
             LocalDate pickedDate = datePicker.getDate();
+
+            // Check for null time inputs
+            if (startTimePicker.getTime() == null || endTimePicker.getTime() == null) {
+                JOptionPane.showMessageDialog(this, "Please select both start and end times.");
+                return;
+            }
+
             LocalDateTime start = LocalDateTime.of(pickedDate, startTimePicker.getTime());
             LocalDateTime end = LocalDateTime.of(pickedDate, endTimePicker.getTime());
 
@@ -221,65 +230,71 @@ public class ScheduleSessionView extends View {
 
                     controller.execute(start, end, title);
 
-                    // refresh list only if scheduled session is on currently selected day
-                    if (pickedDate.equals(selectedDate)) {
+                    // 💡 REVERT: Manually call update for immediate visual feedback
+                    if (pickedDate != null && pickedDate.equals(selectedDate)) {
                         updateSessionListForSelectedDate();
                     }
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "End time must be after start time.");
             }
         }
     }
 
     // display new scheduled study sessions
     private void updateSessionListForSelectedDate() {
-        List<ScheduledSession> sessionsForDate = viewModel.getSessionsForDate(selectedDate); // get all sessions for selected day
+        List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate); // get all sessions for selected day
+
+        // 💡 FIX 3: Sort the sessions by start time
+        sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
 
         // convert each session into String format
         List<String> displayStrings = sessionsForDate.stream()
-                .map(s -> String.format("%s\n%s\n%s",
+                .map(s -> String.format("%s\n%s\n%s", // Reverted to use \n separators
                         s.getTitle(),
-                        s.getStartTime().toLocalTime().toString(),
-                        s.getEndTime().toLocalTime().toString()))
+                        s.getStartTime().toLocalTime().toString(), // Reverted to use default toString()
+                        s.getEndTime().toLocalTime().toString()))  // Reverted to use default toString()
                 .collect(Collectors.toList());
 
         sessionList.setListData(displayStrings.toArray(new String[0])); // update session list
     }
 
-    // get study sessions from Firebase
-    private void loadSessionsFromDatabase() {
-        System.out.println("loadSessionsFromDatabase called");
-        String userId = dashboardViewModel.getState().getUserId();
-        System.out.println("UserId: " + userId);
-        viewModel.clearSessions();
-        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
-        System.out.println("Sessions fetched: " + sessions.size());
-        for (ScheduledSession session : sessions) {
-            viewModel.addScheduledSession(session);
+    // 💡 FIX 4: Call updateSessionListForSelectedDate() whenever the ViewModel notifies of a change.
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        // Handle successful operation messages
+        if ("statusMessage".equals(evt.getPropertyName())) {
+            String message = (String) evt.getNewValue();
+            if (message != null && !message.isEmpty()) {
+                JOptionPane.showMessageDialog(this, message);
+            }
         }
 
-        updateSessionListForSelectedDate();
+        // Handle list update notifications (after successful schedule/delete/load)
+        if ("sessions".equals(evt.getPropertyName())) {
+            // This is the fallback/refresh mechanism for asynchronous updates (Firebase)
+            updateSessionListForSelectedDate();
+        }
     }
+
 
     public void refreshSessions() {
         System.out.println("Refreshing sessions...");
         String userId = dashboardViewModel.getState().getUserId();
+
         if (userId == null || userId.isEmpty()) {
-            System.out.println("UserId not set yet.");
+            // Handle case where user is not logged in (though they should be)
+            System.err.println("Cannot refresh sessions: User ID is null or empty.");
             return;
         }
-
-        viewModel.clearSessions();
-        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
-        System.out.println("Fetched " + sessions.size() + " sessions from Firebase");
-
-        for (ScheduledSession session : sessions) {
-            viewModel.addScheduledSession(session);
-        }
-
-        updateSessionListForSelectedDate();
+        controller.loadInitialSessions(userId);
     }
 
+    @Override
     public void onViewShown() {
+        // 💡 FIX 6: Trigger the initial data load when the view is switched to.
         refreshSessions();
+        // Also ensure the display reflects the current date
+        selectDay(selectedDate.getDayOfWeek().getValue() - 1);
     }
 }

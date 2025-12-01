@@ -279,5 +279,4 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
             throw new RuntimeException("Failed to delete session: " + e.getMessage());
         }
     }
-
 }
