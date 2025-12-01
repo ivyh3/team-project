@@ -1,141 +1,94 @@
-// package use_case.view_study_metrics;
+ package use_case.view_study_metrics;
 
-// import entity.StudyQuiz;
-// import entity.StudySession;
-// import entity.User;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import org.mockito.ArgumentCaptor;
+ import entity.*;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.mockito.ArgumentCaptor;
 
-// import java.time.DayOfWeek;
-// import java.time.Duration;
-// import java.time.LocalDateTime;
-// import java.util.ArrayList;
-// import java.util.List;
-// import java.util.Map;
+ import java.time.DayOfWeek;
+ import java.time.Duration;
+ import java.time.LocalDateTime;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Map;
 
-// import static org.junit.jupiter.api.Assertions.assertEquals;
-// import static org.junit.jupiter.api.Assertions.assertNull;
-// import static org.mockito.Mockito.*;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertNull;
+ import static org.mockito.Mockito.*;
 
-// public class StudyMetricsInteractorTest {
-//     private ViewStudyMetricsInteractor interactor;
-//     private ViewStudyMetricsDataAccessInterface metricsDAO;
-//     private ViewStudyMetricsOutputBoundary presenter;
-//     private User user;
+ class StudyMetricsInteractorTest {
+     private ViewStudyMetricsInteractor interactor;
+     private ViewStudyMetricsDataAccessInterface metricsDAO;
+     private ViewStudyMetricsOutputBoundary presenter;
+     private User user;
 
-//     @BeforeEach
-//     void setUp() {
-//         metricsDAO = mock(ViewStudyMetricsDataAccessInterface.class);
-//         presenter = mock(ViewStudyMetricsOutputBoundary.class);
-//         interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
-//         user = new User("test_user", "name", "password", LocalDateTime.now());
-//     }
+     @BeforeEach
+     void setUp() {
+         metricsDAO = mock(ViewStudyMetricsDataAccessInterface.class);
+         presenter = mock(ViewStudyMetricsOutputBoundary.class);
+         interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
+         user = new User("userid", "name@gmail.com", LocalDateTime.now());
+     }
 
-//     @Test
-//     // check durations make sense when there are multiple sessions in a day
-//     void dailyStudyDurationsMultipleSessionsTest() {
-//         LocalDateTime week = LocalDateTime.of(2025, 11, 2, 0, 0);
-//         String courseId = "all";
-//         List<StudySession> testSessions = new ArrayList<>();
+     // check durations make sense when there are multiple sessions, one session, or zero sessions in a day
+     @Test
+     void dailyStudyDurationsTest() {
+         StudySessionFactory studySessionFactory = new StudySessionFactory();
+         LocalDateTime sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
+         List<StudySession> testSessions = new ArrayList<>();
 
-//         // sunday
-//         testSessions.add(createTestSession("s1", week.plusDays(0), 30, courseId));
-//         testSessions.add(createTestSession("s2", week.plusDays(0), 30, courseId));
+         testSessions.add(studySessionFactory.create("s1", sunday.plusDays(0), sunday.plusDays(0).plusMinutes(30)));
+         testSessions.add(studySessionFactory.create("s2", sunday.plusDays(0), sunday.plusDays(0).plusMinutes(30)));
+         testSessions.add(studySessionFactory.create("s3", sunday.plusDays(1), sunday.plusDays(1).plusMinutes(90)));
 
-//         // monday
-//         testSessions.add(createTestSession("s3", week.plusDays(1), 90, courseId));
+         when(metricsDAO.getSessionsPerWeek(user.getUserId(), sunday))
+                 .thenReturn(testSessions);
+         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), sunday))
+                 .thenReturn(new ArrayList<>());
 
-//         // tuesday
-//         testSessions.add(createTestSession("s4", week.plusDays(2), 120, courseId));
+         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), sunday);
+         interactor.execute(inputData);
 
-//         when(metricsDAO.getSessionsPerWeek(user, week, courseId))
-//                 .thenReturn(testSessions);
-//         when(metricsDAO.getQuizzesPerWeek(user, week, courseId))
-//                 .thenReturn(new ArrayList<>());
+         ArgumentCaptor<ViewStudyMetricsOutputData> captor =
+                 ArgumentCaptor.forClass(ViewStudyMetricsOutputData.class);
+         verify(presenter).prepareSuccessView(captor.capture());
 
-//         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user, courseId, week);
-//         interactor.execute(inputData);
+         ViewStudyMetricsOutputData outputData = captor.getValue();
+         Map<DayOfWeek, Duration> dailyDurations = outputData.getDailyStudyDurations();
 
-//         ArgumentCaptor<ViewStudyMetricsOutputData> captor =
-//                 ArgumentCaptor.forClass(ViewStudyMetricsOutputData.class);
-//         verify(presenter).prepareSuccessView(captor.capture());
+         assertEquals(Duration.ofMinutes(60), dailyDurations.get(DayOfWeek.SUNDAY));
+         assertEquals(Duration.ofMinutes(90), dailyDurations.get(DayOfWeek.MONDAY));
+         assertNull(dailyDurations.get(DayOfWeek.WEDNESDAY));
+     }
 
-//         ViewStudyMetricsOutputData outputData = captor.getValue();
-//         Map<DayOfWeek, Duration> dailyDurations = outputData.getDailyStudyDurations();
+     // check average scores make sense when there are multiple quizzes, one quiz, or zero quizzes in a day
+     @Test
+     void averageQuizScoresTest() {
+         StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
+         LocalDateTime sunday = LocalDateTime.of(2025, 11, 2, 0, 0);
+         List<StudyQuiz> testQuizzes = new ArrayList<>();
 
-//         assertEquals(Duration.ofMinutes(60), dailyDurations.get(DayOfWeek.SUNDAY));
-//         assertEquals(Duration.ofMinutes(90), dailyDurations.get(DayOfWeek.MONDAY));
-//         assertEquals(Duration.ofMinutes(120), dailyDurations.get(DayOfWeek.TUESDAY));
-//         assertNull(dailyDurations.get(DayOfWeek.WEDNESDAY));
+         testQuizzes.add(studyQuizFactory.create("q1", 0.8f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(studyQuizFactory.create("q2", 0.9f, sunday.plusDays(0), sunday.plusDays(0)));
+         testQuizzes.add(studyQuizFactory.create("q3", 0.7f, sunday.plusDays(1), sunday.plusDays(1)));
 
-//     }
+         when(metricsDAO.getSessionsPerWeek(user.getUserId(), sunday))
+                 .thenReturn(new ArrayList<>());
+         when(metricsDAO.getQuizzesPerWeek(user.getUserId(), sunday))
+                 .thenReturn(testQuizzes);
 
-//     void dailyStudyDurationsEmptyTest() {
-//         // TODO: write the test, should be zero and empty
-//     }
+         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user.getUserId(), sunday);
+         interactor.execute(inputData);
 
-//     @Test
-//     // check average scores make sense when there are multiple quizzes in a day
-//     void averageQuizScoresMultipleQuizzesTest() {
-//         LocalDateTime week = LocalDateTime.of(2025, 11, 2, 0, 0);
-//         String courseId = "all";
-//         List<StudyQuiz> testQuizzes = new ArrayList<>();
+         ArgumentCaptor<ViewStudyMetricsOutputData> captor =
+                 ArgumentCaptor.forClass(ViewStudyMetricsOutputData.class);
+         verify(presenter).prepareSuccessView(captor.capture());
 
-//         // sunday: average 85%
-//         testQuizzes.add(createTestQuiz("q1", week.plusDays(0), 80f, courseId));
-//         testQuizzes.add(createTestQuiz("q2", week.plusDays(0), 90f, courseId));
+         ViewStudyMetricsOutputData outputData = captor.getValue();
+         Map<DayOfWeek, Float> averageScores = outputData.getAverageQuizScores();
 
-//         // monday: average 70%
-//         testQuizzes.add(createTestQuiz("q3", week.plusDays(1), 70f, courseId));
-
-//         when(metricsDAO.getSessionsPerWeek(user, week, courseId))
-//                 .thenReturn(new ArrayList<>()); // Empty sessions for this test
-//         when(metricsDAO.getQuizzesPerWeek(user, week, courseId))
-//                 .thenReturn(testQuizzes);
-
-//         ViewStudyMetricsInputData inputData = new ViewStudyMetricsInputData(user, courseId, week);
-//         interactor.execute(inputData);
-
-//         ArgumentCaptor<ViewStudyMetricsOutputData> captor =
-//                 ArgumentCaptor.forClass(ViewStudyMetricsOutputData.class);
-//         verify(presenter).prepareSuccessView(captor.capture());
-
-//         ViewStudyMetricsOutputData outputData = captor.getValue();
-//         Map<DayOfWeek, Float> averageScores = outputData.getAverageQuizScores();
-
-//         assertEquals(85f, averageScores.get(DayOfWeek.SUNDAY), 0.01);
-//         assertEquals(70f, averageScores.get(DayOfWeek.MONDAY), 0.01);
-//         assertNull(averageScores.get(DayOfWeek.TUESDAY));
-//     }
-
-//     void averageQuizScoresEmptyTest() {
-//         // TODO: write the test, should be zero and empty
-//     }
-
-
-//     // helpers
-//     private StudySession createTestSession(String id, LocalDateTime startTime,
-//                                            int durationMinutes, String courseId) {
-//         StudySession session = new StudySession(id, user.getName(), courseId, startTime);
-//         session.setDuration(Duration.ofMinutes(durationMinutes));
-//         return session;
-//     }
-
-//     private StudyQuiz createTestQuiz(String id, LocalDateTime startDate,
-//                                      float score, String courseId) {
-//         StudyQuiz quiz = new StudyQuiz(
-//                 id,
-//                 user.getName(),
-//                 "session_" + id,
-//                 new ArrayList<>(),
-//                 courseId,
-//                 "test quiz",
-//                 List.of("material_1")
-//         );
-//         quiz.setScore(score);
-//         quiz.setStartDate(startDate);
-//         return quiz;
-//     }
-
-// }
+         assertEquals(85f, averageScores.get(DayOfWeek.SUNDAY), 0.01);
+         assertEquals(70f, averageScores.get(DayOfWeek.MONDAY), 0.01);
+         assertNull(averageScores.get(DayOfWeek.TUESDAY));
+     }
+ }

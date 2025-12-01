@@ -15,6 +15,7 @@ public class Main {
         System.setProperty("jdk.unsupported.allowUnsafeAccess", "false");
         // Initialize Firebase
         try {
+            Config.loadDotenv();
             Config.initializeFirebase();
         } catch (IOException e) {
             System.err.println("Failed to initialize Firebase: " + e.getMessage());
@@ -57,16 +58,13 @@ public class Main {
                     .addDashboardView()
                     .addSignupUseCase()
                     .addLoginUseCase()
-                    // TODO: Sort out later.
                     .addSettingsView()
-                    // .addChangePasswordUseCase()
-                    // .addLogoutUseCase()
-                    // .addChooseStudySessionView()
+                    .addChangePasswordUseCase()
+                    .addLogoutUseCase()
                     .addUploadSessionMaterialsView()
                     .addStudySessionView()
                     .addStudySessionEndView()
                     .addEndStudySessionUseCase()
-                    .addVariableSessionView()
                     .addStudyQuizView()
                     .addFileManagerView()
                     .addQuizHistoryView()

@@ -1,20 +1,24 @@
 package use_case.start_study_session;
 
-import interface_adapter.view_model.StudySessionState;
-
 import java.time.LocalDateTime;
 
+import interface_adapter.view_model.StudySessionConfigState;
+
+/**
+ * Output data for the start study session use case.
+ * Includes the configuration state set and the start time.
+ */
 public class StartStudySessionOutputData {
-    private final StudySessionState sessionState;
+    private final StudySessionConfigState config;
     private final LocalDateTime startTime;
 
-    public StartStudySessionOutputData(StudySessionState sessionState, LocalDateTime startTime) {
-        this.sessionState = sessionState;
+    public StartStudySessionOutputData(StudySessionConfigState config, LocalDateTime startTime) {
+        this.config = config;
         this.startTime = startTime;
     }
 
-    public StudySessionState getSessionState() {
-        return sessionState;
+    public StudySessionConfigState getConfig() {
+        return config;
     }
 
     public LocalDateTime getStartTime() {

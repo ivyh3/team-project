@@ -1,6 +1,10 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.*;
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionState;
+import interface_adapter.view_model.StudySessionViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.start_study_session.StartStudySessionOutputBoundary;
 import use_case.start_study_session.StartStudySessionOutputData;
 
@@ -31,11 +35,8 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
 
     @Override
     public void startStudySession(StartStudySessionOutputData outputData) {
-        // Get the StudySessionState from the output data
-        StudySessionState sessionState = outputData.getSessionState();
-
-        // Update the study session view with this state
-        studySessionViewModel.setState(sessionState);
+        // Prepare study session view state with set config
+        studySessionViewModel.setState(new StudySessionState(outputData.getConfig(), outputData.getStartTime()));
         studySessionViewModel.firePropertyChange();
 
         // Reset config view state to default
@@ -44,16 +45,15 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
 
         // Navigate to study session view
         viewManagerModel.setView(studySessionViewModel.getViewName());
-        viewManagerModel.firePropertyChange();
     }
 
     @Override
     public void abortStudySessionConfig() {
-        // Reset config state
+        // Reset config state.
         studySessionConfigViewModel.setState(new StudySessionConfigState());
         studySessionConfigViewModel.firePropertyChange();
 
-        // Navigate back to dashboard
+        // Navigate back to the dashboard.
         viewManagerModel.setView(dashboardViewName);
         viewManagerModel.firePropertyChange();
     }

@@ -1,32 +1,45 @@
 package app;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import io.github.cdimascio.dotenv.Dotenv;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.File;
+import io.github.cdimascio.dotenv.DotenvException;
 
 /**
  * Configuration class for managing API keys and application settings.
  * Uses Dotenv to load environment variables from .env file.
  */
-public class Config {
-    private static final Dotenv dotenv;
-    private static boolean firebaseInitialized = false;
+public final class Config {
+    private static Dotenv dotenv;
+    private static boolean firebaseInitialized;
 
-    static {
-        Dotenv tmp;
+    // Private constructor to prevent instantiation of utility class.
+    private Config() {
+    }
+
+    // ============================================
+    // Dotenv Initialization
+    // ============================================
+
+    /**
+     * Loads Dotenv from project .env file.
+     * This should be called before any other Config methods.
+     */
+    public static void loadDotenv() {
         try {
-            tmp = Dotenv.configure()
-                    .ignoreIfMissing() // don't fail if .env isn't present
+            dotenv = Dotenv.configure()
+                    .directory(".")
                     .load();
-        } catch (Exception e) {
-            tmp = null;
+            System.out.println("Environment variables loaded successfully");
         }
-        dotenv = tmp;
+        catch (DotenvException event) {
+            System.err.println("Warning: Could not load .env file: " + event.getMessage());
+            System.err.println("Proceeding with default/system environment variables");
+        }
     }
 
     // ============================================
@@ -34,27 +47,34 @@ public class Config {
     // ============================================
 
     /**
-     * Initializes Firebase Admin SDK with credentials from src/main/resources
-     * This should be called once at application startup.
+     * Initializes Firebase Admin SDK with credentials from src/main/resources.
+     * This should be called once at application startup, after loadDotenv().
      *
      * @throws IOException if the credentials file cannot be read
      */
     public static void initializeFirebase() throws IOException {
-        String credsPath = getFirebaseCredentialsPath();
-
-        File credsFile = new File(credsPath);
-        if (!credsFile.exists()) {
-            throw new IOException("Firebase credentials file not found at: " + credsPath
-                    + ". Provide the file or set FIREBASE_CREDENTIALS_PATH env var.");
+        // Load dotenv first if not already loaded
+        if (dotenv == null) {
+            loadDotenv();
         }
 
-        try (FileInputStream serviceAccount = new FileInputStream(credsFile)) {
-            FirebaseOptions options = FirebaseOptions.builder()
+        // Prevent multiple Firebase initializations
+        if (!firebaseInitialized) {
+            final String credentialsPath = getFirebaseCredentialsPath();
+            final FileInputStream serviceAccount = new FileInputStream(credentialsPath);
+
+            final FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setStorageBucket("csc207-team-project.firebasestorage.app")
+                    .setStorageBucket(getFirebaseStorageBucket())
                     .build();
+
             FirebaseApp.initializeApp(options);
             firebaseInitialized = true;
+
+            System.out.println("Firebase initialized successfully");
+        }
+        else {
+            System.out.println("Firebase has been already initialized");
         }
     }
 
@@ -84,47 +104,101 @@ public class Config {
     // Dotenv Variables Getters
     // ============================================
 
+    /**
+     * Gets the Firebase credentials path from environment variables.
+     *
+     * @return the Firebase credentials path
+     */
     public static String getFirebaseCredentialsPath() {
-        return getEnv("FIREBASE_CREDENTIALS_PATH", "firebase.json");
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("FIREBASE_CREDENTIALS_PATH", "");
     }
 
+    /**
+     * Gets the Firebase storage bucket from environment variables.
+     *
+     * @return the Firebase storage bucket
+     */
     public static String getFirebaseStorageBucket() {
-        return getEnv("FIREBASE_STORAGE_BUCKET", "");
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("FIREBASE_STORAGE_BUCKET", "");
     }
 
+    /**
+     * Gets the Firebase Web API key from environment variables.
+     *
+     * @return the Firebase Web API key
+     */
     public static String getFirebaseWebApiKey() {
-        return getEnv("FIREBASE_WEB_API_KEY", "");
-    }
-    public static String getGeminiApiKey() {
-        return getEnv("GEMINI_API_KEY", "");
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("FIREBASE_WEB_API_KEY", "");
     }
 
+    /**
+     * Gets the Gemini API key from environment variables.
+     *
+     * @return the Gemini API key
+     */
+    public static String getGeminiApiKey() {
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("GEMINI_API_KEY", "");
+    }
+
+    /**
+     * Gets the Gemini API URL from environment variables.
+     *
+     * @return the Gemini API URL
+     */
     public static String getGeminiApiUrl() {
-        return getEnv("GEMINI_API_URL",
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("GEMINI_API_URL",
                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent");
     }
 
+    /**
+     * Gets the Google OAuth client ID from environment variables.
+     *
+     * @return the Google OAuth client ID
+     */
     public static String getGoogleOAuthClientId() {
-        return getEnv("GOOGLE_OAUTH_CLIENT_ID", "");
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("GOOGLE_OAUTH_CLIENT_ID", "");
     }
 
+    /**
+     * Gets the Google OAuth client secret from environment variables.
+     *
+     * @return the Google OAuth client secret
+     */
     public static String getGoogleOAuthClientSecret() {
-        return getEnv("GOOGLE_OAUTH_CLIENT_SECRET", "");
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("GOOGLE_OAUTH_CLIENT_SECRET", "");
     }
 
+    /**
+     * Gets the Google OAuth redirect URI from environment variables.
+     *
+     * @return the Google OAuth redirect URI
+     */
     public static String getGoogleOAuthRedirectUri() {
-        return getEnv("GOOGLE_OAUTH_REDIRECT_URI",
+        if (dotenv == null) {
+            loadDotenv();
+        }
+        return dotenv.get("GOOGLE_OAUTH_REDIRECT_URI",
                 "http://localhost:8080/oauth/callback");
-    }
-
-    private static String getEnv(String key, String defaultValue) {
-        String val = null;
-        if (dotenv != null) {
-            val = dotenv.get(key);
-        }
-        if (val == null || val.isEmpty()) {
-            val = System.getenv(key);
-        }
-        return (val == null || val.isEmpty()) ? defaultValue : val;
     }
 }

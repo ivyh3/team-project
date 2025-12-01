@@ -1,16 +1,22 @@
 package view;
 
-import app.AppBuilder;
+import java.awt.Color;
+import java.awt.Component;
+import java.beans.PropertyChangeEvent;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import app.AppBuilder;
 import interface_adapter.controller.LoginController;
 import interface_adapter.view_model.LoginState;
 import interface_adapter.view_model.LoginViewModel;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
 
 /**
  * The View for when the user is logging into the program.
@@ -23,9 +29,6 @@ public class LoginView extends StatefulView<LoginState> {
     private final JPasswordField passwordInputField = new JPasswordField(15);
 
     private LoginController loginController;
-
-    private final JButton loginButton;
-    private final JButton returnButton;
 
     public LoginView(LoginViewModel loginViewModel) {
         super("login", loginViewModel);
@@ -42,20 +45,7 @@ public class LoginView extends StatefulView<LoginState> {
         loginErrorField.setForeground(Color.RED);
         loginErrorField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        final JPanel buttons = new JPanel();
-
-        loginButton = new JButton("log In");
-        loginButton.addActionListener(e -> {
-            LoginState state = viewModel.getState();
-            loginController.execute(state.getEmail(), state.getPassword());
-        });
-        buttons.add(loginButton);
-
-        returnButton = new JButton("Return");
-        returnButton.addActionListener(e -> {
-            AppBuilder.viewManagerModel.setView("initial");
-        });
-        buttons.add(returnButton);
+        final JPanel buttons = getButtonsPanel();
 
         emailInputField.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -114,14 +104,45 @@ public class LoginView extends StatefulView<LoginState> {
         this.add(buttons);
     }
 
+    private JPanel getButtonsPanel() {
+        final JPanel buttons = new JPanel();
+
+        final JButton loginButton = new JButton("log In");
+        loginButton.addActionListener(event -> {
+            final LoginState state = viewModel.getState();
+            loginController.execute(state.getEmail(), state.getPassword());
+        });
+        buttons.add(loginButton);
+
+        final JButton returnButton = new JButton("Return");
+        returnButton.addActionListener(event -> {
+            // Clear form when navigating away
+            viewModel.setState(new LoginState());
+            viewModel.firePropertyChange();
+            AppBuilder.viewManagerModel.setView("initial");
+        });
+        buttons.add(returnButton);
+        return buttons;
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
             final LoginState state = (LoginState) evt.getNewValue();
+
+            // Clear input fields if state has been reset
+            if (state.getEmail().isEmpty()) {
+                emailInputField.setText("");
+            }
+            if (state.getPassword().isEmpty()) {
+                passwordInputField.setText("");
+            }
+
             // Display error message if present
             if (state.getEmailError() != null && !state.getEmailError().isEmpty()) {
                 loginErrorField.setText(state.getEmailError());
-            } else {
+            }
+            else {
                 loginErrorField.setText("");
             }
         }

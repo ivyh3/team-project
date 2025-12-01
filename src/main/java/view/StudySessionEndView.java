@@ -1,129 +1,76 @@
 package view;
 
-import interface_adapter.view_model.QuizViewModel;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
+import java.beans.PropertyChangeEvent;
+import java.time.Duration;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import app.AppBuilder;
 import interface_adapter.view_model.StudySessionEndState;
 import interface_adapter.view_model.StudySessionEndViewModel;
-import entity.Question;
 
-import javax.swing.*;
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.util.List;
-
+/**
+ * The view to display the summary (duration elapsed) for a study session.
+ */
 public class StudySessionEndView extends StatefulView<StudySessionEndState> {
-
+    public static final int MIN_PER_HOUR = 60;
+    public static final int SEC_PER_MIN = 60;
+    public static final int TEXT_HUGE = 52;
+    public static final int TEXT_XL = 28;
     private final JLabel resultLabel = new JLabel();
-    private final JPanel quizPanel = new JPanel();
-    private QuizViewModel quizViewModel;
-
-    public void setQuizDependencies(QuizViewModel quizVM) {
-        this.quizViewModel = quizVM;
-    }
 
     public StudySessionEndView(StudySessionEndViewModel viewModel) {
         super("studySessionEnd", viewModel);
 
-        setLayout(new BorderLayout());
-
-        JPanel main = new JPanel();
+        final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        JLabel titleLabel = new JLabel("Study Session End");
-        titleLabel.setFont(new Font(null, Font.BOLD, 52));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        final JLabel studySessionEndLabel = new JLabel("Study Session End");
+        studySessionEndLabel.setFont(new Font(null, Font.BOLD, TEXT_HUGE));
+        studySessionEndLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        resultLabel.setFont(new Font(null, Font.BOLD, 28));
+        resultLabel.setFont(new Font(null, Font.BOLD, TEXT_XL));
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        quizPanel.setLayout(new BoxLayout(quizPanel, BoxLayout.Y_AXIS));
+        final JButton quizMeButton = new JButton("Quiz Me");
+        quizMeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quizMeButton.addActionListener(event -> {
+            AppBuilder.viewManagerModel.setView("studyQuiz");
+        });
 
         main.add(Box.createVerticalGlue());
-        main.add(titleLabel);
+        main.add(studySessionEndLabel);
         main.add(resultLabel);
-        main.add(Box.createVerticalStrut(20));
-        main.add(quizPanel);
+        main.add(Box.createVerticalGlue());
+        main.add(quizMeButton);
         main.add(Box.createVerticalGlue());
 
-        add(main, BorderLayout.CENTER);
+        this.add(main, BorderLayout.CENTER);
     }
 
-    private final JLabel scoreLabel = new JLabel();
-
-    private void renderQuiz() {
-        quizPanel.removeAll();
-        quizPanel.add(scoreLabel);
-
-        if (quizViewModel == null) {
-            scoreLabel.setText("");
-            quizPanel.add(new JLabel("Quiz view model is not set."));
-            quizPanel.revalidate();
-            quizPanel.repaint();
-            return;
-        }
-
-        List<Question> questions = quizViewModel.getQuestions();
-        if (questions == null || questions.isEmpty()) {
-            scoreLabel.setText("");
-            quizPanel.add(new JLabel("No questions generated."));
-            quizPanel.revalidate();
-            quizPanel.repaint();
-            return;
-        }
-
-        Question question = quizViewModel.getCurrentQuestion();
-        if (question == null) {
-            scoreLabel.setText("Quiz complete! Score: " + quizViewModel.getScore() + "/" + questions.size());
-            quizPanel.revalidate();
-            quizPanel.repaint();
-            return;
-        }
-
-        JPanel questionPanel = new JPanel();
-        questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
-
-        JLabel qLabel = new JLabel("<html>" + question.getText() + "</html>");
-        questionPanel.add(qLabel);
-
-        ButtonGroup group = new ButtonGroup();
-        java.util.List<String> options = question.getOptions();
-        for (int i = 0; i < options.size(); i++) {
-            final int optionIndex = i;
-            JRadioButton rb = new JRadioButton(options.get(i));
-            rb.addActionListener(e -> {
-                quizViewModel.submitAnswer(optionIndex);
-                quizViewModel.nextQuestion();
-                SwingUtilities.invokeLater(this::renderQuiz);
-            });
-            group.add(rb);
-            questionPanel.add(rb);
-        }
-
-        quizPanel.add(questionPanel);
-        quizPanel.add(Box.createVerticalStrut(15));
-
-        scoreLabel.setText("Score: " + quizViewModel.getScore() + "/" + questions.size());
-
-        quizPanel.revalidate();
-        quizPanel.repaint();
-    }
-
-    private String formatDurationSafe(java.time.Duration duration) {
-        long seconds = duration.getSeconds();
-        long minutes = seconds / 60;
-        seconds %= 60;
-        long hours = minutes / 60;
-        minutes %= 60;
-        if (hours > 0) return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-        else return String.format("%02d:%02d", minutes, seconds);
+    /**
+     * Return a String representation of a given duration in HHh MMm SSs format.
+     *
+     * @param duration The duration to format.
+     * @return The formatted duration in HHh MMm SSs format.
+     */
+    private String formatDuration(Duration duration) {
+        final long hours = duration.toHours();
+        final long minutes = duration.toMinutes() % MIN_PER_HOUR;
+        final long seconds = duration.getSeconds() % SEC_PER_MIN;
+        return String.format("%02dh %02dm %02ds", hours, minutes, seconds);
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        StudySessionEndState state = (StudySessionEndState) evt.getNewValue();
-        resultLabel.setText("You studied for " + formatDurationSafe(state.getDuration()));
-
-        if (quizViewModel != null) {
-            renderQuiz();
-        }
+        final StudySessionEndState state = (StudySessionEndState) evt.getNewValue();
+        resultLabel.setText("You studied for " + formatDuration(state.getDuration()));
     }
 }

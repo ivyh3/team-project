@@ -1,13 +1,13 @@
 package interface_adapter.controller;
 
+import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.StudySessionConfigState;
-import interface_adapter.view_model.StudySessionState;
 import use_case.start_study_session.StartStudySessionInputBoundary;
 import use_case.start_study_session.StartStudySessionInputData;
 
-import java.io.File;
-import java.time.LocalDateTime;
-
+/**
+ * Controller for starting a study session.
+ */
 public class StartStudySessionController {
     private final StartStudySessionInputBoundary interactor;
 
@@ -15,32 +15,32 @@ public class StartStudySessionController {
         this.interactor = interactor;
     }
 
-    public void execute(StudySessionConfigState state) {
-        // Create a File object from the selected reference file
-        File uploadedFile = state.getReferenceFile() != null
-                ? new File(state.getReferenceFile())
-                : null;
-
-        // Create StudySessionState
-        StudySessionState session = new StudySessionState(
-                state.getSessionType(),
-                LocalDateTime.now(),
-                state.getTotalTargetDurationMinutes(),
-                true,
-                state.getPrompt(),
-                uploadedFile
-        );
-
-        // Wrap in input data for the interactor
-        StartStudySessionInputData inputData = new StartStudySessionInputData(session);
+    /**
+     * Attempts to start a study session with the current config.
+     *
+     * @param userId the current state
+     * @param state The current configuration
+     */
+    public void execute(String userId, StudySessionConfigState state) {
+        final StartStudySessionInputData inputData = new StartStudySessionInputData(
+            userId,
+            state.copy());
         interactor.execute(inputData);
     }
 
+    /**
+     * Abort configuration and return.
+     */
     public void abortStudySessionConfig() {
         interactor.abortStudySessionConfig();
     }
 
-    public void refreshFileOptions() {
-        interactor.refreshFileOptions();
+    /**
+     * Refresh the file options that are available.
+     *
+     * @param userId The User ID
+     */
+    public void refreshFileOptions(String userId) {
+        interactor.refreshFileOptions(userId);
     }
 }

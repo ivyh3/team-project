@@ -7,7 +7,7 @@ public interface EndStudySessionOutputBoundary {
     /**
      * Prepares the study session end view.
      *
-     * @param outputData
+     * @param outputData Output data
      */
     void prepareEndView(EndStudySessionOutputData outputData);
 }

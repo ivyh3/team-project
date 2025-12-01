@@ -1,11 +1,10 @@
 package use_case.start_study_session;
 
-import interface_adapter.view_model.DashboardState;
-import interface_adapter.view_model.StudySessionConfigState.SessionType;
-import interface_adapter.view_model.StudySessionState;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionConfigState.SessionType;
 
 /**
  * The interactor for the start study session use case.
@@ -20,25 +19,38 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         this.fileDataAccessObject = fileRepository;
     }
 
+    /**
+     * Executes start study session use case.
+     *
+     * @param inputData The input data
+     */
     @Override
     public void execute(StartStudySessionInputData inputData) {
-        final StudySessionState sessionState = inputData.getSessionState();
-
-        // Validation
-        if (sessionState.getSessionType() == null) {
+        final StudySessionConfigState config = inputData.getConfig();
+        final String userId = inputData.getUserId();
+        // Validate.
+        if (config.getSessionType() == null) {
             presenter.prepareErrorView("You need a session type selected.");
-        } else if (sessionState.getSessionType() == SessionType.FIXED
-                && (sessionState.getTargetDurationMinutes() == null || sessionState.getTargetDurationMinutes() <= 0)) {
+        }
+        else if (config.getSessionType() == SessionType.FIXED
+            && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
             presenter.prepareErrorView("Please study a bit more seriously (time can't be zero)!");
-        } else if (sessionState.getReferenceFile() == null) {
+        }
+        else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
             presenter.prepareErrorView("Please select a reference file.");
-        } else if (sessionState.getPrompt() == null || sessionState.getPrompt().isEmpty()) {
+        }
+        else if (!checkIfFileExists(userId, config.getReferenceFile())) {
+            presenter.prepareErrorView("Reference file does not exist in storage..? Use another one.");
+        }
+        else if (config.getPrompt() == null || config.getPrompt().isEmpty()) {
             presenter.prepareErrorView("Please provide a prompt describing what to study.");
-        } else {
+        }
+        else {
+            // Passed all validation checks. Start the study session.
             final StartStudySessionOutputData outputData = new StartStudySessionOutputData(
-                    sessionState,
-                    LocalDateTime.now()
-            );
+                config,
+                LocalDateTime.now());
+
             presenter.startStudySession(outputData);
         }
     }
@@ -48,18 +60,32 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         presenter.abortStudySessionConfig();
     }
 
+    /**
+     * Check if the given file resource exists in storage.
+     *
+     * @param userId The id of the current user
+     * @param file   The file to check.
+     * @return whether the file exists.
+     */
+    private boolean checkIfFileExists(String userId, String file) {
+        return fileDataAccessObject.fileExistsByName(userId, file);
+    }
+
+    // TODO: Either remove this and move this to navigation from dashboard to config
+    // view, or
+    // make sure this is called when the config view is opened somehow.
     @Override
-    public void refreshFileOptions() {
-        List<String> fileOptions = fileDataAccessObject.getAllUserFiles(DashboardState.userId);
+    public void refreshFileOptions(String userId) {
+
+        // TODO: Use real user ID
+        final List<String> fileOptions = fileDataAccessObject.getAllUserFiles(userId);
         if (fileOptions == null || fileOptions.isEmpty()) {
             presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
             presenter.abortStudySessionConfig();
-        } else {
+        }
+        else {
             presenter.refreshFileOptions(fileOptions);
         }
     }
 
-    private boolean checkIfFileExists(String file) {
-        return fileDataAccessObject.fileExistsByName(DashboardState.userId, file);
-    }
 }

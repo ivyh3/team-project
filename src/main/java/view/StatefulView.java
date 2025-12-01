@@ -1,9 +1,9 @@
 package view;
 
-import interface_adapter.view_model.ViewModel;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import interface_adapter.view_model.ViewModel;
 
 /**
  * Abstract class for a view which relies on state. A StatefulView will have a
@@ -16,7 +16,7 @@ import java.beans.PropertyChangeListener;
 public abstract class StatefulView<T> extends View implements PropertyChangeListener {
     protected ViewModel<T> viewModel;
 
-    public StatefulView(String viewName, ViewModel<T> viewModel) {
+    protected StatefulView(String viewName, ViewModel<T> viewModel) {
         super(viewName);
         this.viewModel = viewModel;
         this.viewModel.addPropertyChangeListener(this);

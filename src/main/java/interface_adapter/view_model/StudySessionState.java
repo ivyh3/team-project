@@ -1,6 +1,5 @@
 package interface_adapter.view_model;
 
-import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -13,33 +12,29 @@ public class StudySessionState {
     private LocalDateTime startTime;
     private boolean isActive;
     private String prompt;
-    private File referenceFile;
+    private String referenceFile;
 
-    // Constructor using a StudySessionConfigState directly
     public StudySessionState(StudySessionConfigState config, LocalDateTime startTime) {
         this.sessionType = config.getSessionType();
+        if (sessionType == StudySessionConfigState.SessionType.FIXED) {
+            this.targetDurationMinutes = config.getTotalTargetDurationMinutes();
+        }
+        else {
+            this.targetDurationMinutes = 0;
+        }
         this.startTime = startTime;
-        this.targetDurationMinutes = config.getTotalTargetDurationMinutes();
-        this.isActive = true;
         this.prompt = config.getPrompt();
-        this.referenceFile = config.getReferenceFile() != null ? new File(config.getReferenceFile()) : null;
+        this.referenceFile = config.getReferenceFile();
+
+        isActive = true;
     }
 
     /**
-     * Full constructor (optional, can still use)
+     * Empty state.
      */
-    public StudySessionState(StudySessionConfigState.SessionType sessionType, LocalDateTime startTime,
-                             int targetDurationMinutes, boolean isActive, String prompt, File referenceFile) {
-        this.sessionType = sessionType;
-        this.startTime = startTime;
-        this.targetDurationMinutes = targetDurationMinutes;
-        this.isActive = isActive;
-        this.prompt = prompt;
-        this.referenceFile = referenceFile;
-    }
+    public StudySessionState() {
 
-    /** Empty state */
-    public StudySessionState() { }
+    }
 
     public LocalDateTime getStartTime() {
         return startTime;
@@ -53,13 +48,33 @@ public class StudySessionState {
         return Duration.between(startTime, LocalDateTime.now());
     }
 
+    /**
+     * Return the remaining duration of the study session for a fixed session.
+     * If this is a variable session, return Duration.ZERO.
+     *
+     * @return The remaining duration (if fixed session), or Duration.ZERO (if variable session).
+     */
     public Duration getRemainingDuration() {
-        if (sessionType == StudySessionConfigState.SessionType.VARIABLE) return Duration.ZERO;
-        LocalDateTime targetEndTime = startTime.plusMinutes(targetDurationMinutes);
-        Duration remaining = Duration.between(LocalDateTime.now(), targetEndTime);
-        return remaining.isNegative() ? Duration.ZERO : remaining;
+        if (sessionType == StudySessionConfigState.SessionType.VARIABLE) {
+            return Duration.ZERO;
+        }
+
+        final LocalDateTime targetEndTime = startTime.plusMinutes(targetDurationMinutes);
+
+        final Duration remaining = Duration.between(LocalDateTime.now(), targetEndTime);
+
+        if (remaining.isNegative()) {
+            return Duration.ZERO;
+        }
+
+        return remaining;
     }
 
+    /**
+     * Gets the set target duration, in minutes. If this session is a variable session, return 0.
+     *
+     * @return The target duration, in minutes
+     */
     public Integer getTargetDurationMinutes() {
         return targetDurationMinutes;
     }
@@ -80,12 +95,24 @@ public class StudySessionState {
         this.prompt = prompt;
     }
 
-    public File getReferenceFile() {
+    public String getReferenceFile() {
         return referenceFile;
     }
 
-    public void setReferenceFile(File referenceFile) {
+    public void setReferenceFile(String referenceFile) {
         this.referenceFile = referenceFile;
+    }
+
+    @Override
+    public String toString() {
+        return "StudySessionState{"
+            + "sessionType=" + sessionType
+            + ", startTime=" + startTime
+            + ", targetDurationMinutes=" + targetDurationMinutes
+            + ", isActive=" + isActive
+            + ", prompt='" + prompt + '\''
+            + ", referenceFile='" + referenceFile + '\''
+            + '}';
     }
 
     public StudySessionConfigState.SessionType getSessionType() {
@@ -94,17 +121,5 @@ public class StudySessionState {
 
     public void setSessionType(StudySessionConfigState.SessionType sessionType) {
         this.sessionType = sessionType;
-    }
-
-    @Override
-    public String toString() {
-        return "StudySessionState{" +
-                "sessionType=" + sessionType +
-                ", startTime=" + startTime +
-                ", targetDurationMinutes=" + targetDurationMinutes +
-                ", isActive=" + isActive +
-                ", prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                '}';
     }
 }

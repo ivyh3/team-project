@@ -7,9 +7,15 @@ import interface_adapter.view_model.StudySessionState;
  */
 public class EndStudySessionInputData {
     private final StudySessionState studySessionState;
+    private final String userId;
 
-    public EndStudySessionInputData(StudySessionState studySessionState) {
+    public EndStudySessionInputData(String userId, StudySessionState studySessionState) {
         this.studySessionState = studySessionState;
+        this.userId = userId;
+    }
+
+    public String getUserId() {
+        return userId;
     }
 
     public StudySessionState getStudySessionState() {
