@@ -74,24 +74,13 @@ public class StudyQuiz {
 
     @Override
     public String toString() {
-        return "StudyQuiz{" +
-                "id='" + id + '\'' +
-                ", questions=" + questions +
-                ", score=" + score +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+        return "StudyQuiz{"
+            + "id='" + id + '\''
+            + ", questions=" + questions
+            + ", score=" + score
+            + ", startTime=" + startTime
+            + ", endTime=" + endTime
+            + ", duration=" + duration
+            + '}';
     }
-
-    // public void calculateScore() {
-    // if (questions == null || questions.isEmpty()) {
-    // this.score = 0.0f;
-    // return;
-    // }
-
-    // long correctCount =
-    // questions.stream().filter(Question::isWasCorrect).count();
-    // this.score = (float) correctCount / questions.size() * 100;
-    // }
 }
