@@ -12,7 +12,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import app.AppBuilder;
+import interface_adapter.controller.GenerateQuizController;
+import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.StudySessionEndState;
 import interface_adapter.view_model.StudySessionEndViewModel;
 
@@ -25,8 +26,9 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
     public static final int TEXT_HUGE = 52;
     public static final int TEXT_XL = 28;
     private final JLabel resultLabel = new JLabel();
+    private GenerateQuizController controller;
 
-    public StudySessionEndView(StudySessionEndViewModel viewModel) {
+    public StudySessionEndView(StudySessionEndViewModel viewModel, DashboardViewModel dashboardViewModel) {
         super("studySessionEnd", viewModel);
 
         final JPanel main = new JPanel();
@@ -42,7 +44,10 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
         final JButton quizMeButton = new JButton("Quiz Me");
         quizMeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         quizMeButton.addActionListener(event -> {
-            AppBuilder.viewManagerModel.setView("studyQuiz");
+            controller.execute(
+                    dashboardViewModel.getState().getUserId(),
+                    viewModel.getState().getReferenceFile(),
+                    viewModel.getState().getPrompt());
         });
 
         main.add(Box.createVerticalGlue());
@@ -72,5 +77,14 @@ public class StudySessionEndView extends StatefulView<StudySessionEndState> {
     public void propertyChange(PropertyChangeEvent evt) {
         final StudySessionEndState state = (StudySessionEndState) evt.getNewValue();
         resultLabel.setText("You studied for " + formatDuration(state.getDuration()));
+    }
+
+    /**
+     * Set the GenerateQuizController for this view.
+     * 
+     * @param generateQuizController
+     */
+    public void setGenerateQuizController(GenerateQuizController generateQuizController) {
+        this.controller = generateQuizController;
     }
 }

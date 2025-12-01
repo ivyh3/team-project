@@ -17,10 +17,12 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
 import app.Config;
+import use_case.generate_quiz.GenerateQuizFileDataAccessInterface;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
 
 // TODO: Fix this garbage.
-public class FirebaseFileDataAccessObject implements StartStudySessionDataAccessInterface {
+public class FirebaseFileDataAccessObject
+        implements StartStudySessionDataAccessInterface, GenerateQuizFileDataAccessInterface {
 
     private final String FILES_BUCKET;
     // private final Storage storage;
@@ -147,126 +149,6 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
             return bucket.getStorage().readAllBytes(blobId);
         } catch (Exception e) {
             throw new RuntimeException("Error retrieving file contents: " + e.getMessage(), e);
-        }
-    }
-
-}
-
-/**
- * ChatGPT generated test UI
- */
-class Bleh {
-    public static void main(String[] args) {
-        FirebaseFileDataAccessObject fileDAO = new FirebaseFileDataAccessObject();
-
-        while (true) {
-            // Display a menu for the user
-            String[] options = { "Upload File", "Get All Files", "Delete File", "Exit" };
-            int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "Choose an operation:",
-                    "Firebase File Operations",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-
-            try {
-                switch (choice) {
-                    case 0: // Upload File
-                        uploadFile(fileDAO);
-                        break;
-                    case 1: // Get All Files
-                        getAllFiles(fileDAO);
-                        break;
-                    case 2: // Delete File
-                        deleteFile(fileDAO);
-                        break;
-                    case 3: // Exit
-                        System.exit(0);
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(null, "Invalid choice. Try again.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage());
-            }
-        }
-    }
-
-    private static void uploadFile(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Use JFileChooser to select a file
-            JFileChooser fileChooser = new JFileChooser();
-            int result = fileChooser.showOpenDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                String filePath = fileDAO.uploadFile(userId, file);
-                JOptionPane.showMessageDialog(null, "File uploaded successfully! Path: " + filePath);
-            } else {
-                JOptionPane.showMessageDialog(null, "File upload canceled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error uploading file: " + e.getMessage(), e);
-        }
-    }
-
-    private static void getAllFiles(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Retrieve all files for the user
-            List<String> filePaths = fileDAO.getAllUserFiles(userId);
-            if (filePaths.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "No files found for user: " + userId);
-            } else {
-                StringBuilder message = new StringBuilder("Files for user " + userId + ":\n");
-                for (String path : filePaths) {
-                    message.append(path).append("\n");
-                }
-                JOptionPane.showMessageDialog(null, message.toString());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving files: " + e.getMessage(), e);
-        }
-    }
-
-    private static void deleteFile(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Prompt for file path
-            String filePath = JOptionPane
-                    .showInputDialog("Enter the file to delete):");
-            if (filePath == null || filePath.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "File path cannot be empty.");
-                return;
-            }
-
-            // Delete the file
-            fileDAO.deleteFile(userId, filePath);
-            JOptionPane.showMessageDialog(null, "File deleted successfully!");
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting file: " + e.getMessage(), e);
         }
     }
 }
