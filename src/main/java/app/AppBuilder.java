@@ -196,7 +196,7 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionView() {
         studySessionViewModel = new StudySessionViewModel();
-        studySessionView = new StudySessionView(studySessionViewModel);
+        studySessionView = new StudySessionView(studySessionViewModel, dashboardViewModel);
 
         cardPanel.add(studySessionView, studySessionView.getViewName());
         return this;
@@ -204,7 +204,7 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionConfigView() {
         studySessionConfigViewModel = new StudySessionConfigViewModel();
-        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel);
+        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel, dashboardViewModel);
         cardPanel.add(studySessionConfigView, studySessionConfigView.getViewName());
         return this;
     }
@@ -218,7 +218,7 @@ public class AppBuilder {
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
             startStudySessionPresenter, fileDataAccessObject);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
-            configStudySessionInteractor, dashboardViewModel);
+            configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -253,7 +253,7 @@ public class AppBuilder {
             studySessionDataAccessObject,
             studySessionFactory);
         EndStudySessionController endStudySessionController =
-            new EndStudySessionController(endStudySessionInteractor, dashboardViewModel);
+            new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
     }

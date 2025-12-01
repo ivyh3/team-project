@@ -40,9 +40,11 @@ public class StudySessionView extends StatefulView<StudySessionState> {
     private final JLabel headerLabel = new JLabel();
     private final Timer uiTimer;
     private EndStudySessionController endStudySessionController;
+    private DashboardViewModel dashboardViewModel;
 
     public StudySessionView(StudySessionViewModel studySessionViewModel, DashboardViewModel dashboardViewModel) {
         super("studySession", studySessionViewModel);
+        this.dashboardViewModel = dashboardViewModel;
 
         final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -62,14 +64,16 @@ public class StudySessionView extends StatefulView<StudySessionState> {
             if (viewModel.getState().getSessionType() == StudySessionConfigState.SessionType.FIXED
                 && viewModel.getState().getRemainingDuration().isZero()) {
                 final StudySessionState state = viewModel.getState();
-                endStudySessionController.execute(dashboardViewModel.getState().getUserId(), state);
+                endStudySessionController.execute(
+                    this.dashboardViewModel.getState().getUserId(), state);
             }
         });
 
         final JButton finalizeSession = new JButton("Finalize Session");
         finalizeSession.addActionListener(event -> {
             final StudySessionState state = viewModel.getState();
-            endStudySessionController.execute(dashboardViewModel.getState().getUserId(), state);
+            endStudySessionController.execute(
+                this.dashboardViewModel.getState().getUserId(), state);
         });
         finalizeSession.setAlignmentX(Component.CENTER_ALIGNMENT);
 
