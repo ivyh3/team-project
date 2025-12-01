@@ -3,11 +3,13 @@ package app;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
+import entity.Question;
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 import entity.UserFactory;
@@ -16,13 +18,8 @@ import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
-import interface_adapter.controller.ChangePasswordController;
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.LoginController;
-import interface_adapter.controller.LogoutController;
-import interface_adapter.controller.SignupController;
-import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.controller.ViewStudyMetricsController;
+import frameworks_drivers.gemini.GeminiDataAccessObject;
+import interface_adapter.controller.*;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.presenter.LoginPresenter;
@@ -30,19 +27,14 @@ import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.presenter.StartStudySessionPresenter;
 import interface_adapter.presenter.ViewStudyMetricsPresenter;
-import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.view_model.MetricsViewModel;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.SignupViewModel;
-import interface_adapter.view_model.StudySessionConfigViewModel;
-import interface_adapter.view_model.StudySessionEndViewModel;
-import interface_adapter.view_model.StudySessionViewModel;
-import interface_adapter.view_model.ViewManagerModel;
+import interface_adapter.presenter.GenerateQuizPresenter;
+import interface_adapter.view_model.*;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
 import use_case.end_study_session.EndStudySessionInteractor;
+import use_case.generate_quiz.GenerateQuizInteractor;
+import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -239,9 +231,10 @@ public class AppBuilder {
     }
 
     public AppBuilder addUploadMaterialsView() {
-        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
+        // Create the ViewModel for the UploadMaterialsView
+        UploadMaterialsViewModel uploadMaterialsViewModel = new UploadMaterialsViewModel();
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView(dashboardViewModel, uploadMaterialsViewModel);
         cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
-
         return this;
     }
 
@@ -266,8 +259,25 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        StudyQuizView studyQuizView = new StudyQuizView();
-        cardPanel.add(studyQuizView, studyQuizView.getViewName());
+        // Create the ViewModel
+        QuizViewModel quizViewModel = new QuizViewModel();
+
+        // Create the View with the correct single argument constructor
+        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
+        cardPanel.add(studyQuizView, "studyQuizView");
+
+        // Create the controller with the view and quizViewModel
+        GenerateQuizController generateQuizController = new GenerateQuizController(studyQuizView, quizViewModel);
+
+        GenerateQuizOutputBoundary quizPresenter = new GenerateQuizPresenter(quizViewModel);
+        GeminiDataAccessObject geminiDAO = new GeminiDataAccessObject();
+        GenerateQuizInteractor generateQuizInteractor = new GenerateQuizInteractor(quizPresenter, geminiDAO);
+        generateQuizController.setInteractor(generateQuizInteractor);
+
+
+        // Attach the controller to the view
+        studyQuizView.setController(generateQuizController);
+
         return this;
     }
 

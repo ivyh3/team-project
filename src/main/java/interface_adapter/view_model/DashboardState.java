@@ -1,5 +1,9 @@
 package interface_adapter.view_model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * The State information representing the logged-in user and dashboard data.
  */
@@ -12,8 +16,6 @@ public class DashboardState {
         email = copy.email;
     }
 
-    // Because of the previous copy constructor, the default constructor must be
-    // explicit.
     public DashboardState() {
 
     }
@@ -33,4 +35,19 @@ public class DashboardState {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    private List<String> uploadedFiles = new ArrayList<>();
+
+    public DashboardState(List<String> uploadedFiles) {
+        this.uploadedFiles = new ArrayList<>(uploadedFiles != null ? uploadedFiles : Collections.emptyList());
+    }
+
+    public List<String> getUploadedFiles() {
+        return new ArrayList<>(uploadedFiles);
+    }
+
+    public void setUploadedFiles(List<String> uploadedFiles) {
+        this.uploadedFiles = new ArrayList<>(uploadedFiles != null ? uploadedFiles : Collections.emptyList());
+    }
+
 }

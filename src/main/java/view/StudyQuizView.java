@@ -1,205 +1,118 @@
 package view;
 
-import app.AppBuilder;
+import interface_adapter.controller.GenerateQuizController;
+import interface_adapter.view_model.QuizViewModel;
 import entity.Question;
-import entity.StudyQuiz;
-import entity.StudyQuizFactory;
-import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
-import interface_adapter.view_model.DashboardState;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.io.File;
 
 /**
- * View for displaying and taking quizzes in a study session.
+ * View for generating and displaying quizzes.
  */
+public class StudyQuizView extends JPanel {
 
-public class StudyQuizView extends View {
-    private final JLabel questionLabel;
-    private final JRadioButton[] answerButtons;
-    private final ButtonGroup answerGroup;
-    private final JTextArea explanationArea;
-    private final JLabel scoreLabel;
-    private final JButton submitButton;
-    private final JButton nextButton;
+    private final QuizViewModel quizViewModel;
+    private final JButton generateQuizButton;
+    private final JPanel quizPanel;
+    private GenerateQuizController controller;
 
-    private List<Question> questions;
-    private int currentQuestionIndex;
+    public StudyQuizView(QuizViewModel quizViewModel) {
+        this.quizViewModel = quizViewModel;
 
-    public StudyQuizView() {
-        super("studyQuiz");
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel questionPanel = new JPanel();
-        questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
-        questionLabel = new JLabel("Question:");
-        questionLabel.setFont(new Font(null, Font.BOLD, 24));
-        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        questionPanel.add(questionLabel);
+        JLabel titleLabel = new JLabel("Study Quiz");
+        titleLabel.setFont(new Font(null, Font.BOLD, 36));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String[] options = { "Berlin", "Madrid", "Paris", "Rome" };
+        generateQuizButton = new JButton("Generate Quiz");
+        generateQuizButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        generateQuizButton.addActionListener(e -> {
+            if (controller != null) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select PDF Reference File");
+                int result = fileChooser.showOpenDialog(this);
+                if (result != JFileChooser.APPROVE_OPTION) return;
 
-        // Create and configure answer buttons before loading the quiz
-        answerGroup = new ButtonGroup();
-        answerButtons = new JRadioButton[4];
-        for (int i = 0; i < answerButtons.length; i++) {
-            answerButtons[i] = new JRadioButton(options[i]);
-            answerButtons[i].setAlignmentX(Component.CENTER_ALIGNMENT);
-            answerGroup.add(answerButtons[i]);
-            questionPanel.add(answerButtons[i]);
-            int finalI = i;
-            answerButtons[i].addActionListener(e -> answerButtons[finalI].setSelected(true));
-        }
+                File pdfFile = fileChooser.getSelectedFile();
 
-        scoreLabel = new JLabel("Score: 0/0");
-        JPanel header = new ViewHeader("Quiz");
-        header.add(scoreLabel, BorderLayout.EAST);
-        JPanel main = new JPanel();
+                // Prompt for required values (on EDT)
+                String userId = JOptionPane.showInputDialog(this, "Enter user ID:", "user123");
+                if (userId == null) return;
+                String sessionId = JOptionPane.showInputDialog(this, "Enter session ID:", "session123");
+                if (sessionId == null) return;
+                String prompt = JOptionPane.showInputDialog(this, "Enter prompt (optional):", "");
 
-        submitButton = createSubmitButton();
-        nextButton = createNextButton();
-        nextButton.setEnabled(false); // disabled until after submitting
+                // create final copies for use inside the background lambda
+                final File finalPdfFile = pdfFile;
+                final String finalUserId = userId;
+                final String finalSessionId = sessionId;
+                final String finalPrompt = (prompt == null) ? "" : prompt;
 
-        explanationArea = new JTextArea(5, 40);
-        explanationArea.setLineWrap(true);
-        explanationArea.setEditable(false);
-
-        JPanel controls = new JPanel();
-        controls.add(submitButton);
-        controls.add(nextButton);
-
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.add(questionPanel);
-        main.add(controls);
-        main.add(explanationArea);
-
-        this.add(header, BorderLayout.NORTH);
-        this.add(main, BorderLayout.CENTER);
-
-        // Initialize questions after UI components exist
-        questions = List.of(
-                new Question("0",
-                        "What is the capital of France?",
-                        List.of("Berlin", "Madrid", "Paris", "Rome"),
-                        2,
-                        "The capital of France is Paris."),
-                new Question("1",
-                        "What is 2 + 2?",
-                        List.of("3", "4", "5", "6"),
-                        1,
-                        "2 + 2 equals 4."));
-        this.loadQuiz(questions);
-    }
-
-    private JButton createSubmitButton() {
-        JButton submit = new JButton("Submit Answer");
-        submit.addActionListener(e -> {
-            int selectedAnswer = getSelectedAnswer();
-            if (selectedAnswer == -1) {
-                JOptionPane.showMessageDialog(this, "Please select an answer before submitting.", "No Answer Selected",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            Question currentQuestion = questions.get(currentQuestionIndex);
-            currentQuestion.setChosenAnswer(selectedAnswer);
-
-            String explanation = currentQuestion.getExplanation();
-            showExplanation(explanation);
-
-            // Update score
-            int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
-            updateScore(correctAnswers, questions.size());
-
-            // After submitting, disable submit and enable next
-            submit.setEnabled(false);
-            nextButton.setEnabled(true);
-
-            // prevent changing the selected answer after submit
-            for (JRadioButton rb : answerButtons) {
-                rb.setEnabled(false);
+                // Run quiz generation off the Event Dispatch Thread to prevent UI freezing
+                new Thread(() -> {
+                    controller.generateQuizFromPdf(finalPdfFile, finalUserId, finalSessionId, finalPrompt);
+                    SwingUtilities.invokeLater(this::renderQuiz);
+                }).start();
             }
         });
-        return submit;
+
+        quizPanel = new JPanel();
+        quizPanel.setLayout(new BoxLayout(quizPanel, BoxLayout.Y_AXIS));
+
+        add(Box.createVerticalGlue());
+        add(titleLabel);
+        add(Box.createVerticalStrut(15));
+        add(generateQuizButton);
+        add(Box.createVerticalStrut(20));
+        add(quizPanel);
+        add(Box.createVerticalGlue());
     }
 
-    private JButton createNextButton() {
-        JButton next = new JButton("Next Question");
-        next.addActionListener(e -> {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.size()) {
-                displayCurrentQuestion();
-            } else {
-                int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
-                JOptionPane.showMessageDialog(this,
-                        "Quiz completed! Final Score: " + correctAnswers + "/" + questions.size(), "Quiz Completed",
-                        JOptionPane.INFORMATION_MESSAGE);
-                // disable controls after completion
-                next.setEnabled(false);
-                submitButton.setEnabled(false);
+    public void setController(GenerateQuizController controller) {
+        this.controller = controller;
+    }
 
-                // TODO: This is temporary to enable full flow.
-                AppBuilder.viewManagerModel.setView("dashboard");
-                FirebaseStudyQuizDataAccessObject quizDAO = new FirebaseStudyQuizDataAccessObject(
-                        new StudyQuizFactory());
+    public void renderQuiz() {
+        quizPanel.removeAll();
 
-                float score = (float) correctAnswers / questions.size();
-                StudyQuiz quiz = new StudyQuizFactory().create(score,
-                        LocalDateTime.now(), LocalDateTime.now());
-                quizDAO.addStudyQuiz("JGioTqVXbwdu7plKFsMcjdCBwKf1",
-                        quiz);
+        if (quizViewModel.getQuestions().isEmpty()) {
+            quizPanel.add(new JLabel("No questions generated."));
+        } else {
+            for (int qIndex = 0; qIndex < quizViewModel.getQuestions().size(); qIndex++) {
+                final int finalQIndex = qIndex;
+                Question q = quizViewModel.getQuestions().get(qIndex);
+
+                JPanel qPanel = new JPanel();
+                qPanel.setLayout(new BoxLayout(qPanel, BoxLayout.Y_AXIS));
+
+                JLabel qLabel = new JLabel("<html>" + q.getText() + "</html>");
+                qPanel.add(qLabel);
+
+                ButtonGroup group = new ButtonGroup();
+                for (int i = 0; i < q.getOptions().size(); i++) {
+                    final int optionIndex = i;
+                    JRadioButton optionButton = new JRadioButton(q.getOptions().get(i));
+                    optionButton.addActionListener(ev -> {
+                        quizViewModel.answerQuestion(finalQIndex, optionIndex);
+                        SwingUtilities.invokeLater(this::renderQuiz);
+                    });
+                    group.add(optionButton);
+                    qPanel.add(optionButton);
+                }
+
+                quizPanel.add(qPanel);
+                quizPanel.add(Box.createVerticalStrut(10));
             }
-        });
-        return next;
-    }
 
-    public void loadQuiz(List<Question> questions) {
-        this.questions = questions;
-        this.currentQuestionIndex = 0;
-        displayCurrentQuestion();
-    }
-
-    private void displayCurrentQuestion() {
-        validQuestion(questions, currentQuestionIndex, questionLabel, answerButtons);
-        // Reset UI state for a fresh question
-        explanationArea.setText("");
-        submitButton.setEnabled(true);
-        nextButton.setEnabled(false);
-        answerGroup.clearSelection();
-        for (JRadioButton rb : answerButtons) {
-            rb.setEnabled(true);
+            JLabel scoreLabel = new JLabel("Score: " + quizViewModel.getCurrentScore() + "/" + quizViewModel.getQuestions().size());
+            scoreLabel.setFont(new Font(null, Font.BOLD, 16));
+            quizPanel.add(scoreLabel);
         }
-    }
 
-    static void validQuestion(List<Question> questions, int currentQuestionIndex, JLabel questionLabel,
-            JRadioButton[] answerButtons) {
-        if (questions != null && currentQuestionIndex < questions.size()) {
-            Question q = questions.get(currentQuestionIndex);
-            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getQuestion());
-
-            List<String> options = q.getPossibleAnswers();
-            for (int i = 0; i < answerButtons.length && i < options.size(); i++) {
-                answerButtons[i].setText(options.get(i));
-                answerButtons[i].setSelected(false);
-            }
-        }
-    }
-
-    public int getSelectedAnswer() {
-        for (int i = 0; i < answerButtons.length; i++) {
-            if (answerButtons[i].isSelected()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public void showExplanation(String explanation) {
-        explanationArea.setText(explanation);
-    }
-
-    public void updateScore(int correct, int total) {
-        scoreLabel.setText("Score: " + correct + "/" + total);
+        quizPanel.revalidate();
+        quizPanel.repaint();
     }
 }

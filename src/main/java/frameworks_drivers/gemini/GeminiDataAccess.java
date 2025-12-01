@@ -1,21 +1,34 @@
 package frameworks_drivers.gemini;
 
+import entity.Question;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.Question;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class GeminiDataAccess extends GeminiDataAccessObject {
+/**
+ * GeminiDataAccess implements a DAO for generating quizzes.
+ * It simulates API calls to Gemini and parses the response into Question objects.
+ */
+public class GeminiDataAccess {
 
-    @Override
+    /**
+     * Generates quiz questions based on a prompt and reference text.
+     *
+     * @param prompt             The quiz prompt.
+     * @param referenceMaterials List of reference material strings.
+     * @return List of Question objects.
+     */
     public List<Question> generateQuiz(String prompt, List<String> referenceMaterials) {
-        // Prepare request text
+        Objects.requireNonNull(prompt, "Prompt cannot be null");
+        Objects.requireNonNull(referenceMaterials, "Reference materials cannot be null");
+
         String referenceText = String.join("\n\n", referenceMaterials);
 
-        // Simulate Gemini API call (replace with actual API code)
-        String rawJson = callGeminiApi(prompt, referenceText);
+        // Simulated API call
+        String rawJson = simulateGeminiApi(prompt, referenceText);
 
         try {
             return parseGeminiResponse(rawJson);
@@ -25,57 +38,65 @@ public class GeminiDataAccess extends GeminiDataAccessObject {
         }
     }
 
-    private String callGeminiApi(String prompt, String referenceText) {
-        // TODO: Implement actual Gemini API call
-        // For now, return dummy JSON
-        return "{\n"
-            + "  \"candidates\": [\n"
-            + "    {\n"
-            + "      \"content\": {\n"
-            + "        \"parts\": [\n"
-            + "          { \"text\": \"1. What is 2+2?\\\\nA) 3\\\\nB) 4\\\\nC) 5\\\\nD) 6\\\\nAnswer: B\" }\n"
-            + "        ]\n"
-            + "      }\n"
-            + "    }\n"
-            + "  ]\n"
-            + "}\n";
+    /**
+     * Simulates a Gemini API call.
+     *
+     * @param prompt        The quiz prompt.
+     * @param referenceText Reference text.
+     * @return Simulated JSON string response.
+     */
+    private String simulateGeminiApi(String prompt, String referenceText) {
+        // Simple static example
+        return "{ \"candidates\": [ { \"content\": { \"parts\": [ {\"text\": \"1. What is 2+2?\\nA) 3\\nB) 4\\nC) 5\\nD) 6\\nAnswer: B\"} ] } } ] }";
     }
 
+    /**
+     * Parses Gemini JSON response into a list of Question objects.
+     *
+     * @param response JSON string from Gemini.
+     * @return List of parsed Question objects.
+     * @throws Exception If parsing fails.
+     */
     private List<Question> parseGeminiResponse(String response) throws Exception {
         List<Question> questions = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(response);
 
-        JsonNode candidatesNode = root.path("candidates");
-        if (candidatesNode.isMissingNode() || !candidatesNode.isArray()) return questions;
+        JsonNode candidates = root.path("candidates");
+        if (!candidates.isArray()) return questions;
 
-        for (JsonNode candidate : candidatesNode) {
-            JsonNode textNode = candidate.path("content").path("parts").get(0).path("text");
+        for (JsonNode candidate : candidates) {
+            JsonNode parts = candidate.path("content").path("parts");
+            if (!parts.isArray() || parts.size() == 0) continue;
+
+            JsonNode textNode = parts.get(0).path("text");
             if (textNode.isMissingNode()) continue;
 
-            String[] blocks = textNode.asText().split("\\n\\n");
-            for (String block : blocks) {
-                if (!block.contains("A)") || !block.contains("Answer:")) continue;
+            String[] lines = textNode.asText().split("\\n");
+            if (lines.length < 6) continue;
 
-                String[] lines = block.split("\\n");
-                if (lines.length < 6) continue;
-
-                String qText = lines[0].replaceFirst("^\\d+\\.\\s*", "").trim();
-                List<String> choices = new ArrayList<>();
-                for (int i = 1; i <= 4; i++) choices.add(lines[i].substring(3).trim());
-
-                String letter = lines[5].replace("Answer:", "").trim().substring(0, 1).toUpperCase();
-                int correctIndex;
-                switch (letter) {
-                    case "A": correctIndex = 0; break;
-                    case "B": correctIndex = 1; break;
-                    case "C": correctIndex = 2; break;
-                    case "D": correctIndex = 3; break;
-                    default: correctIndex = -1;
+            String qText = lines[0].replaceFirst("^\\d+\\.\\s*", "").trim();
+            List<String> choices = new ArrayList<>();
+            for (int i = 1; i <= 4; i++) {
+                if (lines[i].length() > 3) {
+                    choices.add(lines[i].substring(3).trim());
+                } else {
+                    choices.add(lines[i].trim());
                 }
-
-                questions.add(new Question("Q" + (questions.size() + 1), qText, choices, correctIndex, ""));
             }
+
+            String answerLetter = lines[5].replace("Answer:", "").trim();
+            int correctIndex = -1;
+            if (!answerLetter.isEmpty()) {
+                switch (answerLetter.toUpperCase().charAt(0)) {
+                    case 'A': correctIndex = 0; break;
+                    case 'B': correctIndex = 1; break;
+                    case 'C': correctIndex = 2; break;
+                    case 'D': correctIndex = 3; break;
+                }
+            }
+
+            questions.add(new Question("Q" + (questions.size() + 1), qText, choices, correctIndex, ""));
         }
 
         return questions;
