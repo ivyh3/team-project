@@ -4,7 +4,6 @@ package interface_adapter.view_model;
  * The State information representing the logged-in user and dashboard data.
  */
 public class DashboardState {
-    // I do not care at the moment.
     public static String userId = "";
     private String email = "";
 

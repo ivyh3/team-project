@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 import com.google.firebase.cloud.FirestoreClient;
 import entity.UserFactory;
 import okhttp3.*;
@@ -74,6 +75,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
     /**
      * Creates a new user with the given email and password.
+     * Creates a document in Firestore named after the new userId.
      *
      * @param email    the email of the new user
      * @param password the password of the new user
@@ -88,15 +90,11 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         try {
             UserRecord userRecord = firebaseAuth.createUser(createUserRequest);
+            String userId = userRecord.getUid();
 
-            Map<String, Object> userData = new HashMap<>();
+            createUserDocument(userId);
 
-            firestore.collection(USERS_COLLECTION)
-                    .document(userRecord.getUid())
-                    .set(userData)
-                    .get(); // blocking call to ensure write completes
-
-            System.out.println("Successfully created new user: " + userRecord.getUid());
+            System.out.println("Successfully created new user: " + userId);
         } catch (FirebaseAuthException e) {
             System.err.println("Error creating user: " + e.getMessage());
         } catch (InterruptedException | ExecutionException e) {
@@ -109,7 +107,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      * email.
      *
      * @param email    the email to look for
-     * @param password
+     * @param password the given password to verify
      * @return true if given password matches the password of a user with the given
      *         email; false otherwise
      */
@@ -154,32 +152,54 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
-     * Updates the system to record this user's password.
+     * Updates the user's password using Firebase Admin SDK.
      *
-     * @param user the user whose password is to be updated
+     * @param userId      the user ID whose password is to be updated
+     * @param newPassword the new password
      */
     @Override
-    public void changePassword(User user) {
+    public void changePassword(String userId, String newPassword) {
+        try {
+            UpdateRequest request = new UpdateRequest(userId)
+                    .setPassword(newPassword);
 
+            firebaseAuth.updateUser(request);
+            System.out.println("Successfully updated password for user: " + userId);
+        } catch (FirebaseAuthException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            throw new RuntimeException("Failed to update password: " + e.getMessage());
+        }
     }
 
     /**
-     * Returns the username of the current user of the application.
+     * Gets the email for a given user ID.
      *
-     * @return the username of the current user
+     * @param userId the user ID
+     * @return the user's email
      */
     @Override
-    public String getCurrentUsername() {
-        return "";
+    public String getEmailByUserId(String userId) {
+        try {
+            UserRecord userRecord = firebaseAuth.getUser(userId);
+            return userRecord.getEmail();
+        } catch (FirebaseAuthException e) {
+            System.err.println("Error getting user email: " + e.getMessage());
+            throw new RuntimeException("Failed to get user email: " + e.getMessage());
+        }
     }
 
     /**
-     * Sets the username indicating who is the current user of the application.
+     * Creates a empty document in Firestore for the given user ID.
      *
-     * @param username the new current username
+     * @param userId the user ID to create a folder for
      */
-    @Override
-    public void setCurrentUsername(String username) {
 
+    private void createUserDocument(String userId) throws InterruptedException, ExecutionException {
+        // Create empty Firestore document for user
+        Map<String, Object> userData = new HashMap<>();
+        firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .set(userData)
+                .get(); // blocking call to ensure write completes
     }
 }

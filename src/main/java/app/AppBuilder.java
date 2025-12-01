@@ -4,6 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 import entity.UserFactory;
@@ -12,13 +16,17 @@ import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
+import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.LoginController;
+import interface_adapter.controller.LogoutController;
 import interface_adapter.controller.SignupController;
 import interface_adapter.controller.StartStudySessionController;
 import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.presenter.LoginPresenter;
+import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.presenter.StartStudySessionPresenter;
 import interface_adapter.presenter.ViewStudyMetricsPresenter;
@@ -31,10 +39,16 @@ import interface_adapter.view_model.StudySessionConfigViewModel;
 import interface_adapter.view_model.StudySessionEndViewModel;
 import interface_adapter.view_model.StudySessionViewModel;
 import interface_adapter.view_model.ViewManagerModel;
+import use_case.change_password.ChangePasswordInputBoundary;
+import use_case.change_password.ChangePasswordInteractor;
+import use_case.change_password.ChangePasswordOutputBoundary;
 import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
+import use_case.logout.LogoutInputBoundary;
+import use_case.logout.LogoutInteractor;
+import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
@@ -58,10 +72,6 @@ import view.UploadMaterialsView;
 import view.UploadSessionMaterialsView;
 import view.ViewManager;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-
 public class AppBuilder {
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
     // TODO: Sort things out.
@@ -69,11 +79,11 @@ public class AppBuilder {
     final StudySessionFactory studySessionFactory = new StudySessionFactory();
     final StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
     final FirebaseStudySessionDataAccessObject studySessionDataAccessObject = new FirebaseStudySessionDataAccessObject(
-        studySessionFactory);
+            studySessionFactory);
     final FirebaseStudyQuizDataAccessObject quizDataAccessObject = new FirebaseStudyQuizDataAccessObject(
-        studyQuizFactory);
+            studyQuizFactory);
     final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(
-        userFactory);
+            userFactory);
     final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
     private final String APP_TITLE = "AI Study Companion";
     private final JPanel cardPanel = new JPanel();
@@ -92,6 +102,9 @@ public class AppBuilder {
     private LoginViewModel loginViewModel;
     private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
+
+    private SettingsView settingsView;
+    private SettingsViewModel settingsViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -123,9 +136,9 @@ public class AppBuilder {
 
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
-            signupViewModel, dashboardViewModel);
+                signupViewModel, dashboardViewModel);
         final SignupInputBoundary userSignupInteractor = new SignupInteractor(
-            userDataAccessObject, signupOutputBoundary);
+                userDataAccessObject, signupOutputBoundary);
 
         SignupController controller = new SignupController(userSignupInteractor);
         signupView.setSignupController(controller);
@@ -134,48 +147,43 @@ public class AppBuilder {
 
     public AppBuilder addLoginUseCase() {
         final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
-            dashboardViewModel, loginViewModel);
+                dashboardViewModel, loginViewModel);
         final LoginInputBoundary loginInteractor = new LoginInteractor(
-            userDataAccessObject, loginOutputBoundary);
+                userDataAccessObject, loginOutputBoundary);
 
         LoginController loginController = new LoginController(loginInteractor);
         loginView.setLoginController(loginController);
         return this;
     }
 
-    // public AppBuilder addChangePasswordUseCase() {
-    // final ChangePasswordOutputBoundary changePasswordOutputBoundary = new
-    // ChangePasswordPresenter(viewManagerModel,
-    // dashboardViewModel);
+    public AppBuilder addChangePasswordUseCase() {
+        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
+                dashboardViewModel, settingsViewModel);
 
-    // final ChangePasswordInputBoundary changePasswordInteractor = new
-    // ChangePasswordInteractor(userDataAccessObject,
-    // changePasswordOutputBoundary, userFactory);
+        final ChangePasswordInputBoundary changePasswordInteractor = new ChangePasswordInteractor(userDataAccessObject,
+                changePasswordOutputBoundary);
 
-    // ChangePasswordController changePasswordController = new
-    // ChangePasswordController(changePasswordInteractor);
-    // dashboardView.setChangePasswordController(changePasswordController);
-    // return this;
-    // }
+        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
+        settingsView.setChangePasswordController(changePasswordController);
+        return this;
+    }
 
     /**
      * Adds the Logout Use Case to the application.
      *
      * @return this builder
      */
-    // public AppBuilder addLogoutUseCase() {
-    // final LogoutOutputBoundary logoutOutputBoundary = new
-    // LogoutPresenter(viewManagerModel,
-    // dashboardViewModel, loginViewModel);
+    public AppBuilder addLogoutUseCase() {
+        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
+                dashboardViewModel);
 
-    // final LogoutInputBoundary logoutInteractor = new
-    // LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+        final LogoutInputBoundary logoutInteractor = new LogoutInteractor(logoutOutputBoundary);
 
-    // final LogoutController logoutController = new
-    // LogoutController(logoutInteractor);
-    // dashboardView.setLogoutController(logoutController);
-    // return this;
-    // }
+        final LogoutController logoutController = new LogoutController(logoutInteractor);
+        settingsView.setLogoutController(logoutController);
+        return this;
+    }
+
     public AppBuilder addDashboardView() {
         dashboardViewModel = new DashboardViewModel();
         dashboardView = new DashboardView(dashboardViewModel);
@@ -186,8 +194,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addSettingsView() {
-        SettingsViewModel settingsViewModel = new SettingsViewModel();
-        SettingsView settingsView = new SettingsView(settingsViewModel);
+        settingsViewModel = new SettingsViewModel();
+        settingsView = new SettingsView(settingsViewModel, dashboardViewModel);
 
         cardPanel.add(settingsView, settingsView.getViewName());
 
@@ -211,14 +219,14 @@ public class AppBuilder {
 
     public AppBuilder addConfigStudySessionUseCase() {
         StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
-            studySessionConfigViewModel,
-            studySessionViewModel,
-            viewManagerModel,
-            dashboardView.getViewName());
+                studySessionConfigViewModel,
+                studySessionViewModel,
+                viewManagerModel,
+                dashboardView.getViewName());
         StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-            startStudySessionPresenter, fileDataAccessObject);
+                startStudySessionPresenter, fileDataAccessObject);
         StartStudySessionController studySessionConfigController = new StartStudySessionController(
-            configStudySessionInteractor);
+                configStudySessionInteractor);
         studySessionConfigView.setStartStudySessionController(studySessionConfigController);
         return this;
     }
@@ -246,14 +254,13 @@ public class AppBuilder {
 
     public AppBuilder addEndStudySessionUseCase() {
         EndStudySessionPresenter endStudySessionPresenter = new EndStudySessionPresenter(
-            studySessionViewModel,
-            studySessionEndViewModel,
-            viewManagerModel);
+                studySessionViewModel,
+                studySessionEndViewModel,
+                viewManagerModel);
         EndStudySessionInteractor endStudySessionInteractor = new EndStudySessionInteractor(endStudySessionPresenter,
-            studySessionDataAccessObject,
-            studySessionFactory);
-        EndStudySessionController endStudySessionController =
-            new EndStudySessionController(endStudySessionInteractor);
+                studySessionDataAccessObject,
+                studySessionFactory);
+        EndStudySessionController endStudySessionController = new EndStudySessionController(endStudySessionInteractor);
         studySessionView.addEndStudySessionController(endStudySessionController);
         return this;
     }
@@ -290,8 +297,8 @@ public class AppBuilder {
             studySessionDataAccessObject, quizDataAccessObject);
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
-        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor, dashboardViewModel);
-        StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller);
+        ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);
+        StudyMetricsView studyMetricsView = new StudyMetricsView(metricsViewModel, controller, dashboardViewModel);
 
         cardPanel.add(studyMetricsView, studyMetricsView.getViewName());
         return this;

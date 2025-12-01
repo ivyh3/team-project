@@ -46,6 +46,9 @@ public class SignupView extends StatefulView<SignupState> {
 
         toLoginButton = new JButton(SignupViewModel.TO_LOGIN_BUTTON_LABEL);
         toLoginButton.addActionListener(e -> {
+            // Clear form when navigating away
+            viewModel.setState(new SignupState());
+            viewModel.firePropertyChange();
             AppBuilder.viewManagerModel.setView("login");
         });
         buttons.add(toLoginButton);
@@ -62,6 +65,9 @@ public class SignupView extends StatefulView<SignupState> {
 
         returnButton = new JButton(SignupViewModel.CANCEL_BUTTON_LABEL);
         returnButton.addActionListener(e -> {
+            // Clear form when navigating away
+            viewModel.setState(new SignupState());
+            viewModel.firePropertyChange();
             AppBuilder.viewManagerModel.setView("initial");
         });
         buttons.add(returnButton);
@@ -162,6 +168,18 @@ public class SignupView extends StatefulView<SignupState> {
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
             final SignupState state = (SignupState) evt.getNewValue();
+
+            // Clear input fields if state has been reset
+            if (state.getEmail().isEmpty()) {
+                emailInputField.setText("");
+            }
+            if (state.getPassword().isEmpty()) {
+                passwordInputField.setText("");
+            }
+            if (state.getRepeatPassword().isEmpty()) {
+                repeatPasswordInputField.setText("");
+            }
+
             // Display error message if present
             if (state.getEmailError() != null && !state.getEmailError().isEmpty()) {
                 signupErrorField.setText(state.getEmailError());
