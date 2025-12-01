@@ -9,14 +9,12 @@ import javax.swing.JPanel;
  * Abstract class for a View. Views are named JPanels.
  */
 public abstract class View extends JPanel {
-    private static final int PADDING = 20;
     private final String viewName;
 
-    protected View(String viewName) {
+    public View(String viewName) {
         this.viewName = viewName;
-
-        this.setLayout(new BorderLayout());
-        this.setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING));
+        this.setName(viewName);
+        setLayout(new BorderLayout());
     }
 
     /**
@@ -26,5 +24,8 @@ public abstract class View extends JPanel {
      */
     public String getViewName() {
         return viewName;
+    }
+
+    public void onViewShown() {
     }
 }

@@ -2,6 +2,7 @@ package interface_adapter.controller;
 
 import use_case.schedule_study_session.ScheduleStudySessionInputBoundary;
 import use_case.schedule_study_session.ScheduleStudySessionInputData;
+import use_case.schedule_study_session.DeleteScheduledSessionInputData;
 
 import java.time.LocalDateTime;
 
@@ -14,20 +15,32 @@ public class ScheduleStudySessionController {
     public ScheduleStudySessionController(ScheduleStudySessionInputBoundary interactor) {
         this.interactor = interactor;
     }
-
     /**
      * Executes the schedule study session use case.
-     * 
-     * @param userId           the user ID
-     * @param courseId         the course ID
-     * @param startTime        the start time
-     * @param endTime          the end time
-     * @param syncWithCalendar whether to sync with Google Calendar
+     * @param startTime the start time
+     * @param endTime the end time
+     * @param title the topic of the study session
      */
-    public void execute(String userId, String courseId, LocalDateTime startTime,
-            LocalDateTime endTime, boolean syncWithCalendar) {
+    public void execute(String userId, LocalDateTime startTime, LocalDateTime endTime, String title) {
         ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
-                userId, courseId, startTime, endTime, syncWithCalendar);
+                userId, startTime, endTime, title);
         interactor.execute(inputData);
+    }
+
+    /**
+     * Executes the delete study session use case.
+     * @param sessionId the ID of the session to delete
+     */
+    public void delete(String userId, String sessionId) {
+        DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData(userId, sessionId);
+        interactor.delete(inputData);
+    }
+
+    /**
+     * Triggers the Use Case to load all initial sessions.
+     * @param userId The ID of the currently logged-in user.
+     */
+    public void loadInitialSessions(String userId) {
+        interactor.executeLoad(userId);
     }
 }
