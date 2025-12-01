@@ -18,6 +18,8 @@ public class GenerateQuizController {
             JOptionPane.showMessageDialog(null, "PDF file is invalid or does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        studyQuizView.loadQuizFromPdfFile(pdfFile, prompt);
+
+        // The ViewModel now handles the DAO directly
+        studyQuizView.generateQuizFromDao(pdfFile);
     }
 }

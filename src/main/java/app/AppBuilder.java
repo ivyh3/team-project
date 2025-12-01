@@ -16,7 +16,6 @@ import frameworks_drivers.gemini.GeminiDataAccessObject;
 import interface_adapter.controller.*;
 import interface_adapter.presenter.*;
 import interface_adapter.view_model.*;
-import repository.QuestionDataAccess;
 import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
@@ -101,10 +100,6 @@ public class AppBuilder {
     }
 
     public AppBuilder addSignupView() {
-        StudyQuizFactory factory = new StudyQuizFactory(); // or however you create it
-        FirebaseStudyQuizDataAccessObject dao = new FirebaseStudyQuizDataAccessObject(factory);
-        QuestionDataAccess questionDAO = new FirebaseQuestionDataAccessAdapter(dao);
-
         signupViewModel = new SignupViewModel();
         signupView = new SignupView(signupViewModel);
         cardPanel.add(signupView, signupView.getViewName());
@@ -241,9 +236,7 @@ public class AppBuilder {
     public AppBuilder addStudySessionEndView() {
         studySessionEndViewModel = new StudySessionEndViewModel();
         studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
-        studySessionEndView.setQuizDependencies(
-                new QuizViewModel(new GeminiClient(Config.getGeminiApiKey(), "gemini-2.5-flash"))
-        );
+        studySessionEndView.setQuizDependencies(new QuizViewModel(geminiDataAccessObject));
         cardPanel.add(studySessionEndView, studySessionEndView.getViewName());
         return this;
     }
@@ -262,9 +255,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        quizViewModel = new QuizViewModel(
-                new GeminiClient(Config.getGeminiApiKey(), "gemini-2.5-flash")
-        );
+        quizViewModel = new QuizViewModel(geminiDataAccessObject);
         studyQuizView = new StudyQuizView(quizViewModel);
         cardPanel.add(studyQuizView, "studyQuiz"); // simple string key
         return this;

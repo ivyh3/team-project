@@ -1,7 +1,7 @@
 package use_case.generate_quiz;
 
-import repository.QuestionDataAccess;
 import entity.Question;
+import frameworks_drivers.gemini.GeminiDataAccessObject;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,16 +11,13 @@ import java.util.Objects;
  */
 public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
 
-    private GenerateQuizOutputBoundary output;
-    private final QuestionDataAccess questionRepo;
-    private final GeminiQuizDataAccess gemini;
+    private final GenerateQuizOutputBoundary output;
+    private final GeminiDataAccessObject geminiDao;
 
     public GenerateQuizInteractor(GenerateQuizOutputBoundary output,
-                                  QuestionDataAccess questionRepo,
-                                  GeminiQuizDataAccess gemini) {
+                                  GeminiDataAccessObject geminiDao) {
         this.output = Objects.requireNonNull(output, "Output boundary cannot be null");
-        this.questionRepo = Objects.requireNonNull(questionRepo, "Question repository cannot be null");
-        this.gemini = Objects.requireNonNull(gemini, "Gemini data access cannot be null");
+        this.geminiDao = Objects.requireNonNull(geminiDao, "Gemini DAO cannot be null");
     }
 
     @Override
@@ -36,16 +33,13 @@ public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
                     input.getReferenceMaterialIds() != null ? input.getReferenceMaterialIds() : List.of()
             );
 
-            // Generate quiz questions using Gemini
-            List<Question> questions = gemini.generateQuiz(input.getPrompt(), referenceMaterials);
+            // Generate quiz questions using Gemini DAO
+            List<Question> questions = geminiDao.generateQuiz(input.getPrompt(), referenceMaterials);
 
             if (questions == null || questions.isEmpty()) {
                 output.prepareFailView("Gemini returned no questions.");
                 return;
             }
-
-            // Save questions to repository
-            questionRepo.saveAll(questions);
 
             // Prepare output data and present success view
             GenerateQuizOutputData outputData = new GenerateQuizOutputData(
@@ -59,9 +53,5 @@ public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
         } catch (Exception e) {
             output.prepareFailView("Error generating quiz: " + e.getMessage());
         }
-    }
-
-    public void setOutputBoundary(GenerateQuizOutputBoundary output) {
-        this.output = Objects.requireNonNull(output);
     }
 }

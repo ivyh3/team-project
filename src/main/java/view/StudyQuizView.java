@@ -6,6 +6,7 @@ import interface_adapter.view_model.QuizViewModel;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 public class StudyQuizView extends JPanel {
@@ -54,42 +55,26 @@ public class StudyQuizView extends JPanel {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File pdf = chooser.getSelectedFile();
-            loadQuizFromPdfFile(pdf, "Generate 5 multiple-choice questions for this material");
+            generateQuizFromDao(pdf);
         }
     }
 
-    public void loadQuizFromPdfFile(File pdfFile, String prompt) {
+    public void generateQuizFromDao(File pdfFile) {
         try {
-            String pdfText = PdfReader.readPdf(pdfFile.getAbsolutePath());
-            System.out.println("PDF text length: " + pdfText.length());
-            loadQuizFromPdfText(pdfText, prompt);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Failed to load PDF: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void loadQuizFromPdfText(String pdfText, String prompt) {
-        quizViewModel.setPrompt(prompt);
-        try {
+            String prompt = "Generate 5 multiple-choice questions for this material";
+            quizViewModel.setPrompt(prompt);
+            // Read PDF text content
+            String pdfText = new String(Files.readAllBytes(pdfFile.toPath()));
             quizViewModel.setReferenceText(pdfText);
-            quizViewModel.generateQuizFromGemini(); // main call to Gemini AI
-            System.out.println("Questions generated: " + quizViewModel.getQuestions().size());
-            for (Question q : quizViewModel.getQuestions()) {
-                System.out.println("Q: " + q.getText());
-            }
+            quizViewModel.generateQuizFromGemini(); // DAO handles all generation without arguments
+            updateView();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
                     "Failed to generate quiz: " + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-            quizViewModel.loadQuizFromText(pdfText); // fallback
         }
-        updateView(); // updates UI after questions exist
     }
 
     public void updateView() {
