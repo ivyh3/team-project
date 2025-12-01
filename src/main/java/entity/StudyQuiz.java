@@ -15,66 +15,72 @@ public class StudyQuiz {
     private LocalDateTime endTime;
     private Duration duration;
 
-    public StudyQuiz(String id, List<Question> questions, float score, LocalDateTime startTime, LocalDateTime endTime) {
+    public StudyQuiz(String id, float score, LocalDateTime startTime, LocalDateTime endTime) {
         this.id = id;
-        this.questions = questions;
         this.score = score;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.duration = (startTime != null && endTime != null) ? Duration.between(startTime, endTime) : null;
+        this.duration = Duration.between(startTime, endTime);
     }
 
-    // Getters
+    // Getters and setters
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public List<Question> getQuestions() {
         return questions;
     }
 
-    public float getScore() {
-        return score;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public Duration getDuration() {
-        return duration;
-    }
-
-    // Setters (for database / ID assignment)
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public void setQuestions(List<Question> questions) {
         this.questions = questions;
+    }
+
+    public float getScore() {
+        return score;
     }
 
     public void setScore(float score) {
         this.score = score;
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
-        recalcDuration();
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
-        recalcDuration();
     }
 
-    private void recalcDuration() {
-        if (startTime != null && endTime != null) {
-            this.duration = Duration.between(startTime, endTime);
-        }
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    @Override
+    public String toString() {
+        return "StudyQuiz{"
+            + "id='" + id + '\''
+            + ", questions=" + questions
+            + ", score=" + score
+            + ", startTime=" + startTime
+            + ", endTime=" + endTime
+            + ", duration=" + duration
+            + '}';
     }
 }

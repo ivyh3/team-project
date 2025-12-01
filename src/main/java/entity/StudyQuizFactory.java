@@ -1,33 +1,33 @@
 package entity;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 /**
- * Factory for creating StudyQuiz instances.
+ * Factory for StudyQuiz entities.
  */
 public class StudyQuizFactory {
-
     /**
-     * Create a StudyQuiz with explicit ID and questions.
+     * Create a study quiz with a firebaseID.
+     *
+     * @param id        The firebase document id for this StudyQuiz
+     * @param score     The score/grade of this quiz, as a float between 0 and 1
+     * @param startTime The start time
+     * @param endTime   The end time
+     * @return The StudyQuizEntity
      */
-    public StudyQuiz create(String id, List<Question> questions, float score,
-                            LocalDateTime startDate, LocalDateTime endDate) {
-        return new StudyQuiz(id, questions, score, startDate, endDate);
+    public StudyQuiz create(String id, float score, java.time.LocalDateTime startTime,
+                            java.time.LocalDateTime endTime) {
+        return new StudyQuiz(id, score, startTime, endTime);
     }
 
     /**
-     * Create a StudyQuiz without an ID.
+     * Create a study quiz without a firebaseID (i.e., not added to database yet).
+     *
+     * @param score     The score/grade of this quiz, as a float between 0 and 1
+     * @param startTime The start time
+     * @param endTime   The end time
+     * @return The StudyQuiz Entity
      */
-    public StudyQuiz create(List<Question> questions, float score,
-                            LocalDateTime startDate, LocalDateTime endDate) {
-        return new StudyQuiz(null, questions, score, startDate, endDate);
-    }
-
-    /**
-     * Create a StudyQuiz with only score and times, questions will be empty.
-     */
-    public StudyQuiz create(float score, LocalDateTime startDate, LocalDateTime endDate) {
-        return new StudyQuiz(null, List.of(), score, startDate, endDate);
+    public StudyQuiz create(float score, java.time.LocalDateTime startTime,
+                            java.time.LocalDateTime endTime) {
+        return new StudyQuiz(null, score, startTime, endTime);
     }
 }
