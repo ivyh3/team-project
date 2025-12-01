@@ -26,9 +26,7 @@ public class ScheduleStudySessionController {
      * @param endTime the end time
      * @param title the topic of the study session
      */
-    public void execute(LocalDateTime startTime, LocalDateTime endTime, String title) {
-        String userId = dashboardViewModel.getState().getUserId();
-
+    public void execute(String userId, LocalDateTime startTime, LocalDateTime endTime, String title) {
         ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
                 userId, startTime, endTime, title);
         interactor.execute(inputData);

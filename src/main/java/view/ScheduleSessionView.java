@@ -20,7 +20,7 @@ import com.github.lgooddatepicker.components.TimePicker;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-public class ScheduleSessionView extends View implements PropertyChangeListener { // 💡 FIX 1: Implement PropertyChangeListener
+public class ScheduleSessionView extends View implements PropertyChangeListener {
 
     private final ScheduleStudySessionController controller;
     private final ScheduleSessionViewModel viewModel;
@@ -43,7 +43,6 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         this.viewModel = viewModel;
         this.dashboardViewModel = dashboardViewModel;
 
-        // 💡 FIX 2: Subscribe to ViewModel changes immediately
         this.viewModel.addPropertyChangeListener(this);
 
         sessionList = new JList<>();
@@ -215,7 +214,6 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         if (option == JOptionPane.OK_OPTION) {
             LocalDate pickedDate = datePicker.getDate();
 
-            // Check for null time inputs
             if (startTimePicker.getTime() == null || endTimePicker.getTime() == null) {
                 JOptionPane.showMessageDialog(this, "Please select both start and end times.");
                 return;
@@ -228,9 +226,9 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
                 String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
 
-                    controller.execute(start, end, title);
+                    String userId = dashboardViewModel.getState().getUserId();
+                    controller.execute(userId, start, end, title);
 
-                    // 💡 REVERT: Manually call update for immediate visual feedback
                     if (pickedDate != null && pickedDate.equals(selectedDate)) {
                         updateSessionListForSelectedDate();
                     }
@@ -245,24 +243,21 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
     private void updateSessionListForSelectedDate() {
         List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate); // get all sessions for selected day
 
-        // 💡 FIX 3: Sort the sessions by start time
         sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
 
         // convert each session into String format
         List<String> displayStrings = sessionsForDate.stream()
-                .map(s -> String.format("%s\n%s\n%s", // Reverted to use \n separators
+                .map(s -> String.format("%s\n%s\n%s",
                         s.getTitle(),
-                        s.getStartTime().toLocalTime().toString(), // Reverted to use default toString()
-                        s.getEndTime().toLocalTime().toString()))  // Reverted to use default toString()
+                        s.getStartTime().toLocalTime().toString(),
+                        s.getEndTime().toLocalTime().toString()))
                 .collect(Collectors.toList());
 
         sessionList.setListData(displayStrings.toArray(new String[0])); // update session list
     }
 
-    // 💡 FIX 4: Call updateSessionListForSelectedDate() whenever the ViewModel notifies of a change.
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        // Handle successful operation messages
         if ("statusMessage".equals(evt.getPropertyName())) {
             String message = (String) evt.getNewValue();
             if (message != null && !message.isEmpty()) {
@@ -270,9 +265,7 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
             }
         }
 
-        // Handle list update notifications (after successful schedule/delete/load)
         if ("sessions".equals(evt.getPropertyName())) {
-            // This is the fallback/refresh mechanism for asynchronous updates (Firebase)
             updateSessionListForSelectedDate();
         }
     }
@@ -283,7 +276,6 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         String userId = dashboardViewModel.getState().getUserId();
 
         if (userId == null || userId.isEmpty()) {
-            // Handle case where user is not logged in (though they should be)
             System.err.println("Cannot refresh sessions: User ID is null or empty.");
             return;
         }
@@ -292,9 +284,7 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
     @Override
     public void onViewShown() {
-        // 💡 FIX 6: Trigger the initial data load when the view is switched to.
         refreshSessions();
-        // Also ensure the display reflects the current date
         selectDay(selectedDate.getDayOfWeek().getValue() - 1);
     }
 }
