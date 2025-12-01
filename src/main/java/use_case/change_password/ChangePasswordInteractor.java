@@ -1,5 +1,7 @@
 package use_case.change_password;
 
+import entity.User;
+
 /**
  * The Change Password Interactor.
  */
@@ -41,10 +43,10 @@ public class ChangePasswordInteractor implements ChangePasswordInputBoundary {
         }
         else {
             // Get user's email to verify old password
-            final String email = userDataAccessObject.getEmailByUserId(userId);
+            final User user = userDataAccessObject.getUserByUserId(userId);
 
             // Verify the old password
-            if (!userDataAccessObject.verifyPassword(email, oldPassword)) {
+            if (!userDataAccessObject.verifyPassword(user.getEmail(), oldPassword)) {
                 userPresenter.prepareFailView("Current password is incorrect");
             }
             else {

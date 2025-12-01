@@ -32,5 +32,5 @@ public interface LoginUserDataAccessInterface {
      * @param email the email to look up
      * @return the user with the given email
      */
-    User getUser(String email);
+    User getUserByEmail(String email);
 }
