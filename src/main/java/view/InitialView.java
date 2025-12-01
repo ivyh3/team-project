@@ -1,9 +1,18 @@
 package view;
 
-import app.AppBuilder;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import app.AppBuilder;
 
 /**
  * The Initial View - the first screen users see.
@@ -13,30 +22,30 @@ public class InitialView extends View {
     public InitialView() {
         super("initial");
 
-        JPanel main = new JPanel();
+        final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        JLabel title = new JLabel("Welcome to AI Study Companion!");
+        final JLabel title = new JLabel("Welcome to AI Study Companion!");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setFont(new Font(null, Font.BOLD, 24));
 
-        JLabel subtitle = new JLabel("Choose an option to get started:");
+        final JLabel subtitle = new JLabel("Choose an option to get started:");
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         subtitle.setFont(new Font(null, Font.PLAIN, 14));
 
         // Create a horizontal panel for the buttons
-        JPanel buttonPanel = new JPanel();
+        final JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
 
-        JButton loginButton = new JButton("Log In");
+        final JButton loginButton = new JButton("Log In");
         loginButton.setPreferredSize(new Dimension(120, 40));
-        loginButton.addActionListener(e -> {
+        loginButton.addActionListener(event -> {
             AppBuilder.viewManagerModel.setView("login");
         });
 
-        JButton signupButton = new JButton("Sign Up");
+        final JButton signupButton = new JButton("Sign Up");
         signupButton.setPreferredSize(new Dimension(120, 40));
-        signupButton.addActionListener(e -> {
+        signupButton.addActionListener(event -> {
             AppBuilder.viewManagerModel.setView("sign up");
         });
 

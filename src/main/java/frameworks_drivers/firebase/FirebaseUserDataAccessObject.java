@@ -61,7 +61,7 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
      * @return the user with the given email
      */
     @Override
-    public User getUser(String email) {
+    public User getUserByEmail(String email) {
         User result;
         try {
             final UserRecord userRecord = this.firebaseAuth.getUserByEmail(email);
@@ -76,6 +76,33 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
         catch (FirebaseAuthException event) {
             System.err.println("Error getting user: " + event.getMessage());
+            result = null;
+        }
+        return result;
+    }
+
+    /**
+     * Gets the email for a given user ID.
+     *
+     * @param userId the user ID
+     * @return the user's email
+     */
+    @Override
+    public User getUserByUserId(String userId) {
+        User result;
+        try {
+            final UserRecord userRecord = firebaseAuth.getUser(userId);
+
+            // createdTimestamp is in milliseconds
+            final long createdTimestamp = userRecord.getUserMetadata().getCreationTimestamp();
+            final LocalDateTime createdAt = LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(createdTimestamp),
+                    ZoneId.systemDefault());
+
+            result = userFactory.create(userId, userRecord.getEmail(), createdAt);
+        }
+        catch (FirebaseAuthException event) {
+            System.err.println("Error getting user email: " + event.getMessage());
             result = null;
         }
         return result;
@@ -191,30 +218,11 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /**
-     * Gets the email for a given user ID.
-     *
-     * @param userId the user ID
-     * @return the user's email
-     */
-    @Override
-    public String getEmailByUserId(String userId) {
-        String result = "";
-        try {
-            final UserRecord userRecord = firebaseAuth.getUser(userId);
-            result = userRecord.getEmail();
-        }
-        catch (FirebaseAuthException event) {
-            System.err.println("Error getting user email: " + event.getMessage());
-        }
-        return result;
-    }
-
-    /**
      * Creates an empty document in Firestore for the given user ID.
      *
      * @param userId the user ID to create a folder for
      * @throws InterruptedException if the request fails
-     * @throws ExecutionException if the request fails
+     * @throws ExecutionException   if the request fails
      */
 
     private void createUserDocument(String userId) throws InterruptedException, ExecutionException {

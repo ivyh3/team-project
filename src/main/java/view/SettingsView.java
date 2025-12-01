@@ -39,25 +39,11 @@ public class SettingsView extends StatefulView<SettingsState> {
     private final JPasswordField confirmPasswordInputField = new JPasswordField(15);
     private final JLabel changePasswordErrorField = new JLabel();
 
-    private final int logoutConfirmOptionPane = JOptionPane.showConfirmDialog(
-            this,
-            "Are you sure you want to log out?",
-            "Confirm Logout",
-            JOptionPane.YES_NO_OPTION);
-
     public SettingsView(SettingsViewModel settingsViewModel, DashboardViewModel dashboardViewModel) {
         super("settings", settingsViewModel);
         this.dashboardViewModel = dashboardViewModel;
 
-        final JPanel viewHeader = new ViewHeader("Settings");
-
-        final JButton logoutButton = new JButton("Log Out");
-        logoutButton.addActionListener(event -> {
-            if (logoutController != null && logoutConfirmOptionPane == JOptionPane.YES_OPTION) {
-                logoutController.execute();
-            }
-        });
-        viewHeader.add(logoutButton, BorderLayout.EAST);
+        final JPanel viewHeader = getHeaderPanel();
 
         // Main content panel with BorderLayout
         final JPanel mainContent = new JPanel(new BorderLayout(20, 0));
@@ -67,7 +53,8 @@ public class SettingsView extends StatefulView<SettingsState> {
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        final JLabel navigationTitle = new JLabel("Navigation");
+        final String userEmail = dashboardViewModel.getState().getEmail();
+        final JLabel navigationTitle = new JLabel(userEmail);
         navigationTitle.setFont(new Font(null, Font.BOLD, 16));
         navigationTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -138,6 +125,27 @@ public class SettingsView extends StatefulView<SettingsState> {
 
         this.add(viewHeader, BorderLayout.NORTH);
         this.add(mainContent, BorderLayout.CENTER);
+    }
+
+    private JPanel getHeaderPanel() {
+        final JPanel viewHeader = new ViewHeader("Settings");
+
+        final JButton logoutButton = new JButton("Log Out");
+        logoutButton.addActionListener(event -> {
+            if (logoutController != null) {
+                final int logoutConfirmOptionPane = JOptionPane.showConfirmDialog(
+                        this,
+                        "Are you sure you want to log out?",
+                        "Confirm Logout",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (logoutConfirmOptionPane == JOptionPane.YES_OPTION) {
+                    logoutController.execute();
+                }
+            }
+        });
+        viewHeader.add(logoutButton, BorderLayout.EAST);
+        return viewHeader;
     }
 
     private JButton getChangePasswordButton() {

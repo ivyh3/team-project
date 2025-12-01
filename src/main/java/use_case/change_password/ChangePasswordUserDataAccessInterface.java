@@ -1,5 +1,7 @@
 package use_case.change_password;
 
+import entity.User;
+
 /**
  * The DAO interface for the Change Password Use Case.
  */
@@ -23,10 +25,10 @@ public interface ChangePasswordUserDataAccessInterface {
     void changePassword(String userId, String newPassword);
 
     /**
-     * Gets the email for a given user ID.
+     * Gets the User object for a given user ID.
      * 
      * @param userId the user ID
-     * @return the user's email
+     * @return the User object with the given user ID
      */
-    String getEmailByUserId(String userId);
+    User getUserByUserId(String userId);
 }
