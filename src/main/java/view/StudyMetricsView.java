@@ -69,8 +69,6 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         main.add(returnPanel, BorderLayout.SOUTH);
         this.add(main, BorderLayout.SOUTH);
-
-        SwingUtilities.invokeLater(this::loadMetrics);
     }
 
     @NotNull
