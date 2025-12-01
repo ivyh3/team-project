@@ -9,23 +9,21 @@ import use_case.start_study_session.StartStudySessionInputData;
  * Controller for starting a study session.
  */
 public class StartStudySessionController {
-    private final DashboardViewModel dashboardViewModel;
     private final StartStudySessionInputBoundary interactor;
 
-    public StartStudySessionController(StartStudySessionInputBoundary interactor,
-                                       DashboardViewModel dashboardViewModel) {
+    public StartStudySessionController(StartStudySessionInputBoundary interactor) {
         this.interactor = interactor;
-        this.dashboardViewModel = dashboardViewModel;
     }
 
     /**
      * Attempts to start a study session with the current config.
      *
+     * @param userId the current state
      * @param state The current configuration
      */
-    public void execute(StudySessionConfigState state) {
+    public void execute(String userId, StudySessionConfigState state) {
         final StartStudySessionInputData inputData = new StartStudySessionInputData(
-            dashboardViewModel.getState().getUserId(),
+            userId,
             state.copy());
         interactor.execute(inputData);
     }
@@ -39,8 +37,10 @@ public class StartStudySessionController {
 
     /**
      * Refresh the file options that are available.
+     *
+     * @param userId The User ID
      */
-    public void refreshFileOptions() {
-        interactor.refreshFileOptions(dashboardViewModel.getState().getUserId());
+    public void refreshFileOptions(String userId) {
+        interactor.refreshFileOptions(userId);
     }
 }
