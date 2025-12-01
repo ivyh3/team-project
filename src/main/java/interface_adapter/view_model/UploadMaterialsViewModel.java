@@ -1,67 +1,53 @@
 package interface_adapter.view_model;
 
-import interface_adapter.view_model.UploadMaterialsState;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
  * ViewModel for UploadMaterialsView.
- * Manages the state and notifies the view when changes occur.
+ * Holds uploaded materials and notifies observers on changes.
  */
 public class UploadMaterialsViewModel {
 
-    private final UploadMaterialsState state;
-    private final List<Consumer<UploadMaterialsState>> observers;
+    private final List<String> uploadedMaterials = new ArrayList<>();
+    private final List<Consumer<List<String>>> observers = new ArrayList<>();
 
-    public UploadMaterialsViewModel() {
-        this.state = new UploadMaterialsState();
-        this.observers = new ArrayList<>();
+    // Register observer
+    public void addObserver(Consumer<List<String>> observer) {
+        if (observer != null) observers.add(observer);
     }
 
-    // ---------- State Accessors ----------
-    public UploadMaterialsState getState() {
-        return state;
-    }
-
-    // ---------- Observer Methods ----------
-    public void addObserver(Consumer<UploadMaterialsState> observer) {
-        observers.add(observer);
-    }
-
+    // Notify observers
     private void notifyObservers() {
-        for (Consumer<UploadMaterialsState> observer : observers) {
-            observer.accept(state);
+        for (Consumer<List<String>> observer : observers) {
+            observer.accept(Collections.unmodifiableList(uploadedMaterials));
         }
     }
 
-    // ---------- Public API for the View ----------
+    // Add a material
     public void addMaterial(String materialName) {
-        state.addMaterial(materialName);
-        notifyObservers();
+        if (!uploadedMaterials.contains(materialName)) {
+            uploadedMaterials.add(materialName);
+            notifyObservers();
+        }
     }
 
+    // Remove a material
     public void removeMaterial(String materialName) {
-        state.removeMaterial(materialName);
-        notifyObservers();
+        if (uploadedMaterials.remove(materialName)) {
+            notifyObservers();
+        }
     }
 
-    public void clearMaterials() {
-        state.clearMaterials();
-        notifyObservers();
-    }
-
-    public boolean hasMaterial(String materialName) {
-        return state.hasMaterial(materialName);
-    }
-
+    // Get list of uploaded materials
     public List<String> getUploadedMaterials() {
-        return state.getUploadedMaterials();
+        return Collections.unmodifiableList(uploadedMaterials);
     }
 
-    public void showError(String errorMessage) {
-        // Implement error handling logic if needed
-        System.err.println("Error: " + errorMessage);
+    // Show error
+    public void showError(String message) {
+        System.err.println("Error: " + message);
     }
 }

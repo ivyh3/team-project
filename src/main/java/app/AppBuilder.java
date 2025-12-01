@@ -20,14 +20,7 @@ import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
 import frameworks_drivers.gemini.GeminiDataAccessObject;
 import interface_adapter.controller.*;
-import interface_adapter.presenter.ChangePasswordPresenter;
-import interface_adapter.presenter.EndStudySessionPresenter;
-import interface_adapter.presenter.LoginPresenter;
-import interface_adapter.presenter.LogoutPresenter;
-import interface_adapter.presenter.SignupPresenter;
-import interface_adapter.presenter.StartStudySessionPresenter;
-import interface_adapter.presenter.ViewStudyMetricsPresenter;
-import interface_adapter.presenter.GenerateQuizPresenter;
+import interface_adapter.presenter.*;
 import interface_adapter.view_model.*;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
@@ -45,6 +38,8 @@ import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
 import use_case.start_study_session.StartStudySessionInteractor;
+import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
+import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
 import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 import view.DashboardView;
@@ -223,18 +218,41 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addUploadSessionMaterialsView() {
-        UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
-        cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
+    public AppBuilder addUploadMaterialsView() {
+        // Create ViewModel for UploadMaterialsView
+        UploadMaterialsViewModel uploadMaterialsViewModel = new UploadMaterialsViewModel();
+
+        // Create the view with the required ViewModel
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel);
+
+        // Create controller with interactor
+        UploadReferenceMaterialInputBoundary uploadInteractor = new UploadReferenceMaterialInteractor(
+                fileDataAccessObject,
+                new UploadMaterialsPresenter(uploadMaterialsViewModel, dashboardViewModel, viewManagerModel)
+        );
+        UploadReferenceMaterialController uploadController = new UploadReferenceMaterialController(uploadInteractor);
+
+        // Set controller in view with example userId (replace with actual user logic)
+        String userId = "currentUserId"; // TODO: replace with logged-in user ID
+        uploadMaterialsView.setUploadController(uploadController, userId);
+
+        // Attach back button to navigate to dashboard
+        uploadMaterialsView.setBackButtonListener(e -> viewManagerModel.setView(dashboardView.getViewName()));
+
+        // Add the view to the CardLayout
+        cardPanel.add(uploadMaterialsView, "uploadMaterialsView");
 
         return this;
     }
 
-    public AppBuilder addUploadMaterialsView() {
-        // Create the ViewModel for the UploadMaterialsView
-        UploadMaterialsViewModel uploadMaterialsViewModel = new UploadMaterialsViewModel();
-        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView(dashboardViewModel, uploadMaterialsViewModel);
-        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
+    public AppBuilder addUploadSessionMaterialsView() {
+        UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
+
+        // Attach back button to navigate to dashboard
+        uploadSessionMaterialsView.setBackButtonListener(e -> viewManagerModel.setView(dashboardView.getViewName()));
+
+        cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
+
         return this;
     }
 

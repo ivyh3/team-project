@@ -1,121 +1,89 @@
 package view;
 
-import app.AppBuilder;
 import interface_adapter.controller.UploadReferenceMaterialController;
-import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.UploadMaterialsViewModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
+/**
+ * UI for uploading and managing reference materials.
+ */
 public class UploadMaterialsView extends View {
 
     private final JButton uploadButton;
-    private final JButton deleteButton;
-    private final JButton cancelButton;
-    private final JList<String> materialsList;
-    private final DefaultListModel<String> listModel;
-    private UploadReferenceMaterialController uploadController;
-    private final DashboardViewModel dashboardViewModel;
-    private final UploadMaterialsViewModel uploadViewModel;
+    private final JButton backButton;
+    private final DefaultListModel<String> fileListModel;
+    private final JList<String> fileList;
+    private final UploadMaterialsViewModel viewModel;
+    private final File storageDir = new File("uploaded_materials");
 
-    public UploadMaterialsView(DashboardViewModel dashboardViewModel, UploadMaterialsViewModel uploadViewModel) {
+    public UploadMaterialsView(UploadMaterialsViewModel viewModel) {
         super("uploadMaterials");
-        this.dashboardViewModel = dashboardViewModel;
-        this.uploadViewModel = uploadViewModel;
+        this.viewModel = viewModel;
 
-        JPanel header = new ViewHeader("Upload Materials");
+        if (!storageDir.exists()) storageDir.mkdirs();
 
-        // Upload button panel
-        uploadButton = new JButton("Upload File");
-        JPanel uploadButtonPanel = new JPanel();
-        uploadButtonPanel.add(uploadButton);
+        setLayout(new BorderLayout());
+        setPreferredSize(new Dimension(600, 400));
 
-        // Materials list panel
-        listModel = new DefaultListModel<>();
-        materialsList = new JList<>(listModel);
-        materialsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        fileListModel = new DefaultListModel<>();
+        fileList = new JList<>(fileListModel);
+        JScrollPane scrollPane = new JScrollPane(fileList);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Uploaded Files"));
+        add(scrollPane, BorderLayout.CENTER);
 
-        deleteButton = new JButton("Delete Selected");
-        JPanel deletePanel = new JPanel(new BorderLayout());
-        deletePanel.add(new JLabel("Uploaded Materials:"), BorderLayout.NORTH);
-        deletePanel.add(new JScrollPane(materialsList), BorderLayout.CENTER);
-        deletePanel.add(deleteButton, BorderLayout.SOUTH);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        uploadButton = new JButton("Upload");
+        backButton = new JButton("Back");
+        buttonPanel.add(uploadButton);
+        buttonPanel.add(backButton);
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        // Main panel
-        JPanel main = new JPanel();
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.add(uploadButtonPanel);
-        main.add(deletePanel);
-
-        // Dashboard/cancel panel
-        cancelButton = new JButton("Cancel");
-        JPanel dashboard = new JPanel();
-        dashboard.add(cancelButton);
-
-        this.add(header, BorderLayout.NORTH);
-        this.add(main, BorderLayout.CENTER);
-        this.add(dashboard, BorderLayout.SOUTH);
-
-        // Observe ViewModel
-        uploadViewModel.addObserver(state -> SwingUtilities.invokeLater(() -> {
-            listModel.clear();
-            state.getUploadedMaterials().forEach(listModel::addElement);
-        }));
-    }
-
-    // ------------- File chooser method -------------
-    public File openPdfChooser() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Select PDF to upload");
-        chooser.setAcceptAllFileFilterUsed(false);
-        chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
-
-        int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            return chooser.getSelectedFile();
-        }
-        return null;
-    }
-
-    // --- Controller binding ---
-    public void setUploadController(UploadReferenceMaterialController controller) {
-        this.uploadController = controller;
-
-        uploadButton.addActionListener(e -> {
-            File selectedPdf = openPdfChooser();
-            if (selectedPdf == null) return;
-
-            String userId = dashboardViewModel.getState().getUserId();
-            try {
-                uploadController.uploadReferenceMaterial(userId, selectedPdf);
-                // Update ViewModel so view refreshes
-                uploadViewModel.addMaterial(selectedPdf.getName());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Failed to upload file: " + ex.getMessage());
-            }
+        viewModel.addObserver(files -> {
+            fileListModel.clear();
+            files.forEach(fileListModel::addElement);
         });
 
-        deleteButton.addActionListener(e -> {
-            String[] selected = materialsList.getSelectedValuesList().toArray(new String[0]);
-            if (selected.length == 0) {
-                JOptionPane.showMessageDialog(this, "Select a file to delete.");
-                return;
-            }
-            String userId = dashboardViewModel.getState().getUserId();
-            for (String fileName : selected) {
+        loadExistingFiles();
+    }
+
+    public File[] showFileChooser() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setMultiSelectionEnabled(true);
+        int result = chooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) return chooser.getSelectedFiles();
+        return new File[0];
+    }
+
+    public void setUploadController(UploadReferenceMaterialController controller, String userId) {
+        uploadButton.addActionListener(e -> {
+            File[] selectedFiles = showFileChooser();
+            for (File file : selectedFiles) {
                 try {
-                    uploadController.deleteReferenceMaterial(userId, fileName);
-                    uploadViewModel.removeMaterial(fileName);
+                    File destFile = new File(storageDir, file.getName());
+                    java.nio.file.Files.copy(file.toPath(), destFile.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                    controller.uploadReferenceMaterial(userId, destFile, null);
+                    viewModel.addMaterial(destFile.getName());
                 } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Failed to upload: " + file.getName());
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Failed to delete file: " + ex.getMessage());
                 }
             }
         });
+    }
 
-        cancelButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
+    public void setBackButtonListener(java.awt.event.ActionListener listener) {
+        backButton.addActionListener(listener);
+    }
+
+    private void loadExistingFiles() {
+        File[] files = storageDir.listFiles();
+        if (files != null) {
+            for (File file : files) viewModel.addMaterial(file.getName());
+        }
     }
 }

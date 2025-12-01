@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
@@ -31,7 +29,7 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
     private final Bucket bucket;
 
     public FirebaseFileDataAccessObject() {
-        FILES_BUCKET = Config.getFirebaseStorageBucket();
+        this.FILES_BUCKET = Config.getFirebaseStorageBucket();
 
         try {
             if (FirebaseApp.getApps().isEmpty()) {
@@ -45,16 +43,15 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
                 FirebaseApp.initializeApp(options);
             }
 
-            bucket = StorageClient.getInstance().bucket();
+            this.bucket = StorageClient.getInstance().bucket();
         } catch (IOException e) {
-            throw new RuntimeException("Error initializing Firebase Storage: " + e.getMessage(), e);
+            throw new RuntimeException("Error initializing Firebase: " + e.getMessage(), e);
         }
     }
 
     public String uploadFile(String userId, File file) throws IOException {
         String fileName = file.getName();
         byte[] data = Files.readAllBytes(file.toPath());
-
         String mimeType = Files.probeContentType(file.toPath());
         if (mimeType == null) mimeType = "application/octet-stream";
 
@@ -68,19 +65,21 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
         String filePath = String.format("users/%s/%s", userId, fileName);
         BlobId blobId = BlobId.of(FILES_BUCKET, filePath);
         boolean deleted = bucket.getStorage().delete(blobId);
-        if (!deleted) throw new RuntimeException("File not deleted, may not exist.");
+        if (!deleted) {
+            throw new RuntimeException("File not found or could not be deleted: " + filePath);
+        }
     }
 
     public List<String> getAllUserFiles(String userId) {
-        List<String> fileNames = new java.util.ArrayList<>();
+        List<String> fileNames = new ArrayList<>();
         String prefix = String.format("users/%s/", userId);
 
         bucket.list(com.google.cloud.storage.Storage.BlobListOption.prefix(prefix))
                 .iterateAll()
                 .forEach(blob -> {
-                    String filePath = blob.getName();
-                    if (!filePath.equals(prefix) && !filePath.isEmpty()) {
-                        fileNames.add(filePath.substring(filePath.lastIndexOf('/') + 1));
+                    String path = blob.getName();
+                    if (!path.equals(prefix) && !path.isEmpty()) {
+                        fileNames.add(path.substring(path.lastIndexOf('/') + 1));
                     }
                 });
 
@@ -88,7 +87,7 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
     }
 
     @Override
-    public List<String> getAllFiles(String userId) throws Exception {
+    public List<String> getAllFiles(String userId) {
         return getAllUserFiles(userId);
     }
 
@@ -116,10 +115,11 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
         deleteFile(userId, fileName);
 
         Firestore firestore = FirestoreClient.getFirestore();
+        String docPath = String.format("users/%s/%s", userId, fileName);
         firestore.collection("users")
                 .document(userId)
                 .collection("materials")
-                .document(String.format("users/%s/%s", userId, fileName))
+                .document(docPath)
                 .delete()
                 .get();
     }
@@ -130,13 +130,10 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
         return bucket.get(path) != null;
     }
 
-    /**
-     * Get content of a Firebase Storage file as String
-     */
     public String getFileContent(String userId, String fileName) throws IOException {
         String path = String.format("users/%s/%s", userId, fileName);
         Blob blob = bucket.get(path);
-        if (blob == null) throw new IOException("File not found in Firebase Storage: " + path);
+        if (blob == null) throw new IOException("File not found: " + path);
         return new String(blob.getContent());
     }
 }

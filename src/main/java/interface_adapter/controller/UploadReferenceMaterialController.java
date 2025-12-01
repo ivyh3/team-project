@@ -4,8 +4,10 @@ import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
 import use_case.upload_reference_material.UploadReferenceMaterialInputData;
 
 import java.io.File;
-import java.io.InputStream;
 
+/**
+ * Controller to handle uploading reference materials.
+ */
 public class UploadReferenceMaterialController {
 
     private final UploadReferenceMaterialInputBoundary interactor;
@@ -14,18 +16,18 @@ public class UploadReferenceMaterialController {
         this.interactor = interactor;
     }
 
-    // Change method signature
-    public void uploadReferenceMaterial(String userId, File file) {
-        if (userId == null || file == null) return;
-        interactor.execute(new UploadReferenceMaterialInputData(userId, file, null));
-    }
+    /**
+     * Upload a file via interactor.
+     *
+     * @param userId the user ID
+     * @param file   the file to upload
+     * @param prompt optional prompt
+     */
+    public void uploadReferenceMaterial(String userId, File file, String prompt) {
+        if (userId == null || userId.isEmpty()) return;
+        if (file == null || !file.exists()) return;
 
-    // NEW: delete method
-    public void deleteReferenceMaterial(String userId, String fileName) {
-        try {
-            interactor.delete(userId, fileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        UploadReferenceMaterialInputData inputData = new UploadReferenceMaterialInputData(userId, file, prompt);
+        interactor.execute(inputData);
     }
 }

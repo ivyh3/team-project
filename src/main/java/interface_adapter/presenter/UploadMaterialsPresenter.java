@@ -1,12 +1,17 @@
 package interface_adapter.presenter;
 
 import interface_adapter.view_model.DashboardState;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.UploadMaterialsViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.upload_reference_material.UploadReferenceMaterialOutputBoundary;
 import use_case.upload_reference_material.UploadReferenceMaterialOutputData;
-import interface_adapter.view_model.UploadMaterialsViewModel;
-import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.ViewManagerModel;
 
+import java.util.List;
+
+/**
+ * Presenter to update UploadMaterialsView and dashboard state.
+ */
 public class UploadMaterialsPresenter implements UploadReferenceMaterialOutputBoundary {
 
     private final UploadMaterialsViewModel uploadViewModel;
@@ -24,11 +29,12 @@ public class UploadMaterialsPresenter implements UploadReferenceMaterialOutputBo
     @Override
     public void prepareSuccessView(UploadReferenceMaterialOutputData outputData) {
         String fileName = outputData.getFileName();
+        uploadViewModel.addMaterial(fileName);
 
-        // 2️⃣ Update Dashboard view state
         DashboardState state = dashboardViewModel.getState();
-        state.setUploadedFiles(uploadViewModel.getUploadedMaterials()); // ensure this method exists
-        dashboardViewModel.setState(state); // triggers property change listeners
+        List<String> files = uploadViewModel.getUploadedMaterials();
+        state.setUploadedFiles(files);
+        dashboardViewModel.setState(state);
     }
 
     @Override
@@ -38,15 +44,12 @@ public class UploadMaterialsPresenter implements UploadReferenceMaterialOutputBo
 
     @Override
     public void presentDeletion(String storagePath) {
-        // Extract fileName from storagePath
         String fileName = storagePath.substring(storagePath.lastIndexOf("/") + 1);
-
-        // Remove from UploadMaterials view
         uploadViewModel.removeMaterial(fileName);
 
-        // Update dashboard state as well
         DashboardState state = dashboardViewModel.getState();
-        state.setUploadedFiles(uploadViewModel.getUploadedMaterials()); // ensure this method exists
+        List<String> files = uploadViewModel.getUploadedMaterials();
+        state.setUploadedFiles(files);
         dashboardViewModel.setState(state);
     }
 }

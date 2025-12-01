@@ -18,36 +18,32 @@ public class UploadReferenceMaterialInteractor implements UploadReferenceMateria
     @Override
     public void execute(UploadReferenceMaterialInputData inputData) {
         try {
-            // Upload the file
+            // Upload the file to Firebase
             String storagePath = fileDAO.uploadFile(inputData.getUserId(), inputData.getFile());
 
-            // Create output data including the prompt
-            UploadReferenceMaterialOutputData out =
-                    new UploadReferenceMaterialOutputData(
-                            inputData.getFile().getName(),
-                            storagePath,
-                            inputData.getPrompt() // now works
-                    );
+            // Save metadata in Firestore (optional)
+            fileDAO.saveMetadata(inputData.getUserId(), storagePath, inputData.getPrompt());
 
-            // Notify presenter
+            // Prepare output data for the presenter
+            UploadReferenceMaterialOutputData out = new UploadReferenceMaterialOutputData(
+                    inputData.getFile().getName(),
+                    storagePath,
+                    inputData.getPrompt()
+            );
+
             presenter.prepareSuccessView(out);
         } catch (Exception e) {
             presenter.prepareFailView(e.getMessage());
         }
     }
 
+    // Optional delete method (can be removed if handled elsewhere)
     public void delete(String userId, String fileName) {
         try {
-            // Compute storage path manually
-            String storagePath = String.format("users/%s/%s", userId, fileName);
-
-            // Delete using DAO
-            fileDAO.deleteFile(userId, fileName);
-
-            presenter.presentDeletion(storagePath);
+            fileDAO.deleteFileWithMetadata(userId, fileName);
+            presenter.presentDeletion(String.format("users/%s/%s", userId, fileName));
         } catch (Exception e) {
             presenter.prepareFailView("Deletion failed: " + e.getMessage());
         }
     }
 }
-
