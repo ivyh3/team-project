@@ -44,7 +44,7 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
         LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
         LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
 
-        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(DashboardState.userId, start, end);
+        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(userId, start, end);
 
         return quizzes;
     }
