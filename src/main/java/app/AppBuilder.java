@@ -204,7 +204,7 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionView() {
         studySessionViewModel = new StudySessionViewModel();
-        studySessionView = new StudySessionView(studySessionViewModel);
+        studySessionView = new StudySessionView(studySessionViewModel, dashboardViewModel);
 
         cardPanel.add(studySessionView, studySessionView.getViewName());
         return this;
@@ -212,7 +212,7 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionConfigView() {
         studySessionConfigViewModel = new StudySessionConfigViewModel();
-        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel);
+        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel, dashboardViewModel);
         cardPanel.add(studySessionConfigView, studySessionConfigView.getViewName());
         return this;
     }
@@ -294,7 +294,7 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
-                studySessionDataAccessObject, quizDataAccessObject);
+            studySessionDataAccessObject, quizDataAccessObject);
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);

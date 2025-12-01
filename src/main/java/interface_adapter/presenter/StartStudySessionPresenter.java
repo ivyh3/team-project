@@ -45,8 +45,6 @@ public class StartStudySessionPresenter implements StartStudySessionOutputBounda
 
         // Navigate to study session view
         viewManagerModel.setView(studySessionViewModel.getViewName());
-        viewManagerModel.firePropertyChange();
-
     }
 
     @Override
