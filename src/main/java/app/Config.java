@@ -12,13 +12,29 @@ import io.github.cdimascio.dotenv.DotenvException;
 /**
  * Configuration class for managing API keys and application settings.
  * Uses Dotenv to load environment variables from .env file.
+ * Implements the Singleton pattern to ensure only one instance exists.
  */
 public final class Config {
+    private static Config instance;
     private static Dotenv dotenv;
     private static boolean firebaseInitialized;
 
     // Private constructor to prevent instantiation of utility class.
     private Config() {
+    }
+
+    /**
+     * Gets the singleton instance of Config.
+     * Automatically loads Dotenv on first access.
+     *
+     * @return the singleton Config instance
+     */
+    public static Config getInstance() {
+        if (instance == null) {
+            instance = new Config();
+            loadDotenv();
+        }
+        return instance;
     }
 
     // ============================================
@@ -35,8 +51,7 @@ public final class Config {
                     .directory(".")
                     .load();
             System.out.println("Environment variables loaded successfully");
-        }
-        catch (DotenvException event) {
+        } catch (DotenvException event) {
             System.err.println("Warning: Could not load .env file: " + event.getMessage());
             System.err.println("Proceeding with default/system environment variables");
         }
@@ -53,11 +68,6 @@ public final class Config {
      * @throws IOException if the credentials file cannot be read
      */
     public static void initializeFirebase() throws IOException {
-        // Load dotenv first if not already loaded
-        if (dotenv == null) {
-            loadDotenv();
-        }
-
         // Prevent multiple Firebase initializations
         if (!firebaseInitialized) {
             final String credentialsPath = getFirebaseCredentialsPath();
@@ -72,8 +82,7 @@ public final class Config {
             firebaseInitialized = true;
 
             System.out.println("Firebase initialized successfully");
-        }
-        else {
+        } else {
             System.out.println("Firebase has been already initialized");
         }
     }
