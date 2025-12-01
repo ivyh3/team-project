@@ -143,13 +143,12 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
                 List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
 
-                // 💡 FIX 5: Sessions need to be sorted for the index to match the display list index
                 sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
 
                 ScheduleSessionState sessionStateToDelete = sessionsForDate.get(selectedIndex);
-                controller.delete(sessionStateToDelete.getId());
+                String userId = dashboardViewModel.getState().getUserId();
+                controller.delete(userId, sessionStateToDelete.getId());
 
-                // 💡 REVERT: Manually call update for immediate visual feedback
                 updateSessionListForSelectedDate();
             }
             // display message if user clicks delete button without selecting session to delete

@@ -302,7 +302,7 @@ public class AppBuilder {
         ScheduleStudySessionOutputBoundary presenter = new ScheduleStudySessionPresenter(scheduleViewModel);
         ScheduleStudySessionDataAccessInterface dataAccess = scheduledSessionDataAccessObject;
         ScheduleStudySessionInputBoundary interactor = new ScheduleStudySessionInteractor(dataAccess, presenter);
-        ScheduleStudySessionController controller = new ScheduleStudySessionController(interactor, dashboardViewModel);
+        ScheduleStudySessionController controller = new ScheduleStudySessionController(interactor);
         scheduleSessionView = new ScheduleSessionView(controller, scheduleViewModel, dashboardViewModel);
         cardPanel.add(scheduleSessionView, scheduleSessionView.getViewName());
         return this;
