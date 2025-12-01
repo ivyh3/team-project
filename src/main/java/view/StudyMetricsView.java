@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import interface_adapter.view_model.DashboardViewModel;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -29,17 +30,22 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
     public static final int WIDTH = 350;
     public static final int HEIGHT = 450;
     public static final float OPACITY = 0.5f;
+    public static final double PERFECT_SCORE = 100.0;
+
     private final MetricsViewModel viewModel;
     private final ViewStudyMetricsController controller;
+    private final DashboardViewModel dashboardViewModel;
 
     private ChartPanel chartPanel;
     private final JPanel main;
     private LocalDateTime startDate;
 
-    public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller) {
+    public StudyMetricsView(MetricsViewModel viewModel, ViewStudyMetricsController controller,
+                            DashboardViewModel dashboardViewModel) {
         super("studyMetrics");
         this.viewModel = viewModel;
         this.controller = controller;
+        this.dashboardViewModel = dashboardViewModel;
 
         final int daysSinceSunday = LocalDateTime.now().getDayOfWeek().getValue() % 7;
         this.startDate = LocalDateTime.now().minusDays(daysSinceSunday).toLocalDate().atStartOfDay();
@@ -63,8 +69,6 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         main.add(returnPanel, BorderLayout.SOUTH);
         this.add(main, BorderLayout.SOUTH);
-
-        SwingUtilities.invokeLater(this::loadMetrics);
     }
 
     @NotNull
@@ -92,7 +96,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
      * Helper method to load metrics based on the start date of the week.
      */
     public void loadMetrics() {
-        controller.execute(startDate);
+        final String userId = dashboardViewModel.getState().getUserId();
+        controller.execute(userId, startDate);
     }
 
     @Override
@@ -127,8 +132,8 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         final Map<DayOfWeek, Duration> dailyData = viewModel.getDailyStudyDurations();
 
-        final DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                                  DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY};
+        final DayOfWeek[] days = { DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY };
         for (DayOfWeek day : days) {
             final Duration duration = dailyData.getOrDefault(day, Duration.ZERO);
             final double hours = (double) duration.getSeconds() / SECONDS_IN_AN_HOUR;
@@ -140,10 +145,12 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
                 dateRange,
                 "",
                 "Hours Studied",
-                leftDataset
-        );
+                leftDataset);
 
         final CategoryPlot plot = chart.getCategoryPlot();
+        final NumberAxis leftAxis = (NumberAxis) plot.getRangeAxis();
+        leftAxis.setAutoRange(true);
+        leftAxis.setLowerBound(0.0);
 
         final LineAndShapeRenderer leftRenderer = new LineAndShapeRenderer();
         leftRenderer.setSeriesShapesVisible(0, true);
@@ -162,6 +169,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
         plot.setDataset(1, rightDataset);
         final NumberAxis rightAxis = new NumberAxis("Quiz Score (%)");
+        rightAxis.setRange(0.0, PERFECT_SCORE);
         plot.setRangeAxis(1, rightAxis);
         plot.mapDatasetToRangeAxis(1, 1);
         final LineAndShapeRenderer rightRenderer = new LineAndShapeRenderer();
@@ -181,6 +189,7 @@ public class StudyMetricsView extends View implements PropertyChangeListener {
 
     /**
      * Helper method to format date range for chart title.
+     * 
      * @return the date range formatted as a string
      */
     private String formatDateRange() {

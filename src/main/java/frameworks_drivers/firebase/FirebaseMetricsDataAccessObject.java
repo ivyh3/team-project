@@ -33,7 +33,7 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     public List<StudySession> getSessionsPerWeek(String userId, LocalDateTime currentTime) {
         // Get date range for a week (starting from the given sunday).
         LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
         List<StudySession> sessions = sessionDAO.getStudySessionsInRange(userId, start, end);
         return sessions;
     }
@@ -42,9 +42,9 @@ public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAcce
     public List<StudyQuiz> getQuizzesPerWeek(String userId, LocalDateTime currentTime) {
         // Get date range for a week (starting from the given sunday).
         LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
 
-        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(DashboardState.userId, start, end);
+        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(userId, start, end);
 
         return quizzes;
     }

@@ -4,21 +4,18 @@ package use_case.logout;
  * The Logout Interactor.
  */
 public class LogoutInteractor implements LogoutInputBoundary {
-    private LogoutUserDataAccessInterface userDataAccessObject;
     private LogoutOutputBoundary logoutPresenter;
 
-    public LogoutInteractor(LogoutUserDataAccessInterface userDataAccessInterface,
-            LogoutOutputBoundary logoutOutputBoundary) {
-        this.userDataAccessObject = userDataAccessInterface;
+    public LogoutInteractor(LogoutOutputBoundary logoutOutputBoundary) {
+        // userDataAccessObject not needed - logout is purely client-side state clearing
         this.logoutPresenter = logoutOutputBoundary;
     }
 
     @Override
     public void execute() {
-        String username = userDataAccessObject.getCurrentUsername();
-        userDataAccessObject.setCurrentUsername(null);
-
-        LogoutOutputData outputData = new LogoutOutputData(username);
+        // No server-side action needed for logout
+        // Just notify the presenter to clear state and navigate
+        final LogoutOutputData outputData = new LogoutOutputData();
         logoutPresenter.prepareSuccessView(outputData);
     }
 }

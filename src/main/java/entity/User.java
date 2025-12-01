@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 /**
  * Represents a user in the AI Study Companion application.
+ * This is an immutable entity that contains core user information.
  */
 public class User {
     private final String userId;
@@ -12,6 +13,16 @@ public class User {
 
     // TODO: Most likely will store more data after implementation.
 
+    /**
+     * Constructs a new User with the specified userId, email, and creation timestamp.
+     *
+     * @param userId the unique identifier for the user (cannot be empty)
+     * @param email the user's email address (cannot be empty)
+     * @param createdAt the timestamp when the user account was created (cannot be null)
+     * @throws IllegalArgumentException if userId is empty
+     * @throws IllegalArgumentException if email is empty
+     * @throws IllegalArgumentException if createdAt is null
+     */
     public User(String userId, String email, LocalDateTime createdAt) {
         if ("".equals(userId)) {
             throw new IllegalArgumentException("User ID cannot be empty");
@@ -27,15 +38,29 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    // Getters and setters
+    /**
+     * Returns the unique identifier for this user.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Returns the email address of this user.
+     *
+     * @return the user's email address
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Returns the timestamp when this user account was created.
+     *
+     * @return the creation timestamp
+     */
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

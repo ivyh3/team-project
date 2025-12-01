@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // Initialize Firebase
         try {
+            Config.loadDotenv();
             Config.initializeFirebase();
         } catch (IOException e) {
             System.err.println("Failed to initialize Firebase: " + e.getMessage());
@@ -52,11 +53,9 @@ public class Main {
                     .addDashboardView()
                     .addSignupUseCase()
                     .addLoginUseCase()
-                    // TODO: Sort out later.
                     .addSettingsView()
-                    // .addChangePasswordUseCase()
-                    // .addLogoutUseCase()
-                    // .addChooseStudySessionView()
+                    .addChangePasswordUseCase()
+                    .addLogoutUseCase()
                     .addUploadSessionMaterialsView()
                     .addUploadMaterialsView()
                     .addStudySessionView()

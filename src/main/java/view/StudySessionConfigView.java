@@ -27,6 +27,7 @@ import javax.swing.event.DocumentListener;
 import org.jetbrains.annotations.NotNull;
 
 import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.StudySessionConfigState;
 import interface_adapter.view_model.StudySessionConfigState.SessionType;
 import interface_adapter.view_model.StudySessionConfigViewModel;
@@ -56,12 +57,12 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     private final JTextArea promptArea = new JTextArea(4, 40);
     private final JComboBox<String> typeSelector = new JComboBox<>();
     private final JComboBox<String> fileSelector = new JComboBox<>();
-
+    private final DashboardViewModel dashboardViewModel;
     private StartStudySessionController startStudySessionController;
 
-    public StudySessionConfigView(StudySessionConfigViewModel viewModel) {
+    public StudySessionConfigView(StudySessionConfigViewModel viewModel, DashboardViewModel dashboardViewModel) {
         super("studySessionConfig", viewModel);
-
+        this.dashboardViewModel = dashboardViewModel;
         final JPanel viewHeader = new ViewHeader("Session Config");
         final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -79,7 +80,8 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         cancelButton.addActionListener(event -> startStudySessionController.abortStudySessionConfig());
         nextButton.addActionListener(event -> {
             final StudySessionConfigState currentConfig = viewModel.getState().copy();
-            startStudySessionController.execute(currentConfig);
+            startStudySessionController.execute(
+                this.dashboardViewModel.getState().getUserId(), currentConfig);
         });
 
         navigationContainer.add(cancelButton);
@@ -92,7 +94,11 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         main.add(navigationContainer);
 
         final JButton refreshButton = new JButton("Refresh File List");
-        refreshButton.addActionListener(event -> startStudySessionController.refreshFileOptions());
+        refreshButton.addActionListener(event -> {
+                startStudySessionController.refreshFileOptions(
+                    this.dashboardViewModel.getState().getUserId());
+            }
+        );
 
         viewHeader.add(refreshButton, BorderLayout.EAST);
 
