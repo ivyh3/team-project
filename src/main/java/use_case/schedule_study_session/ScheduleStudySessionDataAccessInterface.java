@@ -6,4 +6,6 @@ import entity.ScheduledSession;
 public interface ScheduleStudySessionDataAccessInterface {
     ScheduledSession saveSession(String userId, ScheduledSession session);
     List<ScheduledSession> getAllSessions(String userId);
+    ScheduledSession getScheduledSessionById(String userId, String sessionId);
+    void deleteSession(String userId, ScheduledSession session);
 }

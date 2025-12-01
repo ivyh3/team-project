@@ -92,6 +92,7 @@ public class AppBuilder {
     private LoginViewModel loginViewModel;
     private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
+    private ScheduleSessionView scheduleSessionView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -276,7 +277,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addScheduleSessionView() {
-        ScheduleSessionView scheduleSessionView = new ScheduleSessionView(dashboardViewModel);
+        scheduleSessionView = new ScheduleSessionView(dashboardViewModel);
         cardPanel.add(scheduleSessionView, scheduleSessionView.getViewName());
         return this;
     }

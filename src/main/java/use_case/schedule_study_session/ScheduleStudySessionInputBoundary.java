@@ -10,4 +10,10 @@ public interface ScheduleStudySessionInputBoundary {
      * @param inputData the input data for scheduling a study session
      */
     void execute(ScheduleStudySessionInputData inputData);
+
+    /**
+     * Executes the delete study session use case.
+     * * @param inputData the input data for deleting a study session
+     */
+    void delete(DeleteScheduledSessionInputData inputData);
 }

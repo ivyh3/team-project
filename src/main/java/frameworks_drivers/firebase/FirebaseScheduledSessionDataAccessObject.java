@@ -132,8 +132,10 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
         try {
             final ApiFuture<QuerySnapshot> future = scheduledSessionRef.get();
             final List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            System.out.println("User ID: " + userId + " has " + documents.size() + " documents in Firestore.");
 
             for (QueryDocumentSnapshot document : documents) {
+                System.out.println("Doc ID: " + document.getId() + ", Title: " + document.getString(TITLE));
                 sessions.add(createScheduledSessionFromDocument(document));
             }
 
@@ -262,4 +264,20 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
         final ZonedDateTime localZoned = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
         return localZoned.toLocalDateTime();
     }
+
+    @Override
+    public void deleteSession(String userId, ScheduledSession session) {
+        try {
+            final DocumentReference sessionRef = firestore.collection(USERS_COLLECTION)
+                    .document(userId)
+                    .collection(SCHEDULED_SESSION_COLLECTION)
+                    .document(session.getId());
+
+            sessionRef.delete().get(); // wait for completion
+            System.out.println("Session deleted successfully: " + session.getTitle());
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to delete session: " + e.getMessage());
+        }
+    }
+
 }

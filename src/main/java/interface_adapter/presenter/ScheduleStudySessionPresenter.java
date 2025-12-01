@@ -3,6 +3,7 @@ package interface_adapter.presenter;
 import interface_adapter.view_model.ScheduleSessionViewModel;
 import use_case.schedule_study_session.ScheduleStudySessionOutputBoundary;
 import use_case.schedule_study_session.ScheduleStudySessionOutputData;
+import use_case.schedule_study_session.DeleteScheduledSessionOutputData;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -31,4 +32,14 @@ public class ScheduleStudySessionPresenter implements ScheduleStudySessionOutput
 		viewModel.setErrorMessage(error);
 		viewModel.setStatusMessage("");
 	}
+
+    @Override
+    public void prepareDeleteSuccessView(DeleteScheduledSessionOutputData outputData) {
+
+        String deletedId = outputData.getDeletedSessionId();
+
+        viewModel.removeScheduledSessionById(deletedId);
+        viewModel.setStatusMessage(outputData.getStatusMessage());
+        viewModel.setErrorMessage("");
+    }
 }

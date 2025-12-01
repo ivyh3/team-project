@@ -17,4 +17,5 @@ public interface ScheduleStudySessionOutputBoundary {
      * @param error the error message
      */
     void prepareFailView(String error);
+    void prepareDeleteSuccessView(DeleteScheduledSessionOutputData outputData);
 }

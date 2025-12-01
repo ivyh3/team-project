@@ -24,8 +24,28 @@ public class ScheduleStudySessionInteractor implements ScheduleStudySessionInput
                 inputData.getTitle()
         );
 
-        ScheduledSession savedSession = dataAccess.saveSession(inputData.getUserId(), session);
-        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(savedSession);
+        dataAccess.saveSession(inputData.getUserId(), session);
+        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(session);
         outputBoundary.prepareSuccessView(outputData);
+    }
+
+    @Override
+    public void delete(DeleteScheduledSessionInputData inputData) {
+
+        ScheduledSession sessionToDelete = dataAccess.getScheduledSessionById(
+                inputData.getUserId(), inputData.getSessionId());
+
+        if (sessionToDelete != null) {
+
+            dataAccess.deleteSession(inputData.getUserId(), sessionToDelete); // Calls the DAO delete method
+
+            DeleteScheduledSessionOutputData outputData = new DeleteScheduledSessionOutputData(
+                    sessionToDelete.getId(),
+                    "Session deleted successfully!"
+            );
+            outputBoundary.prepareDeleteSuccessView(outputData);
+        } else {
+            outputBoundary.prepareFailView("Session not found or already deleted.");
+        }
     }
 }

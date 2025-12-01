@@ -145,14 +145,10 @@ public class ScheduleSessionView extends View {
             int selectedIndex = sessionList.getSelectedIndex(); // selected study session
             if (selectedIndex != -1) {
 
-                List<ScheduledSession> sessionsForDate = viewModel.getSessionsForDate(selectedDate); // get all study sessions on selected date
-                ScheduledSession sessionToDelete = sessionsForDate.get(selectedIndex); // get session user selected
-
-                // remove through the view model
-                viewModel.removeScheduledSession(sessionToDelete);
-                viewModel.setStatusMessage("Session deleted successfully!");
-
-                updateSessionListForSelectedDate(); // update session list
+                List<ScheduledSession> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
+                ScheduledSession sessionToDelete = sessionsForDate.get(selectedIndex);
+                controller.delete(sessionToDelete.getId());
+                updateSessionListForSelectedDate();
             }
 
             // display message if user clicks delete button without selecting session to delete
@@ -170,7 +166,6 @@ public class ScheduleSessionView extends View {
         add(main, BorderLayout.SOUTH);
 
         selectDay(selectedDate.getDayOfWeek().getValue() - 1); // highlight correct day
-        SwingUtilities.invokeLater(this::loadSessionsFromDatabase); // load sessions
 
     }
 
@@ -183,7 +178,6 @@ public class ScheduleSessionView extends View {
         updateHeader(selectedDate);
         updateSessionListForSelectedDate(); // refresh list for that day
     }
-
 
     // update header to selected date
     private void updateHeader(LocalDate date) {
@@ -234,7 +228,6 @@ public class ScheduleSessionView extends View {
                 }
             }
         }
-
     }
 
     // display new scheduled study sessions
@@ -254,13 +247,39 @@ public class ScheduleSessionView extends View {
 
     // get study sessions from Firebase
     private void loadSessionsFromDatabase() {
+        System.out.println("loadSessionsFromDatabase called");
         String userId = dashboardViewModel.getState().getUserId();
+        System.out.println("UserId: " + userId);
+        viewModel.clearSessions();
         List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
+        System.out.println("Sessions fetched: " + sessions.size());
         for (ScheduledSession session : sessions) {
             viewModel.addScheduledSession(session);
         }
 
-        selectDay(selectedDate.getDayOfWeek().getValue() - 1); // refresh the current selected day
+        updateSessionListForSelectedDate();
     }
 
+    public void refreshSessions() {
+        System.out.println("Refreshing sessions...");
+        String userId = dashboardViewModel.getState().getUserId();
+        if (userId == null || userId.isEmpty()) {
+            System.out.println("UserId not set yet.");
+            return;
+        }
+
+        viewModel.clearSessions();
+        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
+        System.out.println("Fetched " + sessions.size() + " sessions from Firebase");
+
+        for (ScheduledSession session : sessions) {
+            viewModel.addScheduledSession(session);
+        }
+
+        updateSessionListForSelectedDate();
+    }
+
+    public void onViewShown() {
+        refreshSessions();
+    }
 }

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 public class ScheduleSessionViewModel {
     private final PropertyChangeSupport support;
-    private final List<ScheduledSession> scheduledSessions;
+    public final List<ScheduledSession> scheduledSessions;
 
     private String statusMessage;
     private String errorMessage;
@@ -79,6 +79,23 @@ public class ScheduleSessionViewModel {
         if (scheduledSessions.remove(session)) {
             support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
         }
+    }
+
+    /**
+     * Removes a scheduled session by its ID.
+     * @param sessionId The ID of the session to remove.
+     * @return true if a session was removed, false otherwise.
+     */
+    public boolean removeScheduledSessionById(String sessionId) {
+        List<ScheduledSession> oldValue = new ArrayList<>(scheduledSessions);
+
+        // Find and remove the session by ID
+        boolean removed = scheduledSessions.removeIf(s -> s.getId().equals(sessionId));
+
+        if (removed) {
+            support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
+        }
+        return removed;
     }
 
 }

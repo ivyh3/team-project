@@ -2,6 +2,7 @@ package interface_adapter.controller;
 
 import use_case.schedule_study_session.ScheduleStudySessionInputBoundary;
 import use_case.schedule_study_session.ScheduleStudySessionInputData;
+import use_case.schedule_study_session.DeleteScheduledSessionInputData;
 import interface_adapter.view_model.DashboardViewModel;
 
 import java.time.LocalDateTime;
@@ -31,5 +32,15 @@ public class ScheduleStudySessionController {
         ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
                 userId, startTime, endTime, title);
         interactor.execute(inputData);
+    }
+
+    /**
+     * Executes the delete study session use case.
+     * @param sessionId the ID of the session to delete
+     */
+    public void delete(String sessionId) {
+        String userId = dashboardViewModel.getState().getUserId();
+        DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData(userId, sessionId);
+        interactor.delete(inputData);
     }
 }
