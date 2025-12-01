@@ -1,42 +1,39 @@
+// In Question.java
 package entity;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-/**
- * Simple Question model used for mapping Gemini response JSON.
- */
 public class Question {
-
     private final String id;
-    private final String questionText;
-    private final List<String> choices;
+    private final String text;
+    private final List<String> options;
     private final int correctIndex;
     private final String explanation;
-    private boolean wasCorrect; // NEW: tracks if user answered correctly
 
-    public Question(String id, String questionText, List<String> choices, int correctIndex, String explanation) {
-        this.id = Objects.requireNonNull(id);
-        this.questionText = Objects.requireNonNull(questionText);
-        this.choices = choices == null ? Collections.emptyList() : List.copyOf(choices);
+    private boolean wasAnswered = false; // track if question was answered
+    private boolean wasCorrect = false;  // track if question was answered correctly
+
+    public Question(String id, String text, List<String> options, int correctIndex, String explanation) {
+        this.id = id;
+        this.text = text;
+        this.options = options;
         this.correctIndex = correctIndex;
-        this.explanation = explanation == null ? "" : explanation;
-        this.wasCorrect = false; // default
+        this.explanation = explanation;
     }
 
+    // Existing getters
     public String getId() { return id; }
-
-    public String getText() { return questionText; }
-
-    public List<String> getOptions() { return choices; }
-
+    public String getText() { return text; }
+    public List<String> getOptions() { return options; }
     public int getCorrectIndex() { return correctIndex; }
-
     public String getExplanation() { return explanation; }
 
-    // --- NEW ---
-    public boolean isWasCorrect() { return wasCorrect; }
+    // New getter/setter for answered state
+    public boolean isAnswered() { return wasAnswered; }
+    public void setAnswered(boolean answered) { this.wasAnswered = answered; }
 
-    public void setWasCorrect(boolean wasCorrect) { this.wasCorrect = wasCorrect; }
+    // Getter/setter for correctness state
+    public boolean isCorrect() { return wasCorrect; }
+    public void setCorrect(boolean correct) { this.wasCorrect = correct; }
+
 }

@@ -19,7 +19,15 @@ public class StudySessionEndState {
         this.startTime = studySessionState.getStartTime();
         this.endTime = endTime;
         this.prompt = studySessionState.getPrompt();
-        this.referenceFile = studySessionState.getReferenceFile();
+
+        // Convert File to String path (or name)
+        if (studySessionState.getReferenceFile() != null) {
+            this.referenceFile = studySessionState.getReferenceFile().getPath();
+        }
+        else {
+            this.referenceFile = null;
+        }
+
         this.duration = Duration.between(startTime, endTime);
     }
 
@@ -65,12 +73,12 @@ public class StudySessionEndState {
 
     @Override
     public String toString() {
-        return "StudySessionEndState{" +
-                "prompt='" + prompt + '\'' +
-                ", referenceFile='" + referenceFile + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", duration=" + duration +
-                '}';
+        return "StudySessionEndState{"
+                + "prompt='" + prompt + '\''
+                + ", referenceFile='" + referenceFile + '\''
+                + ", startTime=" + startTime
+                + ", endTime=" + endTime
+                + ", duration=" + duration
+                + '}';
     }
 }

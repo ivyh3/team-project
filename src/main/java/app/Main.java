@@ -1,14 +1,18 @@
 package app;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Main entry point for the AI Study Companion application.
  */
 public class Main {
     public static void main(String[] args) {
-        System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
+        System.setProperty("io.netty.tryReflectionSetAccessible", "false");
+        System.setProperty("jdk.unsupported.allowUnsafeAccess", "false");
         // Initialize Firebase
         try {
             Config.initializeFirebase();

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
@@ -12,75 +12,52 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <guava.version>32.1.3-jre</guava.version>
         <project.jvm.args>--add-opens jdk.unsupported/sun.misc=ALL-UNNAMED -Djdk.unsupported.doNotLogDeprecated=true</project.jvm.args>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>32.1.3-jre</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
-        <!-- Dotenv -->
+        <!-- Firebase Admin SDK -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.7.0</version>
+        </dependency>
+
+        <!-- Dotenv for environment variables -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
         </dependency>
 
-        <!-- Gson -->
+        <!-- Gson for JSON parsing -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
 
-        <!-- OkHttp -->
+        <!-- OkHttp for HTTP requests -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>4.12.0</version>
         </dependency>
 
-        <!-- Firebase Admin SDK -->
-        <dependency>
-            <groupId>com.google.firebase</groupId>
-            <artifactId>firebase-admin</artifactId>
-            <version>9.7.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.grpc</groupId>
-                    <artifactId>grpc-netty-shaded</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.grpc</groupId>
-                    <artifactId>grpc-all</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- SLF4J simple logger -->
+        <!-- SLF4J Simple Logger -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.17</version>
         </dependency>
 
-        <!-- JUnit -->
+        <!-- JUnit and Mockito for testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- Mockito -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -108,13 +85,7 @@
             <version>2.15.2</version>
         </dependency>
 
-        <!-- gRPC FIX: use grpc-netty instead of grpc-netty-shaded -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty</artifactId>
-            <version>1.74.0</version>
-        </dependency>
-
+        <!-- Google Cloud Storage -->
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
@@ -127,10 +98,25 @@
             </exclusions>
         </dependency>
 
+        <!-- gRPC Netty (needed for Firestore) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+            <version>1.74.0</version>
+        </dependency>
+
+        <!-- PDFBox -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.30</version>
+        </dependency>
+
+        <!-- Guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.5.0-jre</version> <!-- Make sure the hyphen is ASCII -->
+            <version>32.1.3-jre</version>
         </dependency>
 
     </dependencies>

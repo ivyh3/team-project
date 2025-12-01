@@ -29,8 +29,7 @@ class EndStudySessionTest {
         EndStudySessionDataAccessInterface sessionRepository = new InMemoryDatabase();
 
         EndStudySessionInputData inputData = new EndStudySessionInputData(
-                sessionState,
-                "test_user");
+                sessionState);
 
         EndStudySessionOutputBoundary presenter = new EndStudySessionOutputBoundary() {
             @Override

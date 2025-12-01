@@ -8,14 +8,16 @@ import okhttp3.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Implements both GeminiQuizDataAccess and GeminiFileDataAccess.
- * Handles AI-powered quiz generation and file management via Google's Gemini API.
+ * Gemini Data Access Object for AI-powered quiz generation and file management.
+ * Supports asynchronous calls to avoid blocking the UI.
  */
-public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileDataAccess {
+public class GeminiDataAccessObject {
 
     private final String apiKey;
     private final String apiUrl;
@@ -34,9 +36,39 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .build();
+
+        // Suppress PDFBox font logging
+        Logger.getLogger("org.apache.fontbox.ttf").setLevel(Level.SEVERE);
     }
 
-    @Override
+    // ========================
+    // Async Quiz Generation
+    // ========================
+
+    public CompletableFuture<List<Question>> generateQuizAsync(String prompt, List<String> referenceMaterialTexts) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return generateQuiz(prompt, referenceMaterialTexts);
+            } catch (GeminiApiException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public CompletableFuture<List<Question>> generateQuizWithFilesAsync(String prompt, List<String> fileUris) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return generateQuizWithFiles(prompt, fileUris);
+            } catch (GeminiApiException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    // ========================
+    // Synchronous internal methods
+    // ========================
+
     public List<Question> generateQuiz(String prompt, List<String> referenceMaterialTexts) throws GeminiApiException {
         String contextText = buildContext(referenceMaterialTexts);
         String fullPrompt = buildPrompt(prompt, contextText);
@@ -48,67 +80,6 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
         String fullPrompt = buildPromptForFiles(prompt);
         String response = callGeminiApiWithRetry(fullPrompt, fileUris);
         return parseQuestions(response);
-    }
-
-    public String uploadFileToGemini(byte[] fileContent, String mimeType, String displayName) throws GeminiApiException {
-        try {
-            String uploadUrl = "https://generativelanguage.googleapis.com/upload/v1beta/files?key=" + apiKey;
-
-            JsonObject metadata = new JsonObject();
-            JsonObject file = new JsonObject();
-            file.addProperty("display_name", displayName);
-            metadata.add("file", file);
-
-            String boundary = "----Boundary" + System.currentTimeMillis();
-            MultipartBody multipartBody = new MultipartBody.Builder(boundary)
-                    .setType(MultipartBody.FORM)
-                    .addPart(Headers.of("Content-Type", "application/json; charset=UTF-8"),
-                            RequestBody.create(gson.toJson(metadata), MediaType.parse("application/json")))
-                    .addPart(Headers.of("Content-Type", mimeType),
-                            RequestBody.create(fileContent, MediaType.parse(mimeType)))
-                    .build();
-
-            Request request = new Request.Builder()
-                    .url(uploadUrl)
-                    .header("X-Goog-Upload-Protocol", "multipart")
-                    .post(multipartBody)
-                    .build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new GeminiApiException("File upload failed: " + response.code() + " " + response.message());
-                }
-
-                String responseBody = response.body().string();
-                JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
-                String fileUri = jsonResponse.getAsJsonObject("file").get("uri").getAsString();
-
-                scheduleFileDeletion(fileUri);
-
-                return fileUri;
-            }
-
-        } catch (IOException e) {
-            throw new GeminiApiException("Failed to upload file: " + e.getMessage(), e);
-        }
-    }
-
-    public void deleteFileFromGemini(String fileUri) throws GeminiApiException {
-        try {
-            String fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
-            String deleteUrl = "https://generativelanguage.googleapis.com/v1beta/files/" + fileName + "?key=" + apiKey;
-
-            Request request = new Request.Builder().url(deleteUrl).delete().build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful() && response.code() != 204) {
-                    throw new GeminiApiException("File deletion failed: " + response.code() + " " + response.message());
-                }
-            }
-
-        } catch (IOException e) {
-            throw new GeminiApiException("Failed to delete file: " + e.getMessage(), e);
-        }
     }
 
     public String generateText(String prompt) throws GeminiApiException {
@@ -123,7 +94,7 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
         if (referenceMaterialTexts == null || referenceMaterialTexts.isEmpty()) return "No reference materials.";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < referenceMaterialTexts.size(); i++) {
-            sb.append("=== Reference Material ").append(i+1).append(" ===\n");
+            sb.append("=== Reference Material ").append(i + 1).append(" ===\n");
             sb.append(referenceMaterialTexts.get(i)).append("\n\n");
         }
         return sb.toString();
@@ -146,8 +117,12 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
             } catch (IOException e) {
                 lastIo = e;
                 if (attempt < MAX_RETRIES - 1) {
-                    try { Thread.sleep(RETRY_DELAY_MS * (attempt + 1)); }
-                    catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new GeminiApiException("Interrupted", ie);}
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS * (attempt + 1));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new GeminiApiException("Interrupted", ie);
+                    }
                 }
             }
         }
@@ -221,18 +196,25 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
             String jsonText = responseText.trim();
             if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7);
             else if (jsonText.startsWith("```")) jsonText = jsonText.substring(3);
-            if (jsonText.endsWith("```")) jsonText = jsonText.substring(0, jsonText.length()-3);
+            if (jsonText.endsWith("```")) jsonText = jsonText.substring(0, jsonText.length() - 3);
 
-            JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
+            JsonArray jsonArray = JsonParser.parseString(jsonText).getAsJsonArray();
             List<Question> questions = new ArrayList<>();
-            for (JsonElement el : arr) {
-                JsonObject obj = el.getAsJsonObject();
-                String qText = obj.get("question").getAsString();
-                JsonArray optionsArr = obj.getAsJsonArray("options");
-                int correctIndex = obj.get("correctIndex").getAsInt();
-                List<String> options = new ArrayList<>();
-                for (JsonElement opt : optionsArr) options.add(opt.getAsString());
-                questions.add(new Question(UUID.randomUUID().toString(), qText, options, correctIndex, ""));
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JsonObject obj = jsonArray.get(i).getAsJsonObject();
+
+                String questionText = obj.has("questionText") && !obj.get("questionText").isJsonNull() ? obj.get("questionText").getAsString() : "";
+                String explanation = obj.has("explanation") && !obj.get("explanation").isJsonNull() ? obj.get("explanation").getAsString() : "";
+
+                JsonArray answersJson = obj.has("answers") && !obj.get("answers").isJsonNull() ? obj.getAsJsonArray("answers") : new JsonArray();
+                List<String> answers = new ArrayList<>();
+                for (JsonElement answerElem : answersJson) {
+                    answers.add(answerElem.getAsString());
+                }
+
+                // Use Question constructor that matches your entity
+                int correctIndex = obj.has("correctIndex") && !obj.get("correctIndex").isJsonNull() ? obj.get("correctIndex").getAsInt() : -1;
+                questions.add(new Question(questionText, explanation, answers, correctIndex, explanation));
             }
             return questions;
         } catch (Exception e) {
@@ -240,7 +222,10 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
         }
     }
 
-    private void scheduleFileDeletion(String fileUri) {
+    // ===========================
+    // File deletion
+    // ===========================
+    public void scheduleFileDeletion(String fileUri) {
         Thread deletionThread = new Thread(() -> {
             try {
                 Thread.sleep(3600 * 1000L); // 1 hour delay
@@ -255,6 +240,25 @@ public class GeminiDataAccessObject implements GeminiQuizDataAccess, GeminiFileD
         deletionThread.start();
     }
 
+    public void deleteFileFromGemini(String fileUri) throws GeminiApiException {
+        try {
+            String fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
+            String deleteUrl = "https://generativelanguage.googleapis.com/v1beta/files/" + fileName + "?key=" + apiKey;
+
+            Request request = new Request.Builder().url(deleteUrl).delete().build();
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful() && response.code() != 204) {
+                    throw new GeminiApiException("File deletion failed: " + response.code() + " " + response.message());
+                }
+            }
+        } catch (IOException e) {
+            throw new GeminiApiException("Failed to delete file: " + e.getMessage(), e);
+        }
+    }
+
+    // ===========================
+    // Exception
+    // ===========================
     public static class GeminiApiException extends Exception {
         public GeminiApiException(String msg) { super(msg); }
         public GeminiApiException(String msg, Throwable cause) { super(msg, cause); }

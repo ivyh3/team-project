@@ -1,18 +1,15 @@
 package use_case.start_study_session;
 
-import interface_adapter.view_model.StudySessionConfigState;
+import interface_adapter.view_model.StudySessionState;
 
-/**
- * The input data for starting a study session. Includes the currently set configuration by the user.
- */
 public class StartStudySessionInputData {
-    private final StudySessionConfigState config;
+    private final StudySessionState sessionState;
 
-    public StartStudySessionInputData(StudySessionConfigState config) {
-        this.config = config;
+    public StartStudySessionInputData(StudySessionState sessionState) {
+        this.sessionState = sessionState;
     }
 
-    public StudySessionConfigState getConfig() {
-        return config;
+    public StudySessionState getSessionState() {
+        return sessionState;
     }
 }

@@ -1,140 +1,151 @@
 package view;
 
-import interface_adapter.view_model.QuizState;
+import entity.Question;
 import interface_adapter.view_model.QuizViewModel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.List;
 
-/**
- * Fully passive Study Quiz View.
- * Observes QuizViewModel and updates the UI automatically.
- * Does NOT hold business state or mutate ViewModel directly.
- */
-public class StudyQuizView extends StatefulView<QuizState> implements PropertyChangeListener {
+public class StudyQuizView extends JPanel {
 
-    private final QuizViewModel quizViewModel; // <-- add this field
+    private final JLabel questionLabel = new JLabel();
+    private final JButton nextButton = new JButton("Next");
+    private final JButton quizMeButton = new JButton("Quiz Me");
 
-    private final JLabel questionLabel;
-    private final JPanel optionsPanel;
-    private final JTextArea explanationArea;
-    private final JLabel scoreLabel;
-    private final JButton submitButton;
-    private final JButton nextButton;
-
-    private ButtonGroup optionGroup;
+    private final QuizViewModel quizViewModel;
+    private final JRadioButton[] optionButtons = new JRadioButton[4];
+    private final ButtonGroup optionsGroup = new ButtonGroup();
 
     public StudyQuizView(QuizViewModel quizViewModel) {
-        super("quiz", quizViewModel);
-        this.quizViewModel = quizViewModel; // <-- assign constructor param to field
-        this.quizViewModel.addPropertyChangeListener(this);
+        this.quizViewModel = quizViewModel;
+        setLayout(new BorderLayout());
 
-        // --- Header ---
-        JPanel header = new JPanel(new BorderLayout());
-        scoreLabel = new JLabel(this.quizViewModel.getScoreDisplay());
-        header.add(scoreLabel, BorderLayout.EAST);
+        // Question label
+        questionLabel.setFont(new Font(null, Font.PLAIN, 20));
+        questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(questionLabel, BorderLayout.NORTH);
 
-        // --- Question ---
-        questionLabel = new JLabel(this.quizViewModel.getCurrentQuestion());
-        questionLabel.setFont(new Font(null, Font.BOLD, 24));
-        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // --- Options Panel ---
-        optionsPanel = new JPanel();
+        // Options panel
+        JPanel optionsPanel = new JPanel();
         optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-        optionGroup = new ButtonGroup();
-        renderOptions(this.quizViewModel.getCurrentOptions());
+        for (int i = 0; i < optionButtons.length; i++) {
+            optionButtons[i] = new JRadioButton();
+            optionsGroup.add(optionButtons[i]);
+            optionsPanel.add(optionButtons[i]);
+        }
+        add(optionsPanel, BorderLayout.CENTER);
 
-        // --- Explanation Area ---
-        explanationArea = new JTextArea(5, 40);
-        explanationArea.setEditable(false);
-        explanationArea.setLineWrap(true);
-        explanationArea.setText(this.quizViewModel.getExplanation());
+        // Buttons panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(quizMeButton);
+        buttonPanel.add(nextButton);
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        // --- Buttons ---
-        submitButton = new JButton("Submit");
-        nextButton = new JButton("Next");
-        nextButton.setEnabled(false);
+        // Actions
+        quizMeButton.addActionListener(e -> onQuizMeClicked());
+        nextButton.addActionListener(e -> goToNextQuestion());
 
-        JPanel controls = new JPanel();
-        controls.add(submitButton);
-        controls.add(nextButton);
-
-        // --- Main Panel Layout ---
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.add(questionLabel);
-        mainPanel.add(optionsPanel);
-        mainPanel.add(controls);
-        mainPanel.add(explanationArea);
-
-        this.add(header, BorderLayout.NORTH);
-        this.add(mainPanel, BorderLayout.CENTER);
-
-        // --- Observe ViewModel ---
-        this.quizViewModel.addPropertyChangeListener(this);
+        showLoadingState();
     }
 
-    // --- Bind user actions to controller callbacks ---
-    public void bindSubmitAction(Runnable onSubmit) {
-        submitButton.addActionListener(e -> onSubmit.run());
+    private void onQuizMeClicked() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File pdf = chooser.getSelectedFile();
+            loadQuizFromPdfFile(pdf, "Generate 5 multiple-choice questions for this material");
+        }
     }
 
-    public void bindNextAction(Runnable onNext) {
-        nextButton.addActionListener(e -> onNext.run());
+    public void loadQuizFromPdfFile(File pdfFile, String prompt) {
+        try {
+            String pdfText = PdfReader.readPdf(pdfFile.getAbsolutePath());
+            System.out.println("PDF text length: " + pdfText.length());
+            loadQuizFromPdfText(pdfText, prompt);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Failed to load PDF: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    // --- Render options from ViewModel ---
-    private void renderOptions(List<String> options) {
-        optionsPanel.removeAll();
-        optionGroup = new ButtonGroup();
+    public void loadQuizFromPdfText(String pdfText, String prompt) {
+        quizViewModel.setPrompt(prompt);
+        try {
+            quizViewModel.setReferenceText(pdfText);
+            quizViewModel.generateQuizFromGemini(); // main call to Gemini AI
+            System.out.println("Questions generated: " + quizViewModel.getQuestions().size());
+            for (Question q : quizViewModel.getQuestions()) {
+                System.out.println("Q: " + q.getText());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Failed to generate quiz: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            quizViewModel.loadQuizFromText(pdfText); // fallback
+        }
+        updateView(); // updates UI after questions exist
+    }
 
-        if (options != null) {
-            for (int i = 0; i < options.size(); i++) {
-                int idx = i;
-                JRadioButton btn = new JRadioButton(options.get(i));
-                btn.addActionListener(e -> quizViewModel.setSelectedAnswer(idx));
-                optionGroup.add(btn);
-                optionsPanel.add(btn);
+    public void updateView() {
+        List<Question> questions = quizViewModel.getQuestions();
+        int currentIndex = quizViewModel.getCurrentQuestionIndex();
+
+        if (questions.isEmpty()) {
+            questionLabel.setText("No questions generated. Try again.");
+            nextButton.setEnabled(false);
+            return;
+        }
+
+        if (currentIndex >= questions.size()) {
+            questionLabel.setText("Quiz complete! Score: " + quizViewModel.getScore() + "/" + questions.size());
+            nextButton.setEnabled(false);
+            for (JRadioButton btn : optionButtons) btn.setVisible(false);
+            return;
+        }
+
+        Question current = quizViewModel.getCurrentQuestion();
+        questionLabel.setText("<html>" + current.getText() + "</html>");
+
+        List<String> options = current.getOptions();
+        for (int i = 0; i < optionButtons.length; i++) {
+            if (i < options.size()) {
+                optionButtons[i].setText(options.get(i));
+                optionButtons[i].setVisible(true);
+            } else {
+                optionButtons[i].setVisible(false);
+            }
+        }
+        optionsGroup.clearSelection();
+        nextButton.setEnabled(true);
+    }
+
+    private void goToNextQuestion() {
+        int selectedIndex = -1;
+        for (int i = 0; i < optionButtons.length; i++) {
+            if (optionButtons[i].isSelected()) {
+                selectedIndex = i;
+                break;
             }
         }
 
-        optionsPanel.revalidate();
-        optionsPanel.repaint();
+        if (selectedIndex != -1) quizViewModel.submitAnswer(selectedIndex);
+        quizViewModel.nextQuestion();
+        updateView();
     }
 
-    // --- PropertyChangeListener to update UI automatically ---
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            switch (evt.getPropertyName()) {
-                case "currentQuestion":
-                    questionLabel.setText((String) evt.getNewValue());
-                    break;
-                case "currentOptions":
-                    renderOptions((List<String>) evt.getNewValue());
-                    break;
-                case "explanation":
-                    explanationArea.setText((String) evt.getNewValue());
-                    break;
-                case "scoreDisplay":
-                    scoreLabel.setText((String) evt.getNewValue());
-                    break;
-                case "submitEnabled":
-                    submitButton.setEnabled((Boolean) evt.getNewValue());
-                    break;
-                case "nextEnabled":
-                    nextButton.setEnabled((Boolean) evt.getNewValue());
-                    break;
-                case "quizComplete":
-                    boolean complete = (Boolean) evt.getNewValue();
-                    submitButton.setEnabled(!complete);
-                    nextButton.setEnabled(!complete);
-                    break;
-            }
-        });
+    private void showLoadingState() {
+        questionLabel.setText("Select a PDF and click 'Quiz Me' to generate questions.");
+        nextButton.setEnabled(false);
+        for (JRadioButton btn : optionButtons) btn.setVisible(false);
+    }
+
+    public String getViewName() {
+        return "StudyQuizView";
     }
 }

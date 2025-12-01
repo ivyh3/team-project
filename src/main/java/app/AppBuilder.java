@@ -1,76 +1,61 @@
 package app;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
-// TODO: PUT EVERYTHING IN THE PROPER PLACE
 import entity.UserFactory;
 import frameworks_drivers.firebase.*;
+import frameworks_drivers.gemini.GeminiDataAccessObject;
 import interface_adapter.controller.*;
 import interface_adapter.presenter.*;
-import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.view_model.SignupViewModel;
+import interface_adapter.view_model.*;
 import repository.QuestionDataAccess;
+import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
-import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
-import use_case.upload_reference_material.UploadReferenceMaterialOutputBoundary;
-import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
-import use_case.start_study_session.StartStudySessionDataAccessInterface;
-import view.LoginView;
-import view.SignupView;
-import view.ViewManager;
-import view.InitialView;
-
-import interface_adapter.view_model.*;
 import use_case.start_study_session.StartStudySessionInteractor;
-import use_case.end_study_session.EndStudySessionInteractor;
-import interface_adapter.view_model.MetricsViewModel;
+import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
+import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
-
-//import interface_adapter.repository.StudySessionRepository;
-//import interface_adapter.repository.StudyQuizRepository;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.ViewManagerModel;
-import view.*;
+import view.ChooseStudySessionView;
+import view.DashboardView;
+import view.FileManagerView;
+import view.InitialView;
+import view.LoginView;
+import view.QuizHistoryView;
+import view.ScheduleSessionView;
 import view.SettingsView;
+import view.SignupView;
+import view.StudyMetricsView;
+import view.StudyQuizView;
+import view.StudySessionConfigView;
+import view.StudySessionEndView;
+import view.StudySessionView;
+import view.UploadMaterialsView;
+import view.UploadSessionMaterialsView;
+import view.VariableSessionView;
+import view.ViewManager;
 
-import javax.swing.*;
-import java.awt.*;
-import java.time.LocalDateTime;
+// import interface_adapter.repository.StudySessionRepository;
+// import interface_adapter.repository.StudyQuizRepository;
 
 public class AppBuilder {
-    private final String APP_TITLE = "AI Study Companion";
-
-    private final JPanel cardPanel = new JPanel();
-    private final CardLayout cardLayout = new CardLayout();
-
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
-    final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
-
-    private DashboardView dashboardView;
-    private StudySessionConfigView studySessionConfigView;
-    private StudySessionView studySessionView;
-    private StudySessionEndView studySessionEndView;
-    private StudyQuizView studyQuizView;
-    private UploadMaterialsView uploadMaterialsView;
-
-    private StudySessionConfigViewModel studySessionConfigViewModel;
-    private StudySessionViewModel studySessionViewModel;
-    private StudySessionEndViewModel studySessionEndViewModel;
-    private QuizViewModel quizViewModel;
-    private UploadMaterialsViewModel uploadMaterialsViewModel;
-
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
     final StudySessionFactory studySessionFactory = new StudySessionFactory();
     final StudyQuizFactory studyQuizFactory = new StudyQuizFactory();
-
     final FirebaseStudySessionDataAccessObject studySessionDataAccessObject = new FirebaseStudySessionDataAccessObject(
             studySessionFactory);
     final FirebaseStudyQuizDataAccessObject quizDataAccessObject = new FirebaseStudyQuizDataAccessObject(
@@ -78,7 +63,22 @@ public class AppBuilder {
     final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(
             userFactory);
     final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
-
+    final GeminiDataAccessObject geminiDataAccessObject = new GeminiDataAccessObject();
+    private final String APP_TITLE = "AI Study Companion";
+    private final JPanel cardPanel = new JPanel();
+    private final CardLayout cardLayout = new CardLayout();
+    final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
+    private DashboardView dashboardView;
+    private StudySessionConfigView studySessionConfigView;
+    private StudySessionView studySessionView;
+    private StudySessionEndView studySessionEndView;
+    public StudyQuizView studyQuizView;
+    private UploadMaterialsView uploadMaterialsView;
+    private StudySessionConfigViewModel studySessionConfigViewModel;
+    private StudySessionViewModel studySessionViewModel;
+    private StudySessionEndViewModel studySessionEndViewModel;
+    public QuizViewModel quizViewModel;
+    private UploadMaterialsViewModel uploadMaterialsViewModel;
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -173,7 +173,6 @@ public class AppBuilder {
     // dashboardView.setLogoutController(logoutController);
     // return this;
     // }
-
     public AppBuilder addDashboardView() {
         dashboardViewModel = new DashboardViewModel();
         dashboardView = new DashboardView(dashboardViewModel);
@@ -242,6 +241,9 @@ public class AppBuilder {
     public AppBuilder addStudySessionEndView() {
         studySessionEndViewModel = new StudySessionEndViewModel();
         studySessionEndView = new StudySessionEndView(studySessionEndViewModel);
+        studySessionEndView.setQuizDependencies(
+                new QuizViewModel(new GeminiClient(Config.getGeminiApiKey(), "gemini-2.5-flash"))
+        );
         cardPanel.add(studySessionEndView, studySessionEndView.getViewName());
         return this;
     }
@@ -260,12 +262,13 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        quizViewModel = new QuizViewModel();
+        quizViewModel = new QuizViewModel(
+                new GeminiClient(Config.getGeminiApiKey(), "gemini-2.5-flash")
+        );
         studyQuizView = new StudyQuizView(quizViewModel);
-        cardPanel.add(studyQuizView, studyQuizView.getViewName());
+        cardPanel.add(studyQuizView, "studyQuiz"); // simple string key
         return this;
     }
-
 
     public AppBuilder addFileManagerView() {
         FileManagerView fileManagerView = new FileManagerView();

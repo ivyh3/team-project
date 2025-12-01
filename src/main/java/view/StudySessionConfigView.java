@@ -21,6 +21,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     public static final String TIMED_SESSION = "Timed Session";
     public static final String VARIABLE_SESSION_DESCRIPTION = "Study for as long as you want until you're ready.";
     public static final String FIXED_SESSION_DESCRIPTION = "Specify a quantity of studying time.";
+
     private final JPanel selectDurationPanel;
     private final JSpinner hoursSelector = new JSpinner();
     private final JSpinner minutesSelector = new JSpinner();
@@ -50,6 +51,16 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         cancelButton.addActionListener(e -> startStudySessionController.abortStudySessionConfig());
         nextButton.addActionListener(e -> {
             StudySessionConfigState currentConfig = viewModel.getState().copy();
+
+            // Ensure referenceFile is set from either combo box or uploaded file
+            String selectedFile = viewModel.getState().getReferenceFile();
+            if (selectedFile == null || selectedFile.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select or upload a reference file.",
+                        "No File Selected", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Pass the full file path to the controller
             startStudySessionController.execute(currentConfig);
         });
 
@@ -62,9 +73,12 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         main.add(selectReferencePanel);
         main.add(navigationContainer);
 
+        // Refresh file list button
         JButton refreshButton = new JButton("Refresh File List");
         refreshButton.addActionListener(e -> {
-            startStudySessionController.refreshFileOptions();
+            if (startStudySessionController != null) {
+                startStudySessionController.refreshFileOptions();
+            }
         });
 
         viewHeader.add(refreshButton, BorderLayout.EAST);
@@ -79,15 +93,7 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         this.add(main, BorderLayout.CENTER);
     }
 
-    /**
-     * Updates whether the panel to change the duration hours/minute options are
-     * visible in the view,
-     * depending on the currently selected session type.
-     *
-     * @param sessionType The current session type selected.
-     */
     private void updateDurationPanelVisibility(SessionType sessionType) {
-
         selectDurationPanel.setVisible(sessionType == SessionType.FIXED);
     }
 
@@ -98,32 +104,24 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
 
         JPanel hoursContainer = new JPanel();
         hoursContainer.setLayout(new BoxLayout(hoursContainer, BoxLayout.X_AXIS));
-        hoursContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         JLabel hoursLabel = new JLabel("Hours");
         hoursLabel.setFont(new Font(null, Font.BOLD, 24));
-
         hoursSelector.setModel(new SpinnerNumberModel(0, 0, 23, 1));
-        hoursSelector.setEditor(new JSpinner.DefaultEditor(hoursSelector)); // Prevent manual edit of field
+        hoursSelector.setEditor(new JSpinner.DefaultEditor(hoursSelector));
         hoursSelector.setMaximumSize(new Dimension(100, 30));
         hoursSelector.setFont(new Font(null, Font.PLAIN, 20));
-
         hoursContainer.add(hoursLabel);
         hoursContainer.add(Box.createRigidArea(new Dimension(10, 0)));
         hoursContainer.add(hoursSelector);
 
         JPanel minutesContainer = new JPanel();
         minutesContainer.setLayout(new BoxLayout(minutesContainer, BoxLayout.X_AXIS));
-        minutesContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         JLabel minutesLabel = new JLabel("Minutes");
         minutesLabel.setFont(new Font(null, Font.BOLD, 24));
-
         minutesSelector.setModel(new SpinnerNumberModel(0, 0, 55, 5));
-        minutesSelector.setEditor(new JSpinner.DefaultEditor(minutesSelector)); // Prevent manual edit of field
+        minutesSelector.setEditor(new JSpinner.DefaultEditor(minutesSelector));
         minutesSelector.setMaximumSize(new Dimension(100, 30));
         minutesSelector.setFont(new Font(null, Font.PLAIN, 20));
-
         minutesContainer.add(minutesLabel);
         minutesContainer.add(Box.createRigidArea(new Dimension(10, 0)));
         minutesContainer.add(minutesSelector);
@@ -135,48 +133,37 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
     }
 
     private JPanel buildChooseTypePanel() {
-
         JPanel chooseSessionTypePanel = new JPanel();
         chooseSessionTypePanel.setBorder(BorderFactory.createTitledBorder("Session Type"));
-
         chooseSessionTypePanel.setLayout(new GridLayout(1, 2));
 
         JPanel typeSelectorContainer = new JPanel();
-
-        // Populate the type selector with the two session type options.
         typeSelector.addItem(VARIABLE_SESSION);
         typeSelector.addItem(TIMED_SESSION);
         typeSelector.setSelectedIndex(0);
         typeSelector.setFont(new Font(null, Font.PLAIN, 20));
         typeSelectorContainer.add(typeSelector);
 
+        // Descriptions
         JPanel timedSessionContainer = new JPanel();
         timedSessionContainer.setLayout(new BoxLayout(timedSessionContainer, BoxLayout.Y_AXIS));
-
         JLabel timedSessionHeading = new JLabel(TIMED_SESSION);
         JLabel timedSessionLabel = new JLabel(FIXED_SESSION_DESCRIPTION);
-
         timedSessionHeading.setFont(new Font(null, Font.BOLD, 16));
         timedSessionLabel.setFont(new Font(null, Font.ITALIC, 12));
-
-        timedSessionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timedSessionHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
-
+        timedSessionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timedSessionContainer.add(timedSessionHeading);
         timedSessionContainer.add(timedSessionLabel);
 
         JPanel variableSessionContainer = new JPanel();
         variableSessionContainer.setLayout(new BoxLayout(variableSessionContainer, BoxLayout.Y_AXIS));
-
         JLabel variableSessionHeading = new JLabel(VARIABLE_SESSION);
         JLabel variableSessionLabel = new JLabel(VARIABLE_SESSION_DESCRIPTION);
-
         variableSessionHeading.setFont(new Font(null, Font.BOLD, 16));
         variableSessionLabel.setFont(new Font(null, Font.ITALIC, 12));
-
         variableSessionHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
         variableSessionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         variableSessionContainer.add(variableSessionHeading);
         variableSessionContainer.add(variableSessionLabel);
 
@@ -199,14 +186,36 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         chooseReferenceMaterialsPanel.setLayout(new BoxLayout(chooseReferenceMaterialsPanel, BoxLayout.X_AXIS));
         chooseReferenceMaterialsPanel.setBorder(BorderFactory.createTitledBorder("Study Session Context"));
 
+        // Prompt panel
         JPanel promptPanel = new JPanel();
-
         promptArea.setBorder(BorderFactory.createTitledBorder("What are you studying?"));
         promptPanel.add(promptArea);
 
+        // Reference file panel
         JPanel selectorPanel = new JPanel();
-        selectorPanel.setBorder(BorderFactory.createTitledBorder("Textbook"));
+        selectorPanel.setLayout(new BoxLayout(selectorPanel, BoxLayout.Y_AXIS));
+        selectorPanel.setBorder(BorderFactory.createTitledBorder("Reference File"));
+
+        // Existing combo box
         selectorPanel.add(fileSelector);
+
+        // Add a file chooser button
+        JButton chooseFileButton = new JButton("Choose File...");
+        chooseFileButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String selectedFilePath = fileChooser.getSelectedFile().getAbsolutePath();
+                viewModel.getState().setReferenceFile(selectedFilePath);
+
+                // Optional: show chosen file in combo box
+                if (((DefaultComboBoxModel<String>) fileSelector.getModel()).getIndexOf(selectedFilePath) == -1) {
+                    fileSelector.addItem(selectedFilePath);
+                }
+                fileSelector.setSelectedItem(selectedFilePath);
+            }
+        });
+        selectorPanel.add(chooseFileButton);
 
         chooseReferenceMaterialsPanel.add(promptPanel);
         chooseReferenceMaterialsPanel.add(selectorPanel);
@@ -214,147 +223,79 @@ public class StudySessionConfigView extends StatefulView<StudySessionConfigState
         return chooseReferenceMaterialsPanel;
     }
 
-    /**
-     * Attaches listeners to input elements to update state on change.
-     */
+
     private void attachListeners() {
         typeSelector.addActionListener(e -> {
             String choice = (String) typeSelector.getSelectedItem();
-            if (choice == null)
-                return;
-
+            if (choice == null) return;
             SessionType sessionType = choice.equals(VARIABLE_SESSION) ? SessionType.VARIABLE : SessionType.FIXED;
-            // Apparently as per the prof, I can bypass the CA engine for this because no logic is being done.
-            // Must fire property change for UI to update.
             viewModel.getState().setSessionType(sessionType);
             viewModel.firePropertyChange();
         });
 
         fileSelector.addActionListener(e -> {
-            String choice = (String) fileSelector.getSelectedItem();
-            if (choice != null) {
-                viewModel.getState().setReferenceFile(choice);
+            String selectedFile = (String) fileSelector.getSelectedItem();
+            if (selectedFile != null) {
+                viewModel.getState().setReferenceFile(selectedFile);
             }
         });
 
-        hoursSelector.addChangeListener(e -> {
-            Integer hours = (Integer) hoursSelector.getValue();
-            viewModel.getState().setTargetDurationHours(hours);
-        });
-
-        minutesSelector.addChangeListener(e -> {
-
-            Integer minutes = (Integer) minutesSelector.getValue();
-            viewModel.getState().setTargetDurationMinutes(minutes);
-        });
+        hoursSelector.addChangeListener(e -> viewModel.getState().setTargetDurationHours((Integer) hoursSelector.getValue()));
+        minutesSelector.addChangeListener(e -> viewModel.getState().setTargetDurationMinutes((Integer) minutesSelector.getValue()));
 
         promptArea.getDocument().addDocumentListener(new DocumentListener() {
-
-            private void documentListenerHelper() {
-                viewModel.getState().setPrompt(promptArea.getText());
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
+            private void updatePrompt() { viewModel.getState().setPrompt(promptArea.getText()); }
+            @Override public void insertUpdate(DocumentEvent e) { updatePrompt(); }
+            @Override public void removeUpdate(DocumentEvent e) { updatePrompt(); }
+            @Override public void changedUpdate(DocumentEvent e) { updatePrompt(); }
         });
     }
 
-    /**
-     * Sets all editable fields to synchronize with the provided state.
-     *
-     * @param state The state for the view to sync with.
-     */
     private void setFields(StudySessionConfigState state) {
-        typeSelector.setSelectedItem(
-                state.getSessionType() == StudySessionConfigState.SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION);
-
+        typeSelector.setSelectedItem(state.getSessionType() == SessionType.FIXED ? TIMED_SESSION : VARIABLE_SESSION);
         hoursSelector.setValue(state.getTargetDurationHours());
         minutesSelector.setValue(state.getTargetDurationMinutes());
         promptArea.setText(state.getPrompt());
-
         updateFileSelector(state.getFileOptions());
         if (state.getReferenceFile() != null) {
             fileSelector.setSelectedItem(state.getReferenceFile());
         }
-
         updateDurationPanelVisibility(state.getSessionType());
     }
 
-    /**
-     * Populates the file selector with the given file options.
-     *
-     * @param fileOptions the options the user can choose from.
-     */
     private void updateFileSelector(List<String> fileOptions) {
-        if (fileOptions == null) {
-            return;
-        }
-        // Extract the change listener from the file selector.
-        ActionListener[] fileSelectorChangeListeners = fileSelector.getActionListeners();
-        ActionListener fileSelectorChangeListener = fileSelectorChangeListeners.length > 0
-                ? fileSelectorChangeListeners[0]
-                : null;
+        if (fileOptions == null) return;
 
-        // Temporarily remove listner to avoid firing change evnets when updating
-        fileSelector.removeActionListener(fileSelectorChangeListener);
+        ActionListener[] listeners = fileSelector.getActionListeners();
+        ActionListener fileListener = listeners.length > 0 ? listeners[0] : null;
+        if (fileListener != null) fileSelector.removeActionListener(fileListener);
 
-        // Repopulate selector
         fileSelector.removeAllItems();
-        for (String fileName : fileOptions) {
-            fileSelector.addItem(fileName);
-        }
+        for (String file : fileOptions) fileSelector.addItem(file);
 
-        if (fileSelectorChangeListener != null) { // Re add the change listener
-            fileSelector.addActionListener(fileSelectorChangeListener);
-        }
+        if (fileListener != null) fileSelector.addActionListener(fileListener);
 
-        String previousSelectedFile = viewModel.getState().getReferenceFile();
-        if (previousSelectedFile != null && !previousSelectedFile.isEmpty()
-                && fileOptions.contains(previousSelectedFile)) {
-            // Select previous selcted file
-            fileSelector.setSelectedItem(previousSelectedFile);
-            return;
-        } else if (fileSelector.getItemCount() > 0) { // set to first item if possible
+        String selected = viewModel.getState().getReferenceFile();
+        if (selected != null && !selected.isEmpty() && fileOptions.contains(selected)) {
+            fileSelector.setSelectedItem(selected);
+        } else if (!fileOptions.isEmpty()) {
             fileSelector.setSelectedIndex(0);
-            return;
+            viewModel.getState().setReferenceFile(fileSelector.getItemAt(0));
         }
     }
 
-    /**
-     * Sets the controller to start the study session.
-     *
-     * @param startStudySessionController The controller to use.
-     */
-    public void setStartStudySessionController(StartStudySessionController startStudySessionController) {
-        this.startStudySessionController = startStudySessionController;
+    public void setStartStudySessionController(StartStudySessionController controller) {
+        this.startStudySessionController = controller;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-
         if (evt.getPropertyName().equals("state")) {
-            StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
-            System.out.println(state);
-            setFields(state);
+            setFields((StudySessionConfigState) evt.getNewValue());
         } else if (evt.getPropertyName().equals("error")) {
-            StudySessionConfigState state = (StudySessionConfigState) evt.getNewValue();
-            String error = state.getError();
-            JOptionPane.showMessageDialog(this, error, "Configuration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, ((StudySessionConfigState) evt.getNewValue()).getError(), "Configuration Error", JOptionPane.ERROR_MESSAGE);
         } else if (evt.getPropertyName().equals("fileOptions")) {
-            List<String> fileOptions = viewModel.getState().getFileOptions();
-            updateFileSelector(fileOptions);
+            updateFileSelector(viewModel.getState().getFileOptions());
         }
     }
 }

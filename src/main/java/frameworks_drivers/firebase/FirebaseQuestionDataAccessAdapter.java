@@ -35,7 +35,7 @@ public class FirebaseQuestionDataAccessAdapter implements QuestionDataAccess {
             data.put("choices", question.getOptions());
             data.put("correctIndex", question.getCorrectIndex());
             data.put("explanation", question.getExplanation());
-            data.put("wasCorrect", question.isWasCorrect());
+            data.put("wasCorrect", question.isCorrect()); // updated getter
 
             ApiFuture<WriteResult> result = docRef.set(data);
             result.get(); // wait for write to complete
@@ -57,7 +57,7 @@ public class FirebaseQuestionDataAccessAdapter implements QuestionDataAccess {
                                 "choices", question.getOptions(),
                                 "correctIndex", question.getCorrectIndex(),
                                 "explanation", question.getExplanation(),
-                                "wasCorrect", question.isWasCorrect()
+                                "wasCorrect", question.isCorrect()
                         )));
             }
             for (ApiFuture<WriteResult> future : futures) {
@@ -85,7 +85,7 @@ public class FirebaseQuestionDataAccessAdapter implements QuestionDataAccess {
                         doc.getLong("correctIndex").intValue(),
                         doc.getString("explanation")
                 );
-                question.setWasCorrect(Boolean.TRUE.equals(doc.getBoolean("wasCorrect")));
+                question.setCorrect(Boolean.TRUE.equals(doc.getBoolean("wasCorrect")));
                 return Optional.of(question);
             } else {
                 return Optional.empty();
@@ -109,7 +109,7 @@ public class FirebaseQuestionDataAccessAdapter implements QuestionDataAccess {
                         doc.getLong("correctIndex").intValue(),
                         doc.getString("explanation")
                 );
-                q.setWasCorrect(Boolean.TRUE.equals(doc.getBoolean("wasCorrect")));
+                q.setCorrect(Boolean.TRUE.equals(doc.getBoolean("wasCorrect")));
                 return q;
             }).collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {

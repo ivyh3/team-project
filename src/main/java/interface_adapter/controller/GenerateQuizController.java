@@ -1,55 +1,23 @@
 package interface_adapter.controller;
 
-import interface_adapter.view_model.QuizViewModel;
-import use_case.generate_quiz.GenerateQuizInputBoundary;
-import use_case.generate_quiz.GenerateQuizInputData;
+import view.StudyQuizView;
 
-import java.util.List;
-import java.util.Objects;
+import javax.swing.*;
+import java.io.File;
 
-/**
- * Controller for Generate Quiz.
- * Receives UI events and delegates to interactor and ViewModel.
- */
 public class GenerateQuizController {
 
-    private final GenerateQuizInputBoundary interactor;
-    private final QuizViewModel viewModel;
+    private final StudyQuizView studyQuizView;
 
-    public GenerateQuizController(GenerateQuizInputBoundary interactor, QuizViewModel viewModel) {
-        this.interactor = Objects.requireNonNull(interactor, "Interactor cannot be null");
-        this.viewModel = Objects.requireNonNull(viewModel, "ViewModel cannot be null");
+    public GenerateQuizController(StudyQuizView studyQuizView) {
+        this.studyQuizView = studyQuizView;
     }
 
-    /**
-     * Request quiz generation from interactor.
-     */
-    public void generateQuiz(String userId, String sessionId, String courseId,
-                             String prompt, List<String> referenceMaterials) {
-        if (userId == null || prompt == null) {
-            throw new IllegalArgumentException("User ID and prompt cannot be null");
+    public void loadPdfAndGenerateQuiz(File pdfFile, String prompt) {
+        if (pdfFile == null || !pdfFile.exists()) {
+            JOptionPane.showMessageDialog(null, "PDF file is invalid or does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-
-        GenerateQuizInputData inputData = new GenerateQuizInputData(
-                userId, sessionId, courseId, prompt, referenceMaterials
-        );
-
-        interactor.execute(inputData);
-    }
-
-    /**
-     * Handle submit answer action from the View.
-     * Delegates scoring and state update to the ViewModel.
-     */
-    public void submitAnswer() {
-        viewModel.submitAnswer();
-    }
-
-    /**
-     * Handle next question action from the View.
-     * Delegates navigation to the ViewModel.
-     */
-    public void nextQuestion() {
-        viewModel.nextQuestion();
+        studyQuizView.loadQuizFromPdfFile(pdfFile, prompt);
     }
 }

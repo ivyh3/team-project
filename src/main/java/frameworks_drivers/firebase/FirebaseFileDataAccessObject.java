@@ -13,12 +13,13 @@ import javax.swing.JOptionPane;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Bucket;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.cloud.StorageClient;
-import com.google.cloud.storage.Bucket;
 
 import app.Config;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
@@ -55,9 +56,7 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
         byte[] data = Files.readAllBytes(file.toPath());
 
         String mimeType = Files.probeContentType(file.toPath());
-        if (mimeType == null) {
-            mimeType = "application/octet-stream";
-        }
+        if (mimeType == null) mimeType = "application/octet-stream";
 
         String filePath = String.format("users/%s/%s", userId, fileName);
         bucket.create(filePath, data, mimeType);
@@ -69,9 +68,7 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
         String filePath = String.format("users/%s/%s", userId, fileName);
         BlobId blobId = BlobId.of(FILES_BUCKET, filePath);
         boolean deleted = bucket.getStorage().delete(blobId);
-        if (!deleted) {
-            throw new RuntimeException("File not deleted, may not exist.");
-        }
+        if (!deleted) throw new RuntimeException("File not deleted, may not exist.");
     }
 
     public List<String> getAllUserFiles(String userId) {
@@ -97,7 +94,7 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
 
     @Override
     public List<String> getFilesForUser(String userId) {
-        return getAllUserFiles(userId); // reuse existing method
+        return getAllUserFiles(userId);
     }
 
     public void saveMetadata(String userId, String storagePath, String prompt) throws Exception {
@@ -116,10 +113,8 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
     }
 
     public void deleteFileWithMetadata(String userId, String fileName) throws Exception {
-        // Delete file from storage
         deleteFile(userId, fileName);
 
-        // Delete Firestore metadata
         Firestore firestore = FirestoreClient.getFirestore();
         firestore.collection("users")
                 .document(userId)
@@ -131,85 +126,17 @@ public class FirebaseFileDataAccessObject implements UploadReferenceMaterialData
 
     @Override
     public boolean fileExistsByName(String userId, String fileName) {
-        String prefix = String.format("users/%s/%s", userId, fileName);
-        return bucket.get(prefix) != null; // blob exists if the file exists
+        String path = String.format("users/%s/%s", userId, fileName);
+        return bucket.get(path) != null;
     }
 
-
-    /*** Test UI ***/
-    public static void main(String[] args) {
-        FirebaseFileDataAccessObject fileDAO = new FirebaseFileDataAccessObject();
-
-        while (true) {
-            String[] options = { "Upload File", "Get All Files", "Delete File", "Exit" };
-            int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "Choose an operation:",
-                    "Firebase File Operations",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-
-            try {
-                switch (choice) {
-                    case 0:
-                        uploadFileUI(fileDAO);
-                        break;
-                    case 1:
-                        getAllFilesUI(fileDAO);
-                        break;
-                    case 2:
-                        deleteFileUI(fileDAO);
-                        break;
-                    case 3:
-                        System.exit(0);
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(null, "Invalid choice. Try again.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage());
-            }
-        }
-    }
-
-    private static void uploadFileUI(FirebaseFileDataAccessObject fileDAO) throws Exception {
-        String userId = JOptionPane.showInputDialog("Enter User ID:");
-        if (userId == null || userId.isEmpty()) return;
-
-        JFileChooser chooser = new JFileChooser();
-        int result = chooser.showOpenDialog(null);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            String path = fileDAO.uploadFile(userId, file);
-            fileDAO.saveMetadata(userId, path, "Example prompt"); // Example prompt
-            JOptionPane.showMessageDialog(null, "File uploaded successfully: " + path);
-        }
-    }
-
-    private static void getAllFilesUI(FirebaseFileDataAccessObject fileDAO) {
-        String userId = JOptionPane.showInputDialog("Enter User ID:");
-        if (userId == null || userId.isEmpty()) return;
-
-        List<String> files = fileDAO.getAllUserFiles(userId);
-        if (files.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No files found for user " + userId);
-        } else {
-            JOptionPane.showMessageDialog(null, "Files:\n" + String.join("\n", files));
-        }
-    }
-
-    private static void deleteFileUI(FirebaseFileDataAccessObject fileDAO) throws Exception {
-        String userId = JOptionPane.showInputDialog("Enter User ID:");
-        if (userId == null || userId.isEmpty()) return;
-
-        String fileName = JOptionPane.showInputDialog("Enter file name to delete:");
-        if (fileName == null || fileName.isEmpty()) return;
-
-        fileDAO.deleteFileWithMetadata(userId, fileName);
-        JOptionPane.showMessageDialog(null, "File deleted successfully!");
+    /**
+     * Get content of a Firebase Storage file as String
+     */
+    public String getFileContent(String userId, String fileName) throws IOException {
+        String path = String.format("users/%s/%s", userId, fileName);
+        Blob blob = bucket.get(path);
+        if (blob == null) throw new IOException("File not found in Firebase Storage: " + path);
+        return new String(blob.getContent());
     }
 }

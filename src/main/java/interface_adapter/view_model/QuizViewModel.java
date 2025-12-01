@@ -1,193 +1,157 @@
 package interface_adapter.view_model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Question;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ViewModel for Study Quiz.
- * Exposes all quiz state to the View and notifies observers on change.
- * Presenter can update the ViewModel via public setters.
- */
-public class QuizViewModel extends ViewModel<QuizState> {
+public class QuizViewModel {
 
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
-    private String currentQuestion = "";
-    private List<String> currentOptions = new ArrayList<>();
-    private String explanation = "";
-    private String scoreDisplay = "0/0";
-    private boolean submitEnabled = true;
-    private boolean nextEnabled = false;
-    private boolean quizComplete = false;
-
-    private int selectedAnswer = -1;
+    private final GeminiClient client;
+    private String prompt;
+    private String referenceText;
+    private List<Question> questions = new ArrayList<>();
     private int currentQuestionIndex = 0;
-    private int totalQuestions = 0;
     private int score = 0;
 
-    private List<Question> questions = new ArrayList<>();
-
-    public QuizViewModel() {
-        super("quiz");
-        setState(new QuizState());
+    public QuizViewModel(GeminiClient client) {
+        this.client = client;
     }
 
-    // --- PropertyChangeListener support ---
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
+    // ----------------- getters -----------------
+    public List<Question> getQuestions() { return questions; }
+    public int getCurrentQuestionIndex() { return currentQuestionIndex; }
+    public Question getCurrentQuestion() {
+        if (questions.isEmpty() || currentQuestionIndex >= questions.size()) return null;
+        return questions.get(currentQuestionIndex);
+    }
+    public int getScore() { return score; }
+    public int getAnsweredCount() {
+        int count = 0;
+        for (Question q : questions) {
+            if (q.isAnswered()) count++;
+        }
+        return count;
     }
 
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(listener);
+    // ----------------- setters -----------------
+    public void setPrompt(String prompt) { this.prompt = prompt; }
+    public void setReferenceText(String referenceText) { this.referenceText = referenceText; }
+    public void reset() {
+        currentQuestionIndex = 0;
+        score = 0;
+        if (questions != null) {
+            for (Question q : questions) {
+                q.setAnswered(false);
+            }
+        }
+    }
+    public void nextQuestion() { if (currentQuestionIndex < questions.size()) currentQuestionIndex++; }
+
+    // Update generateQuizFromGemini
+    public void generateQuizFromGemini() throws Exception {
+        if (prompt == null || referenceText == null)
+            throw new IllegalStateException("Prompt/reference missing");
+
+        String rawJson = client.generateQuestions(prompt, referenceText);
+        System.out.println("Gemini raw JSON: " + rawJson);
+
+        this.questions = parseGeminiResponse(rawJson); // parse first
+        reset(); // reset after questions are populated
+
+        System.out.println("Parsed questions count: " + questions.size());
     }
 
-    // --- Public setters for Presenter ---
-    public void setCurrentQuestion(String currentQuestion) {
-        String old = this.currentQuestion;
-        this.currentQuestion = currentQuestion != null ? currentQuestion : "";
-        pcs.firePropertyChange("currentQuestion", old, this.currentQuestion);
+    private List<Question> parseGeminiResponse(String response) throws Exception {
+        List<Question> result = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        System.out.println("Raw Gemini response: " + response);
+        JsonNode root = mapper.readTree(response);
+
+        JsonNode candidatesNode = root.path("candidates");
+        if (candidatesNode.isMissingNode() || !candidatesNode.isArray()) return result;
+
+        for (JsonNode candidate : candidatesNode) {
+            JsonNode textNode = candidate.path("content").path("parts").get(0).path("text");
+            if (textNode.isMissingNode()) continue;
+
+            String[] blocks = textNode.asText().split("\\n\\n");
+            for (String block : blocks) {
+                if (!block.contains("A)") || !block.contains("Answer:")) continue;
+
+                String[] lines = block.split("\\n");
+                String qText = lines[0].replaceFirst("^\\d+\\.\\s*", "").trim();
+                List<String> choices = new ArrayList<>();
+                for (int i = 1; i <= 4; i++) choices.add(lines[i].substring(3).trim());
+
+                if (lines.length < 6) continue;
+                String answerLine = lines[5].replace("Answer:", "").trim();
+                String letter = answerLine.substring(0, 1).toUpperCase();
+
+                int correctIndex;
+                switch (letter) {
+                    case "A": correctIndex = 0; break;
+                    case "B": correctIndex = 1; break;
+                    case "C": correctIndex = 2; break;
+                    case "D": correctIndex = 3; break;
+                    default: correctIndex = -1;
+                }
+
+                result.add(new Question("Q" + (result.size() + 1), qText, choices, correctIndex, ""));
+            }
+        }
+        System.out.println("Parsed questions: " + result.size());
+        return result;
     }
 
-    public void setCurrentOptions(List<String> currentOptions) {
-        List<String> old = this.currentOptions;
-        this.currentOptions = currentOptions != null ? currentOptions : new ArrayList<>();
-        pcs.firePropertyChange("currentOptions", old, this.currentOptions);
+    // ----------------- answer submission -----------------
+    public void submitAnswer(int selectedIndex) {
+        Question current = getCurrentQuestion();
+        if (current == null) return;
+
+        boolean correct = selectedIndex == current.getCorrectIndex();
+        current.setAnswered(true);
+        if (correct) score++;
     }
 
-    public void setExplanation(String explanation) {
-        String old = this.explanation;
-        this.explanation = explanation != null ? explanation : "";
-        pcs.firePropertyChange("explanation", old, this.explanation);
-    }
-
-    public void setScoreDisplay(String scoreDisplay) {
-        String old = this.scoreDisplay;
-        this.scoreDisplay = scoreDisplay != null ? scoreDisplay : "0/0";
-        pcs.firePropertyChange("scoreDisplay", old, this.scoreDisplay);
-    }
-
-    public void setSubmitEnabled(boolean submitEnabled) {
-        boolean old = this.submitEnabled;
-        this.submitEnabled = submitEnabled;
-        pcs.firePropertyChange("submitEnabled", old, submitEnabled);
-    }
-
-    public void setNextEnabled(boolean nextEnabled) {
-        boolean old = this.nextEnabled;
-        this.nextEnabled = nextEnabled;
-        pcs.firePropertyChange("nextEnabled", old, nextEnabled);
-    }
-
-    public void setQuizComplete(boolean quizComplete) {
-        boolean old = this.quizComplete;
-        this.quizComplete = quizComplete;
-        pcs.firePropertyChange("quizComplete", old, quizComplete);
-        setSubmitEnabled(!quizComplete);
-        setNextEnabled(!quizComplete);
+    // ----------------- load from PDF fallback -----------------
+    public void loadQuizFromText(String pdfText) {
+        questions.clear();
+        String[] lines = pdfText.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            if (!lines[i].isBlank()) {
+                questions.add(new Question(
+                        "Q" + (i + 1),
+                        lines[i],
+                        List.of("A", "B", "C", "D"), // placeholder choices
+                        0,
+                        ""
+                ));
+            }
+        }
+        reset();
     }
 
     public void setQuestions(List<Question> questions) {
-        this.questions = questions != null ? questions : new ArrayList<>();
-        this.totalQuestions = this.questions.size();
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-
-        if (!this.questions.isEmpty()) {
-            updateCurrentQuestion();
-        }
-
-        setScoreDisplay(score + "/" + totalQuestions);
-        setSubmitEnabled(true);
-        setNextEnabled(false);
+        this.questions = questions;
+        reset();
     }
 
-    // --- Internal logic ---
-    private void updateCurrentQuestion() {
-        if (currentQuestionIndex < questions.size()) {
-            Question q = questions.get(currentQuestionIndex);
-            setCurrentQuestion(q.getText());
-            setCurrentOptions(q.getOptions());
-            setExplanation("");
-            setSubmitEnabled(true);
-            setNextEnabled(false);
-        } else {
-            setQuizComplete(true);
-        }
+    // Add field to store the last Gemini raw JSON
+    private String lastRawJson;
+
+    public String getLastRawJson() {
+        return lastRawJson;
     }
 
-    // --- Selected answer ---
-    public int getSelectedAnswer() {
-        return selectedAnswer;
-    }
+    public void submitAnswer(int questionIndex, int selectedIndex) {
+        if (questionIndex < 0 || questionIndex >= questions.size()) return;
 
-    public void setSelectedAnswer(int selectedAnswer) {
-        int old = this.selectedAnswer;
-        this.selectedAnswer = selectedAnswer;
-        pcs.firePropertyChange("selectedAnswer", old, selectedAnswer);
-    }
-
-    // --- Submission / scoring ---
-    public void submitAnswer() {
-        if (currentQuestionIndex >= questions.size() || selectedAnswer < 0) return;
-
-        Question current = questions.get(currentQuestionIndex);
-        if (selectedAnswer == current.getCorrectIndex()) score++;
-
-        setExplanation(current.getExplanation());
-        setScoreDisplay(score + "/" + totalQuestions);
-
-        setSubmitEnabled(false);
-        setNextEnabled(true);
-    }
-
-    public void nextQuestion() {
-        if (currentQuestionIndex < questions.size() - 1) {
-            currentQuestionIndex++;
-            selectedAnswer = -1;
-            updateCurrentQuestion();
-        } else {
-            setQuizComplete(true);
-        }
-    }
-
-    // --- Getters for View ---
-    public String getCurrentQuestion() { return currentQuestion; }
-    public List<String> getCurrentOptions() { return currentOptions; }
-    public String getExplanation() { return explanation; }
-    public String getScoreDisplay() { return scoreDisplay; }
-    public boolean isSubmitEnabled() { return submitEnabled; }
-    public boolean isNextEnabled() { return nextEnabled; }
-    public boolean isQuizComplete() { return quizComplete; }
-    public int getCurrentQuestionIndex() { return currentQuestionIndex; }
-    public int getTotalQuestions() { return totalQuestions; }
-    public int getScore() { return score; }
-
-    @Override
-    public void setState(QuizState state) {
-        // Update the ViewModel fields from the state
-        setCurrentQuestion(state.getQuestionText());
-        setCurrentOptions(state.getAnswerOptions());
-        setExplanation(state.getExplanation());
-        setScoreDisplay(state.getScore() + "/" + state.getTotalQuestions());
-        setQuizComplete(state.isQuizComplete());
-    }
-
-    @Override
-    public QuizState getState() {
-        return new QuizState(
-                currentQuestion,          // from ViewModel
-                currentOptions,           // from ViewModel
-                currentQuestionIndex + 1, // question number
-                totalQuestions,
-                explanation,
-                score,
-                false,                    // showingExplanation
-                quizComplete,
-                ""                        // errorMessage
-        );
+        Question question = questions.get(questionIndex);
+        boolean correct = selectedIndex == question.getCorrectIndex();
+        question.setAnswered(true);
+        if (correct) score++;
     }
 }

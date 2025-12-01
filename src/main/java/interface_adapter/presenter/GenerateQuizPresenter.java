@@ -27,23 +27,24 @@ public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
             return;
         }
 
-        // Populate the ViewModel with questions
-        quizViewModel.setQuestions(questions);
-        quizViewModel.setQuizComplete(false);
-        quizViewModel.setExplanation("");
-        quizViewModel.setScoreDisplay("0/" + questions.size());
-        quizViewModel.setSubmitEnabled(true);
-        quizViewModel.setNextEnabled(false);
+        quizViewModel.setQuestions(questions); // correctly sets questions and resets
     }
 
     @Override
     public void prepareFailView(String errorMessage) {
-        // Clear previous state and display error
-        quizViewModel.setQuestions(List.of());
-        quizViewModel.setCurrentQuestion("");
-        quizViewModel.setCurrentOptions(List.of());
-        quizViewModel.setExplanation(errorMessage);
-        quizViewModel.setScoreDisplay("0/0");
-        quizViewModel.setQuizComplete(true);
+        quizViewModel.loadQuizFromText(""); // empty quiz
+        quizViewModel.reset();
+    }
+
+    /**
+     * Converts a list of Question objects into a plain text format for QuizViewModel.
+     * This allows the existing loadQuizFromText() fallback to work.
+     */
+    private String questionsToText(List<Question> questions) {
+        StringBuilder sb = new StringBuilder();
+        for (Question q : questions) {
+            sb.append(q.getText()).append("\n");
+        }
+        return sb.toString();
     }
 }

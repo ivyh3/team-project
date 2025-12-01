@@ -1,6 +1,5 @@
 package use_case.generate_quiz;
 
-import frameworks_drivers.gemini.GeminiQuizDataAccess;
 import repository.QuestionDataAccess;
 import entity.Question;
 
@@ -12,7 +11,7 @@ import java.util.Objects;
  */
 public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
 
-    private final GenerateQuizOutputBoundary output;
+    private GenerateQuizOutputBoundary output;
     private final QuestionDataAccess questionRepo;
     private final GeminiQuizDataAccess gemini;
 
@@ -60,5 +59,9 @@ public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
         } catch (Exception e) {
             output.prepareFailView("Error generating quiz: " + e.getMessage());
         }
+    }
+
+    public void setOutputBoundary(GenerateQuizOutputBoundary output) {
+        this.output = Objects.requireNonNull(output);
     }
 }

@@ -1,10 +1,13 @@
 package interface_adapter.view_model;
 
+import entity.Question;
+
 import java.util.Collections;
 import java.util.List;
 
-public final class QuizState {
+public class QuizState {
 
+    private final Question question;
     private final String questionText;
     private final List<String> answerOptions;
     private final int questionNumber;
@@ -16,6 +19,7 @@ public final class QuizState {
     private final String errorMessage;
 
     public QuizState(
+            Question question,
             String questionText,
             List<String> answerOptions,
             int questionNumber,
@@ -26,6 +30,7 @@ public final class QuizState {
             boolean quizComplete,
             String errorMessage
     ) {
+        this.question = question;
         this.questionText = questionText;
         this.answerOptions = List.copyOf(answerOptions);
         this.questionNumber = questionNumber;
@@ -37,11 +42,10 @@ public final class QuizState {
         this.errorMessage = errorMessage;
     }
 
-    public QuizState() {
-        this("", Collections.emptyList(), 0, 0, "", 0, false, false, "");
-    }
-
     // Getters only — immutable
+    public Question getQuestion() {
+        return question;
+    }
     public String getQuestionText() { return questionText; }
     public List<String> getAnswerOptions() { return answerOptions; }
     public int getQuestionNumber() { return questionNumber; }
