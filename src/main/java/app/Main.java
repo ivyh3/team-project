@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // Initialize Firebase
         try {
+            Config.loadDotenv();
             Config.initializeFirebase();
         } catch (IOException e) {
             System.err.println("Failed to initialize Firebase: " + e.getMessage());

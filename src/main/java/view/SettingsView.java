@@ -1,18 +1,28 @@
 package view;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.beans.PropertyChangeEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
 import app.AppBuilder;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.controller.LogoutController;
-import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.SettingsState;
 import interface_adapter.view_model.SettingsViewModel;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
 
 /**
  * View for Application settings.
@@ -21,59 +31,54 @@ public class SettingsView extends StatefulView<SettingsState> {
 
     private ChangePasswordController changePasswordController;
     private LogoutController logoutController;
-    private DashboardViewModel dashboardViewModel;
+
+    private final DashboardViewModel dashboardViewModel;
 
     private final JPasswordField oldPasswordInputField = new JPasswordField(15);
     private final JPasswordField newPasswordInputField = new JPasswordField(15);
     private final JPasswordField confirmPasswordInputField = new JPasswordField(15);
     private final JLabel changePasswordErrorField = new JLabel();
 
-    private final JButton manageUploadedFilesButton;
-    private final JButton changePasswordButton;
-    private final JButton logoutButton;
-    private final JButton returnButton;
+    private final int logoutConfirmOptionPane = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to log out?",
+            "Confirm Logout",
+            JOptionPane.YES_NO_OPTION);
 
     public SettingsView(SettingsViewModel settingsViewModel, DashboardViewModel dashboardViewModel) {
         super("settings", settingsViewModel);
         this.dashboardViewModel = dashboardViewModel;
 
-        JPanel viewHeader = new ViewHeader("Settings");
+        final JPanel viewHeader = new ViewHeader("Settings");
 
-        logoutButton = new JButton("Log Out");
-        logoutButton.addActionListener(e -> {
-            if (logoutController != null) {
-                int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Are you sure you want to log out?",
-                        "Confirm Logout",
-                        JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    logoutController.execute();
-                }
+        final JButton logoutButton = new JButton("Log Out");
+        logoutButton.addActionListener(event -> {
+            if (logoutController != null && logoutConfirmOptionPane == JOptionPane.YES_OPTION) {
+                logoutController.execute();
             }
         });
         viewHeader.add(logoutButton, BorderLayout.EAST);
 
         // Main content panel with BorderLayout
-        JPanel mainContent = new JPanel(new BorderLayout(20, 0));
+        final JPanel mainContent = new JPanel(new BorderLayout(20, 0));
 
         // Left side - Navigation buttons
-        JPanel leftPanel = new JPanel();
+        final JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel navigationTitle = new JLabel("Navigation");
+        final JLabel navigationTitle = new JLabel("Navigation");
         navigationTitle.setFont(new Font(null, Font.BOLD, 16));
         navigationTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        manageUploadedFilesButton = new JButton("Manage Uploaded Files");
-        manageUploadedFilesButton.addActionListener(e -> {
+        final JButton manageUploadedFilesButton = new JButton("Manage Uploaded Files");
+        manageUploadedFilesButton.addActionListener(event -> {
             AppBuilder.viewManagerModel.setView("uploadMaterials");
         });
         manageUploadedFilesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        returnButton = new JButton("Return to Dashboard");
-        returnButton.addActionListener(e -> {
+        final JButton returnButton = new JButton("Return to Dashboard");
+        returnButton.addActionListener(event -> {
             // Clear form when navigating away
             viewModel.setState(new SettingsState());
             viewModel.firePropertyChange();
@@ -89,11 +94,11 @@ public class SettingsView extends StatefulView<SettingsState> {
         leftPanel.add(Box.createVerticalGlue());
 
         // Right side - Change password form
-        JPanel rightPanel = new JPanel();
+        final JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel changePasswordTitle = new JLabel("Change Password");
+        final JLabel changePasswordTitle = new JLabel("Change Password");
         changePasswordTitle.setFont(new Font(null, Font.BOLD, 16));
         changePasswordTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -108,23 +113,7 @@ public class SettingsView extends StatefulView<SettingsState> {
         changePasswordErrorField.setForeground(Color.RED);
         changePasswordErrorField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        changePasswordButton = new JButton("Change Password");
-        changePasswordButton.addActionListener(e -> {
-            if (changePasswordController != null) {
-                SettingsState state = viewModel.getState();
-
-                // Get userId from DashboardState
-                DashboardState dashboardState = dashboardViewModel.getState();
-                String userId = dashboardState.getUserId();
-
-                changePasswordController.execute(
-                        userId,
-                        state.getOldPassword(),
-                        state.getNewPassword(),
-                        state.getConfirmPassword());
-            }
-        });
-        changePasswordButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        final JButton changePasswordButton = getChangePasswordButton();
 
         // Add document listeners for password fields
         addPasswordFieldListener(oldPasswordInputField, SettingsState::setOldPassword);
@@ -149,6 +138,23 @@ public class SettingsView extends StatefulView<SettingsState> {
 
         this.add(viewHeader, BorderLayout.NORTH);
         this.add(mainContent, BorderLayout.CENTER);
+    }
+
+    private JButton getChangePasswordButton() {
+        final JButton changePasswordButton = new JButton("Change Password");
+        changePasswordButton.addActionListener(event -> {
+            if (changePasswordController != null) {
+                final SettingsState state = viewModel.getState();
+
+                changePasswordController.execute(
+                        dashboardViewModel.getState().getUserId(),
+                        state.getOldPassword(),
+                        state.getNewPassword(),
+                        state.getConfirmPassword());
+            }
+        });
+        changePasswordButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return changePasswordButton;
     }
 
     private void addPasswordFieldListener(JPasswordField field,
@@ -196,7 +202,8 @@ public class SettingsView extends StatefulView<SettingsState> {
             // Display error message if present
             if (state.getChangePasswordError() != null && !state.getChangePasswordError().isEmpty()) {
                 changePasswordErrorField.setText(state.getChangePasswordError());
-            } else {
+            }
+            else {
                 changePasswordErrorField.setText("");
             }
         }

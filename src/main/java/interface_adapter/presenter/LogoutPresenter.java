@@ -1,8 +1,8 @@
 package interface_adapter.presenter;
 
-import interface_adapter.view_model.ViewManagerModel;
 import interface_adapter.view_model.DashboardState;
 import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.logout.LogoutOutputBoundary;
 import use_case.logout.LogoutOutputData;
 
@@ -11,8 +11,8 @@ import use_case.logout.LogoutOutputData;
  */
 public class LogoutPresenter implements LogoutOutputBoundary {
 
-    private DashboardViewModel dashboardViewModel;
-    private ViewManagerModel viewManagerModel;
+    private final DashboardViewModel dashboardViewModel;
+    private final ViewManagerModel viewManagerModel;
 
     public LogoutPresenter(ViewManagerModel viewManagerModel,
             DashboardViewModel dashboardViewModel) {
