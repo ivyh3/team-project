@@ -19,14 +19,7 @@ import frameworks_drivers.firebase.FirebaseScheduledSessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
-import interface_adapter.controller.ChangePasswordController;
-import interface_adapter.controller.EndStudySessionController;
-import interface_adapter.controller.LoginController;
-import interface_adapter.controller.ScheduleStudySessionController;
-import interface_adapter.controller.LogoutController;
-import interface_adapter.controller.SignupController;
-import interface_adapter.controller.StartStudySessionController;
-import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.controller.*;
 import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.presenter.LoginPresenter;
@@ -35,16 +28,7 @@ import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.presenter.StartStudySessionPresenter;
 import interface_adapter.presenter.ViewStudyMetricsPresenter;
-import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.LoginViewModel;
-import interface_adapter.view_model.MetricsViewModel;
-import interface_adapter.view_model.ScheduleSessionViewModel;
-import interface_adapter.view_model.SettingsViewModel;
-import interface_adapter.view_model.SignupViewModel;
-import interface_adapter.view_model.StudySessionConfigViewModel;
-import interface_adapter.view_model.StudySessionEndViewModel;
-import interface_adapter.view_model.StudySessionViewModel;
-import interface_adapter.view_model.ViewManagerModel;
+import interface_adapter.view_model.*;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
@@ -103,12 +87,16 @@ public class AppBuilder {
     private final CardLayout cardLayout = new CardLayout();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
     private DashboardView dashboardView;
+    private QuizViewModel quizViewModel;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
+    private UploadMaterialsView uploadMaterialsView;
+    private UploadSessionMaterialsView uploadSessionMaterialsView;
+    private UploadMaterialsViewModel uploadMaterialsViewModel;
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -246,16 +234,23 @@ public class AppBuilder {
     }
 
     public AppBuilder addUploadSessionMaterialsView() {
-        UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
-        cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
-
+        uploadMaterialsViewModel = new UploadMaterialsViewModel();
+        uploadSessionMaterialsView = new UploadSessionMaterialsView(
+                "UPLOAD_SESSION_MATERIALS",
+                uploadMaterialsViewModel
+        );
+        cardPanel.add(uploadSessionMaterialsView.getPanel(), "UPLOAD_SESSION_MATERIALS");
         return this;
     }
 
     public AppBuilder addUploadMaterialsView() {
-        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
-        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
+        uploadMaterialsViewModel = new UploadMaterialsViewModel();
+        uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel);
+        UploadReferenceMaterialController uploadController =
+                new UploadReferenceMaterialController(uploadMaterialsViewModel);
 
+        uploadMaterialsView.setUploadController(uploadController);
+        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
         return this;
     }
 
@@ -280,8 +275,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        StudyQuizView studyQuizView = new StudyQuizView();
-        cardPanel.add(studyQuizView, studyQuizView.getViewName());
+        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
+        cardPanel.add(studyQuizView, "STUDY_QUIZ");
         return this;
     }
 

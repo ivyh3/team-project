@@ -1,5 +1,8 @@
 package interface_adapter.view_model;
 
+import view.StatefulView;
+import view.UploadSessionMaterialsView;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,10 +12,14 @@ import java.util.function.Consumer;
  * ViewModel for UploadMaterialsView.
  * Holds uploaded materials and notifies observers on changes.
  */
-public class UploadMaterialsViewModel {
+public class UploadMaterialsViewModel extends ViewModel<UploadMaterialsState> {
 
     private final List<String> uploadedMaterials = new ArrayList<>();
     private final List<Consumer<List<String>>> observers = new ArrayList<>();
+
+    public UploadMaterialsViewModel() {
+        super("uploadMaterials");
+    }
 
     // Register observer
     public void addObserver(Consumer<List<String>> observer) {

@@ -1,60 +1,56 @@
 package view;
 
+import interface_adapter.view_model.UploadMaterialsState;
+import interface_adapter.view_model.ViewModel;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.io.File;
 
-public class UploadSessionMaterialsView extends JFrame {
+public class UploadSessionMaterialsView extends StatefulView<UploadMaterialsState> {
 
-    private JPanel mainPanel;
-    private JButton uploadButton;
-    private JButton cancelButton;
-    private JLabel titleLabel;
+    private JPanel mainPanel = new JPanel();
+    private JButton uploadButton = new JButton("Upload PDF");
+    private JButton cancelButton = new JButton("Cancel");
+    private JLabel title = new JLabel("Upload Session Materials", SwingConstants.CENTER);
 
-    public UploadSessionMaterialsView() {
-        // Initialize components
-        mainPanel = new JPanel();
+    public UploadSessionMaterialsView(String viewName, ViewModel uploadMaterialsViewModel) {
+        super(viewName, uploadMaterialsViewModel);
+
         mainPanel.setLayout(new BorderLayout());
-
-        titleLabel = new JLabel("Upload Session Materials", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-
-        uploadButton = new JButton("Upload");
-        cancelButton = new JButton("Cancel");
+        title.setFont(new Font("Arial", Font.BOLD, 18));
+        mainPanel.add(title, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(uploadButton);
         buttonPanel.add(cancelButton);
+        mainPanel.add(buttonPanel, BorderLayout.CENTER);
 
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        // 🔥 THIS MAKES THE FILE CHOOSER WORK
+        uploadButton.addActionListener(e -> openPdfChooser());
 
-        // Set content pane and default frame properties
-        setContentPane(mainPanel);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(400, 200);
-        setLocationRelativeTo(null); // centers the JFrame
-        setVisible(true);
-
-        // Example button actions
-        uploadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(UploadSessionMaterialsView.this, "Upload clicked!");
-            }
-        });
-
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose(); // closes the window
-            }
+        cancelButton.addActionListener(e -> {
+            // Switch back to previous screen if needed
+            System.out.println("Cancel pressed");
         });
     }
 
-    // Test main method
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new UploadSessionMaterialsView());
+    private void openPdfChooser() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setFileFilter(new FileNameExtensionFilter("PDF Files", "pdf"));
+
+        int result = chooser.showOpenDialog(mainPanel); // ❗ pass a Swing Component
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selected = chooser.getSelectedFile();
+            System.out.println("Selected File: " + selected.getAbsolutePath());
+
+            // TODO: call use case here
+        }
+    }
+
+    // Required by AppBuilder to add this view to the CardLayout
+    public JPanel getPanel() {
+        return mainPanel;
     }
 }

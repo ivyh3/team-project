@@ -1,17 +1,18 @@
 package view;
 
 import interface_adapter.controller.UploadReferenceMaterialController;
+import interface_adapter.view_model.UploadMaterialsState;
 import interface_adapter.view_model.UploadMaterialsViewModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
-/**
- * UI for uploading and managing reference materials.
- */
-public class UploadMaterialsView extends View {
+public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
 
+    private UploadReferenceMaterialController controller;    // 🔥 added
     private final JButton uploadButton;
     private final JButton backButton;
     private final DefaultListModel<String> fileListModel;
@@ -20,7 +21,7 @@ public class UploadMaterialsView extends View {
     private final File storageDir = new File("uploaded_materials");
 
     public UploadMaterialsView(UploadMaterialsViewModel viewModel) {
-        super("uploadMaterials");
+        super("uploadMaterials");  // ❗ constructor unchanged
         this.viewModel = viewModel;
 
         if (!storageDir.exists()) storageDir.mkdirs();
@@ -34,13 +35,19 @@ public class UploadMaterialsView extends View {
         scrollPane.setBorder(BorderFactory.createTitledBorder("Uploaded Files"));
         add(scrollPane, BorderLayout.CENTER);
 
+        // ---- Buttons ----
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+
         uploadButton = new JButton("Upload");
+        uploadButton.addActionListener(e -> selectPdfAndUpload());
+
         backButton = new JButton("Back");
+
         buttonPanel.add(uploadButton);
         buttonPanel.add(backButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // update UI when ViewModel changes
         viewModel.addObserver(files -> {
             fileListModel.clear();
             files.forEach(fileListModel::addElement);
@@ -49,41 +56,41 @@ public class UploadMaterialsView extends View {
         loadExistingFiles();
     }
 
-    public File[] showFileChooser() {
+    /** Called from AppBuilder — required to avoid 'cannot resolve symbol controller' */
+    public void setUploadController(UploadReferenceMaterialController controller) {
+        this.controller = controller;
+    }
+
+    /** Handles selecting a PDF and saving it locally */
+    private void selectPdfAndUpload() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setMultiSelectionEnabled(true);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
+
         int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) return chooser.getSelectedFiles();
-        return new File[0];
+        if (result != JFileChooser.APPROVE_OPTION) return;
+
+        File selected = chooser.getSelectedFile();
+        File dest = new File(storageDir, selected.getName());
+
+        try {
+            Files.copy(selected.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            viewModel.addMaterial(dest.getName());   // update view
+
+            if (controller != null) controller.uploadPdf(dest); // call backend only if injected
+            JOptionPane.showMessageDialog(this, "Upload successful.");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Upload failed: " + ex.getMessage());
+        }
     }
 
-    public void setUploadController(UploadReferenceMaterialController controller, String userId) {
-        uploadButton.addActionListener(e -> {
-            File[] selectedFiles = showFileChooser();
-            for (File file : selectedFiles) {
-                try {
-                    File destFile = new File(storageDir, file.getName());
-                    java.nio.file.Files.copy(file.toPath(), destFile.toPath(),
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                    controller.uploadReferenceMaterial(userId, destFile, null);
-                    viewModel.addMaterial(destFile.getName());
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "Failed to upload: " + file.getName());
-                    ex.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public void setBackButtonListener(java.awt.event.ActionListener listener) {
-        backButton.addActionListener(listener);
-    }
-
+    /** Loads existing folder contents on startup */
     private void loadExistingFiles() {
         File[] files = storageDir.listFiles();
-        if (files != null) {
-            for (File file : files) viewModel.addMaterial(file.getName());
-        }
+        if (files != null)
+            for (File file : files)
+                viewModel.addMaterial(file.getName());
     }
 }
