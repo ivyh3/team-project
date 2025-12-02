@@ -14,7 +14,6 @@ public class ScheduleSessionState {
         this.endTime = endTime;
     }
 
-    // Add getters:
     public String getId() { return id; }
     public String getTitle() { return title; }
     public LocalDateTime getStartTime() { return startTime; }
