@@ -3,6 +3,12 @@ A productivity app made in Java for CSC207 Software Design. This app allows user
 
 Slides: https://docs.google.com/presentation/d/1OZKGy73GqQBH4XlzVhJXqXNjHAYyr0xkN4gvdokc1KA/edit?usp=sharing
 
+## Table of Contents
+- [Features](#features)
+- [User Guide](#user-guide)
+- [APIs](#apis)
+- [Contributors](#contributors)
+
 ## Features
 - Users can create an account to save their data
 - Users can start a study session and track it by choosing a timer or stopwatch
