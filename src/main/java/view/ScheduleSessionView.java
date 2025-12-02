@@ -299,6 +299,7 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         controller.loadInitialSessions(userId);
     }
 
+    // refresh session data and selected day
     @Override
     public void onViewShown() {
         refreshSessions();

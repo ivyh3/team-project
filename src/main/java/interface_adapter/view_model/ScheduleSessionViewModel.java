@@ -31,13 +31,13 @@ public class ScheduleSessionViewModel {
     }
 
     public void addScheduledSession(ScheduleSessionState sessionState) {
-        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        final List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
         this.scheduledSessions.add(sessionState);
         support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
     }
 
     public void setStatusMessage(String message) {
-        String old = this.statusMessage;
+        final String old = this.statusMessage;
         this.statusMessage = message;
         support.firePropertyChange("statusMessage", old, message);
     }
@@ -47,7 +47,7 @@ public class ScheduleSessionViewModel {
     }
 
     public void setErrorMessage(String message) {
-        String old = this.errorMessage;
+        final String old = this.errorMessage;
         this.errorMessage = message;
         support.firePropertyChange("errorMessage", old, message);
     }
@@ -85,10 +85,9 @@ public class ScheduleSessionViewModel {
      * @return true if a session was removed, false otherwise.
      */
     public boolean removeScheduledSessionById(String sessionId) {
-        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        final List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
 
-        // Find and remove the session by ID
-        boolean removed = scheduledSessions.removeIf(s -> s.getId().equals(sessionId));
+        final boolean removed = scheduledSessions.removeIf(s -> s.getId().equals(sessionId));
 
         if (removed) {
             support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);

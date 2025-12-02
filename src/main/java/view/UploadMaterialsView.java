@@ -17,14 +17,14 @@ public class UploadMaterialsView extends View {
 
     public UploadMaterialsView() {
         super("uploadMaterials");
-        JPanel header = new ViewHeader("Upload Materials");
+        final JPanel header = new ViewHeader("Upload Materials");
 
-        JPanel main = new JPanel();
+        final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        JPanel promptPanel = new JPanel();
+        final JPanel promptPanel = new JPanel();
 
-        JLabel promptLabel = new JLabel("Upload and manage your reference materials here.");
+        final JLabel promptLabel = new JLabel("Upload and manage your reference materials here.");
         promptArea = new JTextArea(3, 30);
         promptArea.setLineWrap(true);
 
@@ -33,12 +33,12 @@ public class UploadMaterialsView extends View {
 
         uploadButton = new JButton("Upload File");
 
-        JPanel uploadButtonPanel = new JPanel();
+        final JPanel uploadButtonPanel = new JPanel();
         uploadButtonPanel.add(uploadButton);
 
-        JPanel deletePanel = new JPanel();
+        final JPanel deletePanel = new JPanel();
 
-        JLabel materialsLabel = new JLabel("Uploaded Materials:");
+        final JLabel materialsLabel = new JLabel("Uploaded Materials:");
         listModel = new DefaultListModel<>();
         materialsList = new JList<>(listModel);
         materialsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -54,9 +54,9 @@ public class UploadMaterialsView extends View {
         main.add(uploadButtonPanel);
         main.add(deletePanel);
 
-        JPanel dashboard = new JPanel();
+        final JPanel dashboard = new JPanel();
 
-        JButton cancelButton = new JButton("Cancel");
+        final JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
             // Navigate back to dashboard
             AppBuilder.viewManagerModel.setView("dashboard");
