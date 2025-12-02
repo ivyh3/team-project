@@ -7,7 +7,7 @@ Slides: https://docs.google.com/presentation/d/1OZKGy73GqQBH4XlzVhJXqXNjHAYyr0xk
 - Users can create an account to save their data
 - Users can start a study session and track it by choosing a timer or stopwatch
 - Users can view study metrics to get a weekly graph summary of their average quiz scores and daily study durations 
-- Useres can schedule future study sessions in a calendar view to stay organised.
+- Users can schedule future study sessions in a calendar view to stay organised.
 
 ## User Guide
 1. Users create an account or log in from the login/signup screen
@@ -15,6 +15,7 @@ Slides: https://docs.google.com/presentation/d/1OZKGy73GqQBH4XlzVhJXqXNjHAYyr0xk
 3. Users can choose to start studying by selecting their study session type (timed or variable) and choosing their textbook
 4. Once the session ends, they are prompted to answer quiz questions
 5. Users can choose to view their study metrics in the View Statistics page
+6. Users can also schedule a study session in the calendar in the Schedule Session page.
    
 <img width="488" height="417" alt="image" src="https://github.com/user-attachments/assets/4410ac13-d5e9-445e-a7d9-8b1d0972b25c" />
 <img width="499" height="413" alt="image" src="https://github.com/user-attachments/assets/4f3bc28a-8e72-42f0-807d-fe26309bfd86" />
@@ -24,6 +25,7 @@ Slides: https://docs.google.com/presentation/d/1OZKGy73GqQBH4XlzVhJXqXNjHAYyr0xk
 (insert quiz questions screenshot here)
 
 <img width="499" height="428" alt="image" src="https://github.com/user-attachments/assets/a20f1d3e-ed2d-47f6-ae79-9a99d9283b7a" />
+<img width="428" height="446" alt="image" src="https://github.com/user-attachments/assets/076424fa-cb05-4316-993a-b4159673d64c" />
 
 
 ## APIs
