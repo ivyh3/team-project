@@ -2,6 +2,7 @@ package use_case.start_study_session;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
@@ -238,7 +239,7 @@ class StartStudySessionTest {
     @Test
     void testFileRefresh() {
         final StartStudySessionDataAccessInterface database = new InMemoryDatabase(
-            Map.of("csc236.pdf", "csc263.pdf",
+            Map.of("csc236.pdf", "csc236.pdf",
                 "mat223.pdf", "mat223.pdf"));
 
         final StartStudySessionOutputBoundary successPresenter = new StartStudySessionOutputBoundary() {
@@ -259,8 +260,8 @@ class StartStudySessionTest {
 
             @Override
             public void refreshFileOptions(List<String> fileOptions) {
-                assertEquals("csc236.pdf", fileOptions.get(0));
-                assertEquals("mat223.pdf", fileOptions.get(1));
+                assertTrue(fileOptions.contains("mat223.pdf"));
+                assertTrue(fileOptions.contains("csc236.pdf"));
             }
         };
 
@@ -268,6 +269,139 @@ class StartStudySessionTest {
             database);
 
         interactor.refreshFileOptions("testUser");
+    }
 
+    @Test
+    void failureNoReferenceSetTest() {
+        final StudySessionConfigState config = new StudySessionConfigState();
+        config.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
+        config.setPrompt("Bleh");
+        config.setReferenceFile("");
+        final StartStudySessionOutputBoundary failPresenter = new StartStudySessionOutputBoundary() {
+            @Override
+            public void startStudySession(StartStudySessionOutputData outputData) {
+                fail("Starting the session is unexpected.");
+            }
+
+            @Override
+            public void prepareErrorView(String errorMessage) {
+                assertEquals("Please select a reference file.", errorMessage);
+            }
+
+            @Override
+            public void abortStudySessionConfig() {
+                fail("Aborting the config is unexpected.");
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
+        };
+        final StartStudySessionInputData inputData = new StartStudySessionInputData("user", config);
+
+        final StartStudySessionInteractor interactor = new StartStudySessionInteractor(
+            failPresenter, new InMemoryDatabase()
+        );
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureFileNotExistTest() {
+        final StudySessionConfigState config = new StudySessionConfigState();
+        config.setReferenceFile("mat223.pdf");
+        config.setSessionType(StudySessionConfigState.SessionType.VARIABLE);
+        config.setPrompt("Bleh");
+        final StartStudySessionOutputBoundary failPresenter = new StartStudySessionOutputBoundary() {
+            @Override
+            public void startStudySession(StartStudySessionOutputData outputData) {
+                fail("Starting the session is unexpected.");
+            }
+
+            @Override
+            public void prepareErrorView(String errorMessage) {
+                assertEquals("Reference file does not exist in storage..? Use another one.", errorMessage);
+            }
+
+            @Override
+            public void abortStudySessionConfig() {
+                fail("Aborting the config is unexpected.");
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
+        };
+        final StartStudySessionInputData inputData = new StartStudySessionInputData("user", config);
+
+        final StartStudySessionInteractor interactor = new StartStudySessionInteractor(
+            failPresenter, new InMemoryDatabase()
+        );
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureSessionTypeNotSetTest() {
+        final StudySessionConfigState config = new StudySessionConfigState();
+        config.setReferenceFile("mat223.pdf");
+        config.setSessionType(null);
+        config.setPrompt("Bleh");
+        final StartStudySessionOutputBoundary failPresenter = new StartStudySessionOutputBoundary() {
+            @Override
+            public void startStudySession(StartStudySessionOutputData outputData) {
+                fail("Starting the session is unexpected.");
+            }
+
+            @Override
+            public void prepareErrorView(String errorMessage) {
+                assertEquals("You need a session type selected.", errorMessage);
+            }
+
+            @Override
+            public void abortStudySessionConfig() {
+                fail("Aborting the config is unexpected.");
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
+        };
+        final StartStudySessionInputData inputData = new StartStudySessionInputData("user", config);
+
+        final StartStudySessionInteractor interactor = new StartStudySessionInteractor(
+            failPresenter, new InMemoryDatabase()
+        );
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureNoFileOptionsInStorageTest() {
+        final StartStudySessionOutputBoundary failPresenter = new StartStudySessionOutputBoundary() {
+            @Override
+            public void startStudySession(StartStudySessionOutputData outputData) {
+                fail("Starting the session is unexpected.");
+            }
+
+            @Override
+            public void prepareErrorView(String errorMessage) {
+                assertEquals("No textbook files. Go to the settings and add some first.", errorMessage);
+            }
+
+            @Override
+            public void abortStudySessionConfig() {
+                // Expected config abort after the error was shown
+            }
+
+            @Override
+            public void refreshFileOptions(List<String> fileOptions) {
+                fail("Refreshing file options is unexpected.");
+            }
+        };
+        final StartStudySessionInteractor interactor = new StartStudySessionInteractor(
+            failPresenter, new InMemoryDatabase()
+        );
+        interactor.refreshFileOptions("userID");
     }
 }

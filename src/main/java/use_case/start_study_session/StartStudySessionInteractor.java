@@ -71,13 +71,8 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         return fileDataAccessObject.fileExistsByName(userId, file);
     }
 
-    // TODO: Either remove this and move this to navigation from dashboard to config
-    // view, or
-    // make sure this is called when the config view is opened somehow.
     @Override
     public void refreshFileOptions(String userId) {
-
-        // TODO: Use real user ID
         final List<String> fileOptions = fileDataAccessObject.getAllUserFiles(userId);
         if (fileOptions == null || fileOptions.isEmpty()) {
             presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
