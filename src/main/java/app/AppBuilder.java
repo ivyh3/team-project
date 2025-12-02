@@ -3,34 +3,59 @@ package app;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
-import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import entity.Question;
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 import entity.UserFactory;
+import entity.ScheduledSession;
+import entity.ScheduledSessionFactory;
 import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
+import frameworks_drivers.firebase.FirebaseScheduledSessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
-import frameworks_drivers.gemini.GeminiDataAccessObject;
-import interface_adapter.controller.*;
-import interface_adapter.presenter.*;
-import interface_adapter.view_model.*;
+import interface_adapter.controller.ChangePasswordController;
+import interface_adapter.controller.EndStudySessionController;
+import interface_adapter.controller.LoginController;
+import interface_adapter.controller.ScheduleStudySessionController;
+import interface_adapter.controller.LogoutController;
+import interface_adapter.controller.SignupController;
+import interface_adapter.controller.StartStudySessionController;
+import interface_adapter.controller.ViewStudyMetricsController;
+import interface_adapter.presenter.ChangePasswordPresenter;
+import interface_adapter.presenter.EndStudySessionPresenter;
+import interface_adapter.presenter.LoginPresenter;
+import interface_adapter.presenter.ScheduleStudySessionPresenter;
+import interface_adapter.presenter.LogoutPresenter;
+import interface_adapter.presenter.SignupPresenter;
+import interface_adapter.presenter.StartStudySessionPresenter;
+import interface_adapter.presenter.ViewStudyMetricsPresenter;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.LoginViewModel;
+import interface_adapter.view_model.MetricsViewModel;
+import interface_adapter.view_model.ScheduleSessionViewModel;
+import interface_adapter.view_model.SettingsViewModel;
+import interface_adapter.view_model.SignupViewModel;
+import interface_adapter.view_model.StudySessionConfigViewModel;
+import interface_adapter.view_model.StudySessionEndViewModel;
+import interface_adapter.view_model.StudySessionViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
 import use_case.end_study_session.EndStudySessionInteractor;
-import use_case.generate_quiz.GenerateQuizInteractor;
-import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
+import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
+import use_case.schedule_study_session.ScheduleStudySessionInteractor;
+import use_case.schedule_study_session.ScheduleStudySessionInputBoundary;
+import use_case.schedule_study_session.ScheduleStudySessionOutputBoundary;
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
@@ -38,8 +63,6 @@ import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
 import use_case.start_study_session.StartStudySessionInteractor;
-import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
-import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
 import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 import view.DashboardView;
@@ -72,6 +95,9 @@ public class AppBuilder {
     final FirebaseUserDataAccessObject userDataAccessObject = new FirebaseUserDataAccessObject(
             userFactory);
     final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
+    final ScheduledSessionFactory scheduledSessionFactory = new ScheduledSessionFactory();
+    final FirebaseScheduledSessionDataAccessObject scheduledSessionDataAccessObject = new FirebaseScheduledSessionDataAccessObject(
+            scheduledSessionFactory);
     private final String APP_TITLE = "AI Study Companion";
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
@@ -89,6 +115,7 @@ public class AppBuilder {
     private LoginViewModel loginViewModel;
     private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
+    private ScheduleSessionView scheduleSessionView;
 
     private SettingsView settingsView;
     private SettingsViewModel settingsViewModel;
@@ -218,40 +245,16 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addUploadMaterialsView() {
-        // Create ViewModel for UploadMaterialsView
-        UploadMaterialsViewModel uploadMaterialsViewModel = new UploadMaterialsViewModel();
-
-        // Create the view with the required ViewModel
-        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel);
-
-        // Create controller with interactor
-        UploadReferenceMaterialInputBoundary uploadInteractor = new UploadReferenceMaterialInteractor(
-                fileDataAccessObject,
-                new UploadMaterialsPresenter(uploadMaterialsViewModel, dashboardViewModel, viewManagerModel)
-        );
-        UploadReferenceMaterialController uploadController = new UploadReferenceMaterialController(uploadInteractor);
-
-        // Set controller in view with example userId (replace with actual user logic)
-        String userId = "currentUserId"; // TODO: replace with logged-in user ID
-        uploadMaterialsView.setUploadController(uploadController, userId);
-
-        // Attach back button to navigate to dashboard
-        uploadMaterialsView.setBackButtonListener(e -> viewManagerModel.setView(dashboardView.getViewName()));
-
-        // Add the view to the CardLayout
-        cardPanel.add(uploadMaterialsView, "uploadMaterialsView");
+    public AppBuilder addUploadSessionMaterialsView() {
+        UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
+        cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
 
         return this;
     }
 
-    public AppBuilder addUploadSessionMaterialsView() {
-        UploadSessionMaterialsView uploadSessionMaterialsView = new UploadSessionMaterialsView();
-
-        // Attach back button to navigate to dashboard
-        uploadSessionMaterialsView.setBackButtonListener(e -> viewManagerModel.setView(dashboardView.getViewName()));
-
-        cardPanel.add(uploadSessionMaterialsView, uploadSessionMaterialsView.getViewName());
+    public AppBuilder addUploadMaterialsView() {
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView();
+        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
 
         return this;
     }
@@ -277,25 +280,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        // Create the ViewModel
-        QuizViewModel quizViewModel = new QuizViewModel();
-
-        // Create the View with the correct single argument constructor
-        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
-        cardPanel.add(studyQuizView, "studyQuizView");
-
-        // Create the controller with the view and quizViewModel
-        GenerateQuizController generateQuizController = new GenerateQuizController(studyQuizView, quizViewModel);
-
-        GenerateQuizOutputBoundary quizPresenter = new GenerateQuizPresenter(quizViewModel);
-        GeminiDataAccessObject geminiDAO = new GeminiDataAccessObject();
-        GenerateQuizInteractor generateQuizInteractor = new GenerateQuizInteractor(quizPresenter, geminiDAO);
-        generateQuizController.setInteractor(generateQuizInteractor);
-
-
-        // Attach the controller to the view
-        studyQuizView.setController(generateQuizController);
-
+        StudyQuizView studyQuizView = new StudyQuizView();
+        cardPanel.add(studyQuizView, studyQuizView.getViewName());
         return this;
     }
 
@@ -312,7 +298,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addScheduleSessionView() {
-        ScheduleSessionView scheduleSessionView = new ScheduleSessionView();
+        ScheduleSessionViewModel scheduleViewModel = new ScheduleSessionViewModel();
+        ScheduleStudySessionOutputBoundary presenter = new ScheduleStudySessionPresenter(scheduleViewModel);
+        ScheduleStudySessionDataAccessInterface dataAccess = scheduledSessionDataAccessObject;
+        ScheduleStudySessionInputBoundary interactor = new ScheduleStudySessionInteractor(dataAccess, presenter);
+        ScheduleStudySessionController controller = new ScheduleStudySessionController(interactor);
+        scheduleSessionView = new ScheduleSessionView(controller, scheduleViewModel, dashboardViewModel);
         cardPanel.add(scheduleSessionView, scheduleSessionView.getViewName());
         return this;
     }
