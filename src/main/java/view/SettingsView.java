@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 
 import javax.swing.BorderFactory;
@@ -38,6 +41,7 @@ public class SettingsView extends StatefulView<SettingsState> {
     private final JPasswordField newPasswordInputField = new JPasswordField(15);
     private final JPasswordField confirmPasswordInputField = new JPasswordField(15);
     private final JLabel changePasswordErrorField = new JLabel();
+    private final JLabel userEmailLabel = new JLabel();
 
     public SettingsView(SettingsViewModel settingsViewModel, DashboardViewModel dashboardViewModel) {
         super("settings", settingsViewModel);
@@ -45,18 +49,18 @@ public class SettingsView extends StatefulView<SettingsState> {
 
         final JPanel viewHeader = getHeaderPanel();
 
-        // Main content panel with BorderLayout
-        final JPanel mainContent = new JPanel(new BorderLayout(20, 0));
+        // Main content panel with GridLayout for equal-width columns
+        final JPanel mainContent = new JPanel(new GridLayout(1, 2));
+        mainContent.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
-        // Left side - Navigation buttons
+        // Left side - Navigation buttons (wrapper for centering)
+        final JPanel leftWrapper = new JPanel(new BorderLayout());
         final JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        final String userEmail = dashboardViewModel.getState().getEmail();
-        final JLabel navigationTitle = new JLabel(userEmail);
-        navigationTitle.setFont(new Font(null, Font.BOLD, 16));
-        navigationTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        userEmailLabel.setFont(new Font(null, Font.BOLD, 16));
+        userEmailLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         final JButton manageUploadedFilesButton = new JButton("Manage Uploaded Files");
         manageUploadedFilesButton.addActionListener(event -> {
@@ -64,23 +68,14 @@ public class SettingsView extends StatefulView<SettingsState> {
         });
         manageUploadedFilesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        final JButton returnButton = new JButton("Return to Dashboard");
-        returnButton.addActionListener(event -> {
-            // Clear form when navigating away
-            viewModel.setState(new SettingsState());
-            viewModel.firePropertyChange();
-            AppBuilder.viewManagerModel.setView("dashboard");
-        });
-        returnButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        leftPanel.add(navigationTitle);
+        leftPanel.add(userEmailLabel);
         leftPanel.add(Box.createVerticalStrut(20));
         leftPanel.add(manageUploadedFilesButton);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(returnButton);
-        leftPanel.add(Box.createVerticalGlue());
 
-        // Right side - Change password form
+        leftWrapper.add(leftPanel, BorderLayout.NORTH);
+
+        // Right side - Change password form (wrapper for centering)
+        final JPanel rightWrapper = new JPanel(new BorderLayout());
         final JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -118,13 +113,41 @@ public class SettingsView extends StatefulView<SettingsState> {
         rightPanel.add(changePasswordErrorField);
         rightPanel.add(Box.createVerticalStrut(10));
         rightPanel.add(changePasswordButton);
-        rightPanel.add(Box.createVerticalGlue());
 
-        mainContent.add(leftPanel, BorderLayout.WEST);
-        mainContent.add(rightPanel, BorderLayout.CENTER);
+        rightWrapper.add(rightPanel, BorderLayout.NORTH);
+
+        mainContent.add(leftWrapper);
+        mainContent.add(rightWrapper);
+
+        // Bottom panel with centered Return button
+        final JPanel bottomPanel = new JPanel();
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
+        final JButton returnButton = new JButton("Return");
+        returnButton.addActionListener(event -> {
+            // Clear form when navigating away
+            viewModel.setState(new SettingsState());
+            viewModel.firePropertyChange();
+            AppBuilder.viewManagerModel.setView("dashboard");
+        });
+        bottomPanel.add(returnButton);
 
         this.add(viewHeader, BorderLayout.NORTH);
         this.add(mainContent, BorderLayout.CENTER);
+        this.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Update user email when view becomes visible
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                final String userEmail = dashboardViewModel.getState().getEmail();
+                if (userEmail.isEmpty()) {
+                    userEmailLabel.setText("<no user found>");
+                }
+                else {
+                    userEmailLabel.setText(dashboardViewModel.getState().getEmail());
+                }
+            }
+        });
     }
 
     private JPanel getHeaderPanel() {

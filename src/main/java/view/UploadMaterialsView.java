@@ -59,7 +59,7 @@ public class UploadMaterialsView extends View {
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
             // Navigate back to dashboard
-            AppBuilder.viewManagerModel.setView("dashboard");
+            AppBuilder.viewManagerModel.setView("settings");
         });
 
         dashboard.add(cancelButton);
