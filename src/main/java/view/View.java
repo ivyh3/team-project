@@ -2,7 +2,6 @@ package view;
 
 import java.awt.BorderLayout;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 /**

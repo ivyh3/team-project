@@ -7,7 +7,8 @@ public class ScheduleStudySessionOutputData {
     private final String endTime;
     private final boolean isSuccess;
 
-    public ScheduleStudySessionOutputData(String id, String title, String startTime, String endTime, boolean isSuccess) {
+    public ScheduleStudySessionOutputData(String id, String title, String startTime,
+                                          String endTime, boolean isSuccess) {
         this.id = id;
         this.title = title;
         this.startTime = startTime;
@@ -15,9 +16,23 @@ public class ScheduleStudySessionOutputData {
         this.isSuccess = isSuccess;
     }
 
-    public String getId() { return id; }
-    public String getTitle() { return title; }
-    public String getStartTime() { return startTime; }
-    public String getEndTime() { return endTime; }
-    public boolean getIsSuccess() { return isSuccess; }
+    public String getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public boolean getIsSuccess() {
+        return isSuccess;
+    }
 }

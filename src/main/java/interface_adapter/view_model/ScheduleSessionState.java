@@ -1,4 +1,5 @@
 package interface_adapter.view_model;
+
 import java.time.LocalDateTime;
 
 public class ScheduleSessionState {
@@ -14,8 +15,19 @@ public class ScheduleSessionState {
         this.endTime = endTime;
     }
 
-    public String getId() { return id; }
-    public String getTitle() { return title; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public LocalDateTime getEndTime() { return endTime; }
+    public String getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
 }

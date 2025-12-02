@@ -12,9 +12,8 @@ import java.util.stream.Collectors;
  * Stores the state and data that the schedule session view needs to display.
  */
 public class ScheduleSessionViewModel {
+    private final List<ScheduleSessionState> scheduledSessions;
     private final PropertyChangeSupport support;
-    public final List<ScheduleSessionState> scheduledSessions;
-
     private String statusMessage;
     private String errorMessage;
 

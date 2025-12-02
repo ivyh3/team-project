@@ -2,36 +2,37 @@ package use_case.schedule_session;
 
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-import use_case.schedule_study_session.ScheduleStudySessionInteractor;
-import use_case.schedule_study_session.ScheduleStudySessionInputData;
-import use_case.schedule_study_session.ScheduleStudySessionOutputData;
+import org.junit.jupiter.api.Test;
+
+import entity.ScheduledSession;
 import use_case.schedule_study_session.DeleteScheduledSessionInputData;
 import use_case.schedule_study_session.DeleteScheduledSessionOutputData;
 import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
+import use_case.schedule_study_session.ScheduleStudySessionInputData;
+import use_case.schedule_study_session.ScheduleStudySessionInteractor;
 import use_case.schedule_study_session.ScheduleStudySessionOutputBoundary;
-import entity.ScheduledSession;
+import use_case.schedule_study_session.ScheduleStudySessionOutputData;
 
 public class ScheduleSessionTest {
 
     @Test
     void testExecute_success() {
-        ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
-        ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
-        ScheduleStudySessionInteractor interactor = new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
+        final ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
+        final ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
+        final ScheduleStudySessionInteractor interactor =
+                new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
 
-        ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
+        final ScheduleStudySessionInputData inputData = new ScheduleStudySessionInputData(
                 "user1",
                 LocalDateTime.now(),
                 LocalDateTime.now().plusHours(1),
                 "Math Study"
         );
 
-        ScheduledSession savedSession = new ScheduledSession(
+        final ScheduledSession savedSession = new ScheduledSession(
                 "session1",
                 inputData.getStartTime(),
                 inputData.getEndTime(),
@@ -48,12 +49,13 @@ public class ScheduleSessionTest {
 
     @Test
     void testDelete_sessionExists() {
-        ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
-        ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
-        ScheduleStudySessionInteractor interactor = new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
+        final ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
+        final ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
+        final ScheduleStudySessionInteractor interactor =
+                new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
 
-        DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData("user1", "session1");
-        ScheduledSession session = new ScheduledSession(
+        final DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData("user1", "session1");
+        final ScheduledSession session = new ScheduledSession(
                 "session1",
                 LocalDateTime.now(),
                 LocalDateTime.now().plusHours(1),
@@ -62,21 +64,20 @@ public class ScheduleSessionTest {
 
         when(dataAccess.getScheduledSessionById("user1", "session1")).thenReturn(session);
 
-        // Act
         interactor.delete(inputData);
 
-        // Assert
         verify(dataAccess).deleteSession("user1", session);
         verify(outputBoundary).prepareDeleteSuccessView(any(DeleteScheduledSessionOutputData.class));
     }
 
     @Test
     void testDelete_sessionDoesNotExist() {
-        ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
-        ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
-        ScheduleStudySessionInteractor interactor = new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
+        final ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
+        final ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
+        final ScheduleStudySessionInteractor interactor =
+                new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
 
-        DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData("user1", "session1");
+        final DeleteScheduledSessionInputData inputData = new DeleteScheduledSessionInputData("user1", "session1");
 
         when(dataAccess.getScheduledSessionById("user1", "session1")).thenReturn(null);
 
@@ -88,11 +89,12 @@ public class ScheduleSessionTest {
 
     @Test
     void testExecuteLoad() {
-        ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
-        ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
-        ScheduleStudySessionInteractor interactor = new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
+        final ScheduleStudySessionDataAccessInterface dataAccess = mock(ScheduleStudySessionDataAccessInterface.class);
+        final ScheduleStudySessionOutputBoundary outputBoundary = mock(ScheduleStudySessionOutputBoundary.class);
+        final ScheduleStudySessionInteractor interactor =
+                new ScheduleStudySessionInteractor(dataAccess, outputBoundary);
 
-        List<ScheduledSession> sessions = List.of(
+        final List<ScheduledSession> sessions = List.of(
                 new ScheduledSession("session1", LocalDateTime.now(), LocalDateTime.now().plusHours(1), "Math Study")
         );
 

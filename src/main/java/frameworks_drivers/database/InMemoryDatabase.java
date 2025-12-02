@@ -1,17 +1,18 @@
 package frameworks_drivers.database;
 
-import entity.StudyQuiz;
-import entity.StudySession;
-import use_case.end_study_session.EndStudySessionDataAccessInterface;
-import use_case.start_study_session.StartStudySessionDataAccessInterface;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import entity.StudyQuiz;
+import entity.StudySession;
+import use_case.end_study_session.EndStudySessionDataAccessInterface;
+import use_case.start_study_session.StartStudySessionDataAccessInterface;
+
 /**
  * In memory database for study sessions and quizzes.
+ *
  * <p>
  * No multiuser functionality, assumes there's only one user.
  */

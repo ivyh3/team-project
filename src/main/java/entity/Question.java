@@ -54,9 +54,13 @@ public class Question {
         return chosenAnswer;
     }
 
+    /**
+     * Sets the user's answer and checks whether it is correct.
+     *
+    * @param chosenAnswer the answer selected by the user */
     public void setChosenAnswer(int chosenAnswer) {
         this.chosenAnswer = chosenAnswer;
-        this.wasCorrect = (chosenAnswer == correctAnswer);
+        this.wasCorrect = chosenAnswer == correctAnswer;
     }
 
     public int getCorrectAnswer() {

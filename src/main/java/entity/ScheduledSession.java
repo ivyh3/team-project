@@ -17,10 +17,21 @@ public class ScheduledSession {
         this.title = title;
     }
 
-    public String getId() { return id; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public LocalDateTime getEndTime() { return endTime; }
-    public String getTitle() { return title; }
+    public String getId() {
+        return id;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public String getTitle() {
+        return title;
+    }
 
     @Override
     public String toString() {

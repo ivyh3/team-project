@@ -273,9 +273,10 @@ public class FirebaseScheduledSessionDataAccessObject implements ScheduleStudySe
                     .collection(SCHEDULED_SESSION_COLLECTION)
                     .document(session.getId());
 
-            sessionRef.delete().get(); // wait for completion
+            sessionRef.delete().get();
             System.out.println("Session deleted successfully: " + session.getTitle());
-        } catch (InterruptedException | ExecutionException e) {
+        }
+        catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Failed to delete session: " + e.getMessage());
         }
     }

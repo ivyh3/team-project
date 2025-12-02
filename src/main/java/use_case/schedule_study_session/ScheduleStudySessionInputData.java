@@ -31,5 +31,7 @@ public class ScheduleStudySessionInputData {
         return endTime;
     }
 
-    public String getTitle() { return title; }
+    public String getTitle() {
+        return title;
+    }
 }

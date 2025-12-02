@@ -1,24 +1,24 @@
 package view;
 
-import app.AppBuilder;
-import interface_adapter.controller.ScheduleStudySessionController;
-import interface_adapter.view_model.ScheduleSessionViewModel;
-import interface_adapter.view_model.DashboardViewModel;
-import interface_adapter.view_model.ScheduleSessionState;
-
-import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.swing.*;
+
+import app.AppBuilder;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.TimePicker;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import interface_adapter.controller.ScheduleStudySessionController;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.ScheduleSessionState;
+import interface_adapter.view_model.ScheduleSessionViewModel;
 
 public class ScheduleSessionView extends View implements PropertyChangeListener {
 
@@ -29,8 +29,12 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
     private final JList<String> sessionList;
     private final java.util.List<JButton> dayButtons = new java.util.ArrayList<>();
 
-    private LocalDate weekStart; // Monday of current week
-    private LocalDate selectedDate; // currently selected day
+    // Monday of current week
+    private LocalDate weekStart;
+
+    // currently selected day
+    private LocalDate selectedDate;
+
     private JPanel header;
     private JLabel headerTitle;
 
@@ -50,7 +54,9 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
         // initialize date
         selectedDate = LocalDate.now();
-        weekStart = selectedDate.minusDays(selectedDate.getDayOfWeek().getValue() - 1); // get Monday of current week
+
+        // get Monday of current week
+        weekStart = selectedDate.minusDays(selectedDate.getDayOfWeek().getValue() - 1);
 
         // header
         headerTitle = new JLabel();
@@ -60,23 +66,23 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         updateHeader(selectedDate);
 
         // arrow buttons in top row
-        JPanel dayRow = new JPanel(new BorderLayout());
-        JButton leftArrow = new JButton("<");
-        JButton rightArrow = new JButton(">");
+        final JPanel dayRow = new JPanel(new BorderLayout());
+        final JButton leftArrow = new JButton("<");
+        final JButton rightArrow = new JButton(">");
         leftArrow.setPreferredSize(new Dimension(50, 40));
         rightArrow.setPreferredSize(new Dimension(50, 40));
 
         // day buttons in top row
-        JPanel daysPanel = new JPanel(new GridLayout(1, 7, 5, 0));
-        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        final JPanel daysPanel = new JPanel(new GridLayout(1, 7, 5, 0));
+        final String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
         // display and format day buttons
         for (int i = 0; i < days.length; i++) {
-            String dayName = days[i];
-            JButton b = new JButton(dayName) {
+            final String dayName = days[i];
+            final JButton b = new JButton(dayName) {
                 @Override
                 protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g.create();
+                    final Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(getBackground());
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
@@ -122,31 +128,36 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
             selectDay(0);
         });
 
-        JScrollPane scrollPane = new JScrollPane(sessionList); // create new scroll pane to display scheduled sessions
+        // create new scroll pane to display scheduled sessions
+        final JScrollPane scrollPane = new JScrollPane(sessionList);
 
         // create and add bottom buttons
-        JPanel main = new JPanel();
-        JButton scheduleButton = new JButton("Schedule Session");
-        JButton deleteButton = new JButton("Delete Session");
-        JButton returnButton = new JButton("Return");
+        final JPanel main = new JPanel();
+        final JButton scheduleButton = new JButton("Schedule Session");
+        final JButton deleteButton = new JButton("Delete Session");
+        final JButton returnButton = new JButton("Return");
         main.add(scheduleButton);
         main.add(deleteButton);
         main.add(returnButton);
 
-        scheduleButton.addActionListener(e -> openDateTimeDialog()); // open date selection pop up when schedule button clicked
-        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard")); // go back to dashboard when return button clicked
+        // open date selection pop up when schedule button clicked
+        scheduleButton.addActionListener(e -> openDateTimeDialog());
+
+        // go back to dashboard when return button clicked
+        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("dashboard"));
 
         // delete scheduled session when delete button clicked
         deleteButton.addActionListener(e -> {
-            int selectedIndex = sessionList.getSelectedIndex(); // selected study session
+            // selected study session
+            final int selectedIndex = sessionList.getSelectedIndex();
             if (selectedIndex != -1) {
 
-                List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
+                final List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
 
                 sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
 
-                ScheduleSessionState sessionStateToDelete = sessionsForDate.get(selectedIndex);
-                String userId = dashboardViewModel.getState().getUserId();
+                final ScheduleSessionState sessionStateToDelete = sessionsForDate.get(selectedIndex);
+                final String userId = dashboardViewModel.getState().getUserId();
                 controller.delete(userId, sessionStateToDelete.getId());
 
                 updateSessionListForSelectedDate();
@@ -159,13 +170,14 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
         // format layout
         add(header, BorderLayout.NORTH);
-        JPanel centerPanel = new JPanel(new BorderLayout());
+        final JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(dayRow, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
         add(centerPanel, BorderLayout.CENTER);
         add(main, BorderLayout.SOUTH);
 
-        selectDay(selectedDate.getDayOfWeek().getValue() - 1); // highlight correct day
+        // highlight correct day
+        selectDay(selectedDate.getDayOfWeek().getValue() - 1);
 
     }
 
@@ -176,12 +188,13 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         }
         selectedDate = weekStart.plusDays(index);
         updateHeader(selectedDate);
-        updateSessionListForSelectedDate(); // refresh list for that day
+        // refresh list for that day
+        updateSessionListForSelectedDate();
     }
 
     // update header to selected date
     private void updateHeader(LocalDate date) {
-        DateTimeFormatter headerFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+        final DateTimeFormatter headerFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
         headerTitle.setText(date.format(headerFormatter));
         header.revalidate();
         header.repaint();
@@ -189,11 +202,11 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
     // pop-up to select date and time
     private void openDateTimeDialog() {
-        DatePicker datePicker = new DatePicker();
-        TimePicker startTimePicker = new TimePicker();
-        TimePicker endTimePicker = new TimePicker();
+        final DatePicker datePicker = new DatePicker();
+        final TimePicker startTimePicker = new TimePicker();
+        final TimePicker endTimePicker = new TimePicker();
 
-        JPanel panel = new JPanel(new GridLayout(3, 2));
+        final JPanel panel = new JPanel(new GridLayout(3, 2));
         panel.add(new JLabel("Date:"));
         panel.add(datePicker);
         panel.add(new JLabel("Start Time:"));
@@ -201,7 +214,7 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         panel.add(new JLabel("End Time:"));
         panel.add(endTimePicker);
 
-        int option = JOptionPane.showConfirmDialog(
+        final int option = JOptionPane.showConfirmDialog(
                 this,
                 panel,
                 "",
@@ -211,28 +224,30 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
         // get selected date and times when user clicks ok
         if (option == JOptionPane.OK_OPTION) {
-            LocalDate pickedDate = datePicker.getDate();
+            final LocalDate pickedDate = datePicker.getDate();
 
             if (startTimePicker.getTime() == null || endTimePicker.getTime() == null) {
                 JOptionPane.showMessageDialog(this, "Please select both start and end times.");
                 return;
             }
 
-            LocalDateTime start = LocalDateTime.of(pickedDate, startTimePicker.getTime());
-            LocalDateTime end = LocalDateTime.of(pickedDate, endTimePicker.getTime());
+            final LocalDateTime start = LocalDateTime.of(pickedDate, startTimePicker.getTime());
+            final LocalDateTime end = LocalDateTime.of(pickedDate, endTimePicker.getTime());
 
             if (end.isAfter(start)) {
-                String title = JOptionPane.showInputDialog(this, "Enter topic:");
+                final String title = JOptionPane.showInputDialog(this, "Enter topic:");
                 if (title != null && !title.isEmpty()) {
 
-                    String userId = dashboardViewModel.getState().getUserId();
+                    final String userId = dashboardViewModel.getState().getUserId();
                     controller.execute(userId, start, end, title);
 
                     if (pickedDate != null && pickedDate.equals(selectedDate)) {
                         updateSessionListForSelectedDate();
                     }
                 }
-            } else {
+            }
+
+            else {
                 JOptionPane.showMessageDialog(this, "End time must be after start time.");
             }
         }
@@ -240,25 +255,29 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
 
     // display new scheduled study sessions
     private void updateSessionListForSelectedDate() {
-        List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate); // get all sessions for selected day
+        // get all sessions for selected day
+        final List<ScheduleSessionState> sessionsForDate = viewModel.getSessionsForDate(selectedDate);
 
         sessionsForDate.sort(Comparator.comparing(ScheduleSessionState::getStartTime));
 
         // convert each session into String format
-        List<String> displayStrings = sessionsForDate.stream()
-                .map(s -> String.format("%s\n%s\n%s",
-                        s.getTitle(),
-                        s.getStartTime().toLocalTime().toString(),
-                        s.getEndTime().toLocalTime().toString()))
+        final List<String> displayStrings = sessionsForDate.stream()
+                .map(s -> {
+                    return String.format("%s\n%s\n%s",
+                            s.getTitle(),
+                            s.getStartTime().toLocalTime().toString(),
+                            s.getEndTime().toLocalTime().toString());
+                })
                 .collect(Collectors.toList());
 
-        sessionList.setListData(displayStrings.toArray(new String[0])); // update session list
+        // update session list
+        sessionList.setListData(displayStrings.toArray(new String[0]));
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if ("statusMessage".equals(evt.getPropertyName())) {
-            String message = (String) evt.getNewValue();
+            final String message = (String) evt.getNewValue();
             if (message != null && !message.isEmpty()) {
                 JOptionPane.showMessageDialog(this, message);
             }
@@ -269,10 +288,9 @@ public class ScheduleSessionView extends View implements PropertyChangeListener 
         }
     }
 
-
     public void refreshSessions() {
         System.out.println("Refreshing sessions...");
-        String userId = dashboardViewModel.getState().getUserId();
+        final String userId = dashboardViewModel.getState().getUserId();
 
         if (userId == null || userId.isEmpty()) {
             System.err.println("Cannot refresh sessions: User ID is null or empty.");

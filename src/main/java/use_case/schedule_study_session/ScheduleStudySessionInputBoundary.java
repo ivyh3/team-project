@@ -13,13 +13,15 @@ public interface ScheduleStudySessionInputBoundary {
 
     /**
      * Executes the delete study session use case.
-     * * @param inputData the input data for deleting a study session
+     *
+     * @param inputData the input data for deleting a study session
      */
     void delete(DeleteScheduledSessionInputData inputData);
 
     /**
      * Initiates the use case to fetch all scheduled sessions for a user..
-     * * @param userId The ID of the user whose sessions are to be loaded.
+     *
+     * @param userId The ID of the user whose sessions are to be loaded.
      */
     void executeLoad(String userId);
 }

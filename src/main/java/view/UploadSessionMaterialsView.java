@@ -1,23 +1,24 @@
 package view;
 
-import app.AppBuilder;
+import java.awt.*;
 
 import javax.swing.*;
-import java.awt.*;
+
+import app.AppBuilder;
 
 public class UploadSessionMaterialsView extends View {
     public UploadSessionMaterialsView() {
         super("uploadSessionMaterials");
-        JPanel header = new ViewHeader("Study Materials");
+        final JPanel header = new ViewHeader("Study Materials");
 
-        JPanel main = new JPanel();
+        final JPanel main = new JPanel();
 
-        JButton cancelButton = new JButton("Cancel");
+        final JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("dashboard");
         });
 
-        JButton nextButton = new JButton("Next");
+        final JButton nextButton = new JButton("Next");
         nextButton.addActionListener(e -> {
             AppBuilder.viewManagerModel.setView("variableSession");
         });
