@@ -5,9 +5,6 @@ import use_case.upload_reference_material.UploadReferenceMaterialInputData;
 
 import java.io.File;
 
-/**
- * Controller to handle uploading reference materials.
- */
 public class UploadReferenceMaterialController {
 
     private final UploadReferenceMaterialInputBoundary interactor;
@@ -16,13 +13,7 @@ public class UploadReferenceMaterialController {
         this.interactor = interactor;
     }
 
-    /**
-     * Upload a file via interactor.
-     *
-     * @param userId the user ID
-     * @param file   the file to upload
-     * @param prompt optional prompt
-     */
+    // This is the method your view should call
     public void uploadReferenceMaterial(String userId, File file, String prompt) {
         if (userId == null || userId.isEmpty()) return;
         if (file == null || !file.exists()) return;

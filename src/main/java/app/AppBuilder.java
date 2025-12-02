@@ -47,6 +47,8 @@ import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
 import use_case.start_study_session.StartStudySessionInteractor;
+import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
+import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
 import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 import use_case.view_study_metrics.ViewStudyMetricsInteractor;
 import view.DashboardView;
@@ -244,10 +246,18 @@ public class AppBuilder {
     }
 
     public AppBuilder addUploadMaterialsView() {
+        // Make sure you have a SettingsState instance (replace with your actual state)
+        SettingsState settingsState = new SettingsState();
+
         uploadMaterialsViewModel = new UploadMaterialsViewModel();
-        uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel);
+        uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel, settingsState);
+
+        // Proper interactor for uploading reference material
+        UploadReferenceMaterialInputBoundary uploadInteractor =
+                new UploadReferenceMaterialInteractor(fileDataAccessObject); // your interactor
+
         UploadReferenceMaterialController uploadController =
-                new UploadReferenceMaterialController(uploadMaterialsViewModel);
+                new UploadReferenceMaterialController(uploadInteractor);
 
         uploadMaterialsView.setUploadController(uploadController);
         cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());

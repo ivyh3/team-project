@@ -8,6 +8,7 @@ public class SettingsState {
     private String newPassword = "";
     private String confirmPassword = "";
     private String changePasswordError;
+    private String currentUserId;
 
     public String getOldPassword() {
         return oldPassword;
@@ -39,6 +40,18 @@ public class SettingsState {
 
     public void setChangePasswordError(String changePasswordError) {
         this.changePasswordError = changePasswordError;
+    }
+
+    public SettingsState() {
+        this.currentUserId = ""; // default empty
+    }
+
+    public String getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(String currentUserId) {
+        this.currentUserId = currentUserId;
     }
 
     @Override

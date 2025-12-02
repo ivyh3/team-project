@@ -38,14 +38,6 @@ public class DashboardState {
 
     private List<String> uploadedFiles = new ArrayList<>();
 
-    public DashboardState(List<String> uploadedFiles) {
-        this.uploadedFiles = new ArrayList<>(uploadedFiles != null ? uploadedFiles : Collections.emptyList());
-    }
-
-    public List<String> getUploadedFiles() {
-        return new ArrayList<>(uploadedFiles);
-    }
-
     public void setUploadedFiles(List<String> uploadedFiles) {
         this.uploadedFiles = new ArrayList<>(uploadedFiles != null ? uploadedFiles : Collections.emptyList());
     }
