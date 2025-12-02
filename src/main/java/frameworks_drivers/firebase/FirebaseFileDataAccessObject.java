@@ -7,39 +7,31 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-
+import app.Config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-
-import app.Config;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
 
-// TODO: Fix this garbage.
 public class FirebaseFileDataAccessObject implements StartStudySessionDataAccessInterface {
-
-    private final String FILES_BUCKET;
-    // private final Storage storage;
+    private final String filesBucket;
     private final Bucket bucket;
 
     public FirebaseFileDataAccessObject() {
-        FILES_BUCKET = Config.getFirebaseStorageBucket();
-
-        // TODO: Fix this garbage.
+        filesBucket = Config.getFirebaseStorageBucket();
         try {
-            Storage storage = StorageOptions.newBuilder()
+            final Storage storage = StorageOptions.newBuilder()
                     .setCredentials(
                             GoogleCredentials.fromStream(new FileInputStream(Config.getFirebaseCredentialsPath())))
                     .build()
                     .getService();
 
-            bucket = storage.get(FILES_BUCKET);
-        } catch (IOException e) {
-            throw new RuntimeException("Error initializing Firebase Storage: " + e.getMessage(), e);
+            bucket = storage.get(filesBucket);
+        }
+        catch (IOException err) {
+            throw new RuntimeException("Error initializing Firebase Storage: " + err.getMessage(), err);
         }
     }
 
@@ -52,23 +44,25 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
      */
     public String uploadFile(String userId, File file) {
         try {
-            String fileName = file.getName();
-            byte[] data = Files.readAllBytes(file.toPath());
+            final String fileName = file.getName();
+            final byte[] data = Files.readAllBytes(file.toPath());
 
             // Determine the MIME type of the file
             String mimeType = Files.probeContentType(file.toPath());
             if (mimeType == null) {
-                mimeType = "application/octet-stream"; // Fallback to a default MIME type
+                // Fallback to a default MIME type
+                mimeType = "application/octet-stream";
             }
 
-            String filePath = String.format("users/%s/%s", userId, fileName);
+            final String filePath = getFilePath(userId, fileName);
 
             bucket.create(filePath, data, mimeType);
 
             return filePath;
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error uploading file: " + e.getMessage(), e);
+        }
+        catch (IOException err) {
+            throw new RuntimeException("Error uploading file: " + err.getMessage(), err);
         }
     }
 
@@ -76,33 +70,33 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
      * Deletes a file from Firebase Storage.
      * 
      * @param userId   The id of the user
-     * @param filePath The path of the file to delete
+     * @param fileName The name of the file to delete
      */
     public void deleteFile(String userId, String fileName) {
         try {
-            String filePath = String.format("users/%s/%s", userId, fileName);
-            BlobId blobId = BlobId.of(FILES_BUCKET, filePath);
-            boolean deleted = bucket.getStorage().delete(blobId);
+            final String filePath = getFilePath(userId, fileName);
+            final BlobId blobId = BlobId.of(filesBucket, filePath);
+            final boolean deleted = bucket.getStorage().delete(blobId);
             if (!deleted) {
                 throw new RuntimeException("File not deleted, may not exist.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting file: " + e.getMessage(), e);
+        }
+        catch (Exception err) {
+            throw new RuntimeException("Error deleting file: " + err.getMessage(), err);
         }
     }
 
     /**
-     * Return whether the user's file exists within their storage bucket
+     * Return whether the user's file exists within their storage bucket.
      * 
      * @param userId   The id of the user
      * @param fileName The name of the file to check
      */
     public boolean fileExistsByName(String userId, String fileName) {
-        String filePath = String.format("users/%s/%s", userId, fileName);
-        BlobId blobId = BlobId.of(FILES_BUCKET, filePath);
-        boolean exists = bucket.getStorage().get(blobId) != null;
+        final String filePath = getFilePath(userId, fileName);
+        final BlobId blobId = BlobId.of(filesBucket, filePath);
 
-        return exists;
+        return bucket.getStorage().get(blobId) != null;
     }
 
     /**
@@ -112,23 +106,24 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
      * @return filenames for all files belonging to the user
      */
     public List<String> getAllUserFiles(String userId) {
-        List<String> fileNames = new ArrayList<>();
-        String prefix = String.format("users/%s/", userId);
+        final List<String> fileNames = new ArrayList<>();
+        final String prefix = String.format("users/%s/", userId);
 
         try {
             bucket.list(Storage.BlobListOption.prefix(prefix)).iterateAll().forEach(blob -> {
-                String filePath = blob.getName();
+                final String filePath = blob.getName();
 
                 // Skip the prefix itself or empty file paths
                 if (filePath.equals(prefix) || filePath.isEmpty()) {
                     return;
                 }
 
-                String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+                final String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
                 fileNames.add(fileName);
             });
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving user files: " + e.getMessage(), e);
+        }
+        catch (Exception err) {
+            throw new RuntimeException("Error retrieving user files: " + err.getMessage(), err);
         }
         return fileNames;
     }
@@ -136,137 +131,29 @@ public class FirebaseFileDataAccessObject implements StartStudySessionDataAccess
     /**
      * Get the contents of a file as a byte array.
      * 
-     * @param userId
-     * @param fileName
-     * @return
+     * @param userId The userId
+     * @param fileName the filaname 
+     * @return the byte[] of the content
      */
     public byte[] getFileContents(String userId, String fileName) {
-        String filePath = String.format("users/%s/%s", userId, fileName);
+        final String filePath = getFilePath(userId, fileName);
         try {
-            BlobId blobId = BlobId.of(FILES_BUCKET, filePath);
+            final BlobId blobId = BlobId.of(filesBucket, filePath);
             return bucket.getStorage().readAllBytes(blobId);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Error retrieving file contents: " + e.getMessage(), e);
         }
     }
 
-}
-
-/**
- * ChatGPT generated test UI
- */
-class Bleh {
-    public static void main(String[] args) {
-        FirebaseFileDataAccessObject fileDAO = new FirebaseFileDataAccessObject();
-
-        while (true) {
-            // Display a menu for the user
-            String[] options = { "Upload File", "Get All Files", "Delete File", "Exit" };
-            int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "Choose an operation:",
-                    "Firebase File Operations",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-
-            try {
-                switch (choice) {
-                    case 0: // Upload File
-                        uploadFile(fileDAO);
-                        break;
-                    case 1: // Get All Files
-                        getAllFiles(fileDAO);
-                        break;
-                    case 2: // Delete File
-                        deleteFile(fileDAO);
-                        break;
-                    case 3: // Exit
-                        System.exit(0);
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(null, "Invalid choice. Try again.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage());
-            }
-        }
+    /**
+     * Given the userID and the filename, return the file path for this file in firebase storage.
+     * @param userId The user Id
+     * @param fileName The file name
+     * @return The path of the file
+     */
+    private String getFilePath(String userId, String fileName) {
+        return String.format("users/%s/%s", userId, fileName);
     }
 
-    private static void uploadFile(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Use JFileChooser to select a file
-            JFileChooser fileChooser = new JFileChooser();
-            int result = fileChooser.showOpenDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                String filePath = fileDAO.uploadFile(userId, file);
-                JOptionPane.showMessageDialog(null, "File uploaded successfully! Path: " + filePath);
-            } else {
-                JOptionPane.showMessageDialog(null, "File upload canceled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error uploading file: " + e.getMessage(), e);
-        }
-    }
-
-    private static void getAllFiles(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Retrieve all files for the user
-            List<String> filePaths = fileDAO.getAllUserFiles(userId);
-            if (filePaths.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "No files found for user: " + userId);
-            } else {
-                StringBuilder message = new StringBuilder("Files for user " + userId + ":\n");
-                for (String path : filePaths) {
-                    message.append(path).append("\n");
-                }
-                JOptionPane.showMessageDialog(null, message.toString());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving files: " + e.getMessage(), e);
-        }
-    }
-
-    private static void deleteFile(FirebaseFileDataAccessObject fileDAO) {
-        try {
-            // Prompt for user ID
-            String userId = JOptionPane.showInputDialog("Enter User ID:");
-            if (userId == null || userId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "User ID cannot be empty.");
-                return;
-            }
-
-            // Prompt for file path
-            String filePath = JOptionPane
-                    .showInputDialog("Enter the file to delete):");
-            if (filePath == null || filePath.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "File path cannot be empty.");
-                return;
-            }
-
-            // Delete the file
-            fileDAO.deleteFile(userId, filePath);
-            JOptionPane.showMessageDialog(null, "File deleted successfully!");
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting file: " + e.getMessage(), e);
-        }
-    }
 }
