@@ -1,205 +1,128 @@
 package view;
 
-import app.AppBuilder;
-import entity.Question;
-import entity.StudyQuiz;
-import entity.StudyQuizFactory;
-import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
-import interface_adapter.view_model.DashboardState;
-
-import javax.swing.*;
-import java.awt.*;
-import java.time.LocalDateTime;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.beans.PropertyChangeEvent;
 import java.util.List;
 
-/**
- * View for displaying and taking quizzes in a study session.
- */
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.SwingConstants;
 
-public class StudyQuizView extends View {
-    private final JLabel questionLabel;
-    private final JRadioButton[] answerButtons;
-    private final ButtonGroup answerGroup;
-    private final JTextArea explanationArea;
-    private final JLabel scoreLabel;
-    private final JButton submitButton;
-    private final JButton nextButton;
+import app.AppBuilder;
+import interface_adapter.view_model.AnswerableQuestion;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.QuizState;
+import interface_adapter.view_model.QuizViewModel;
 
-    private List<Question> questions;
-    private int currentQuestionIndex;
+public class StudyQuizView extends StatefulView<QuizState> {
 
-    public StudyQuizView() {
-        super("studyQuiz");
+    private final JLabel questionLabel = new JLabel();
+    private final JButton nextButton = new JButton("Next");
 
-        JPanel questionPanel = new JPanel();
-        questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
-        questionLabel = new JLabel("Question:");
-        questionLabel.setFont(new Font(null, Font.BOLD, 24));
-        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        questionPanel.add(questionLabel);
+    private final JRadioButton[] optionButtons = new JRadioButton[4];
+    private final ButtonGroup optionsGroup = new ButtonGroup();
 
-        String[] options = { "Berlin", "Madrid", "Paris", "Rome" };
+    public StudyQuizView(QuizViewModel quizViewModel, DashboardViewModel dashboardViewModel) {
+        super("studyQuiz", quizViewModel);
 
-        // Create and configure answer buttons before loading the quiz
-        answerGroup = new ButtonGroup();
-        answerButtons = new JRadioButton[4];
-        for (int i = 0; i < answerButtons.length; i++) {
-            answerButtons[i] = new JRadioButton(options[i]);
-            answerButtons[i].setAlignmentX(Component.CENTER_ALIGNMENT);
-            answerGroup.add(answerButtons[i]);
-            questionPanel.add(answerButtons[i]);
-            int finalI = i;
-            answerButtons[i].addActionListener(e -> answerButtons[finalI].setSelected(true));
+        // Question label
+        questionLabel.setFont(new Font(null, Font.PLAIN, 20));
+        questionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(questionLabel, BorderLayout.NORTH);
+
+        // Options panel
+        JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        for (int i = 0; i < optionButtons.length; i++) {
+            optionButtons[i] = new JRadioButton();
+            optionsGroup.add(optionButtons[i]);
+            optionsPanel.add(optionButtons[i]);
         }
+        add(optionsPanel, BorderLayout.CENTER);
 
-        scoreLabel = new JLabel("Score: 0/0");
-        JPanel header = new ViewHeader("Quiz");
-        header.add(scoreLabel, BorderLayout.EAST);
-        JPanel main = new JPanel();
+        // Buttons panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
 
-        submitButton = createSubmitButton();
-        nextButton = createNextButton();
-        nextButton.setEnabled(false); // disabled until after submitting
+        buttonPanel.add(nextButton);
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        explanationArea = new JTextArea(5, 40);
-        explanationArea.setLineWrap(true);
-        explanationArea.setEditable(false);
+        // Actions
+        nextButton.addActionListener(e -> goToNextQuestion());
 
-        JPanel controls = new JPanel();
-        controls.add(submitButton);
-        controls.add(nextButton);
-
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.add(questionPanel);
-        main.add(controls);
-        main.add(explanationArea);
-
-        this.add(header, BorderLayout.NORTH);
-        this.add(main, BorderLayout.CENTER);
-
-        // Initialize questions after UI components exist
-        questions = List.of(
-                new Question("0",
-                        "What is the capital of France?",
-                        List.of("Berlin", "Madrid", "Paris", "Rome"),
-                        2,
-                        "The capital of France is Paris."),
-                new Question("1",
-                        "What is 2 + 2?",
-                        List.of("3", "4", "5", "6"),
-                        1,
-                        "2 + 2 equals 4."));
-        this.loadQuiz(questions);
     }
 
-    private JButton createSubmitButton() {
-        JButton submit = new JButton("Submit Answer");
-        submit.addActionListener(e -> {
-            int selectedAnswer = getSelectedAnswer();
-            if (selectedAnswer == -1) {
-                JOptionPane.showMessageDialog(this, "Please select an answer before submitting.", "No Answer Selected",
+    private void goToNextQuestion() {
+        // Already answered, nextquestion.
+        if (viewModel.getState().isQuizComplete()) {
+            JOptionPane.showMessageDialog(this,
+                    String.format("You got %d out of %d correct", viewModel.getState().getNumCorrect(),
+                            viewModel.getState().getNumQuestions()),
+                    "Done!",
+                    JOptionPane.INFORMATION_MESSAGE);
+            // TODO: Temporary everything is temporary here bro
+            AppBuilder.viewManagerModel.setView("dashboard");
+            return;
+        } else if (viewModel.getState().getCurrentQuestion() != null &&
+                viewModel.getState().getCurrentQuestion().isAnswered()) {
+
+            viewModel.getState().nextQuestion();
+            viewModel.firePropertyChange();
+        } else {
+            // Did not answer yet, submit answer and show the explanation
+            boolean answered = false;
+            for (int i = 0; i < optionButtons.length; i++) {
+                if (optionButtons[i].isVisible() && optionButtons[i].isSelected()) {
+                    viewModel.getState().submitAnswer(i);
+                    viewModel.firePropertyChange();
+                    answered = true;
+                    break;
+                }
+            }
+            if (!answered) {
+                JOptionPane.showMessageDialog(this, "Please select an answer before proceeding.", "No Answer Selected",
                         JOptionPane.WARNING_MESSAGE);
-                return;
             }
-
-            Question currentQuestion = questions.get(currentQuestionIndex);
-            currentQuestion.setChosenAnswer(selectedAnswer);
-
-            String explanation = currentQuestion.getExplanation();
-            showExplanation(explanation);
-
-            // Update score
-            int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
-            updateScore(correctAnswers, questions.size());
-
-            // After submitting, disable submit and enable next
-            submit.setEnabled(false);
-            nextButton.setEnabled(true);
-
-            // prevent changing the selected answer after submit
-            for (JRadioButton rb : answerButtons) {
-                rb.setEnabled(false);
-            }
-        });
-        return submit;
+        }
     }
 
-    private JButton createNextButton() {
-        JButton next = new JButton("Next Question");
-        next.addActionListener(e -> {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.size()) {
-                displayCurrentQuestion();
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        AnswerableQuestion currentQuestion = viewModel.getState().getCurrentQuestion();
+        if (currentQuestion == null) {
+            return;
+        }
+        questionLabel.setText(currentQuestion.getQuestionText());
+        List<String> options = currentQuestion.getChoices();
+        // Hide all buttons first
+        for (int i = 0; i < optionButtons.length; i++) {
+            if (i < options.size()) {
+                optionButtons[i].setText(options.get(i));
+                optionButtons[i].setVisible(true);
             } else {
-                int correctAnswers = (int) questions.stream().filter(Question::isWasCorrect).count();
-                JOptionPane.showMessageDialog(this,
-                        "Quiz completed! Final Score: " + correctAnswers + "/" + questions.size(), "Quiz Completed",
-                        JOptionPane.INFORMATION_MESSAGE);
-                // disable controls after completion
-                next.setEnabled(false);
-                submitButton.setEnabled(false);
-
-                // TODO: This is temporary to enable full flow.
-                AppBuilder.viewManagerModel.setView("dashboard");
-                FirebaseStudyQuizDataAccessObject quizDAO = new FirebaseStudyQuizDataAccessObject(
-                        new StudyQuizFactory());
-
-                float score = (float) correctAnswers / questions.size();
-                StudyQuiz quiz = new StudyQuizFactory().create(score,
-                        LocalDateTime.now(), LocalDateTime.now());
-                quizDAO.addStudyQuiz("JGioTqVXbwdu7plKFsMcjdCBwKf1",
-                        quiz);
+                optionButtons[i].setVisible(false);
             }
-        });
-        return next;
-    }
-
-    public void loadQuiz(List<Question> questions) {
-        this.questions = questions;
-        this.currentQuestionIndex = 0;
-        displayCurrentQuestion();
-    }
-
-    private void displayCurrentQuestion() {
-        validQuestion(questions, currentQuestionIndex, questionLabel, answerButtons);
-        // Reset UI state for a fresh question
-        explanationArea.setText("");
-        submitButton.setEnabled(true);
-        nextButton.setEnabled(false);
-        answerGroup.clearSelection();
-        for (JRadioButton rb : answerButtons) {
-            rb.setEnabled(true);
+            optionButtons[i].setSelected(false);
+            optionButtons[i].setEnabled(!currentQuestion.isAnswered());
         }
-    }
+        optionsGroup.clearSelection();
 
-    static void validQuestion(List<Question> questions, int currentQuestionIndex, JLabel questionLabel,
-            JRadioButton[] answerButtons) {
-        if (questions != null && currentQuestionIndex < questions.size()) {
-            Question q = questions.get(currentQuestionIndex);
-            questionLabel.setText((currentQuestionIndex + 1) + ". " + q.getQuestion());
-
-            List<String> options = q.getPossibleAnswers();
-            for (int i = 0; i < answerButtons.length && i < options.size(); i++) {
-                answerButtons[i].setText(options.get(i));
-                answerButtons[i].setSelected(false);
+        if (currentQuestion.isAnswered()) {
+            String message;
+            if (currentQuestion.isAnsweredCorrectly()) {
+                message = "Correct!\n\n" + currentQuestion.getExplanation();
+            } else {
+                message = String.format("Incorrect! The correct answer was: %s\n\n%s",
+                        currentQuestion.getChoices().get(currentQuestion.getCorrectIndex()),
+                        currentQuestion.getExplanation());
             }
+            JOptionPane.showMessageDialog(this, message, "Answer Explanation", JOptionPane.INFORMATION_MESSAGE);
         }
-    }
-
-    public int getSelectedAnswer() {
-        for (int i = 0; i < answerButtons.length; i++) {
-            if (answerButtons[i].isSelected()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public void showExplanation(String explanation) {
-        explanationArea.setText(explanation);
-    }
-
-    public void updateScore(int correct, int total) {
-        scoreLabel.setText("Score: " + correct + "/" + total);
     }
 }

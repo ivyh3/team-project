@@ -68,6 +68,7 @@ public class Main {
                     .addStudyMetricsView()
                     .addStudySessionConfigView()
                     .addConfigStudySessionUseCase()
+                    .addGenerateStudyQuizUseCase()
                     .build();
 
             app.pack();

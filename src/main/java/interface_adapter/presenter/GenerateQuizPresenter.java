@@ -1,49 +1,45 @@
 package interface_adapter.presenter;
 
-import entity.Question;
-import entity.StudyQuiz;
+import java.util.List;
+
+import interface_adapter.view_model.AnswerableQuestion;
+import interface_adapter.view_model.QuizState;
 import interface_adapter.view_model.QuizViewModel;
+import interface_adapter.view_model.ViewManagerModel;
 import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.generate_quiz.GenerateQuizOutputData;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * Presenter for the Generate Quiz use case.
- * Formats output data and updates the QuizViewModel.
+ * Presenter for Generate Quiz.
+ * Updates the QuizViewModel based on interactor output.
  */
 public class GenerateQuizPresenter implements GenerateQuizOutputBoundary {
-    private final QuizViewModel viewModel;
 
-    public GenerateQuizPresenter(QuizViewModel viewModel) {
-        this.viewModel = viewModel;
+    private final QuizViewModel quizViewModel;
+    private final ViewManagerModel viewManagerModel;
+
+    public GenerateQuizPresenter(QuizViewModel quizViewModel, ViewManagerModel viewManagerModel) {
+        this.quizViewModel = quizViewModel;
+        this.viewManagerModel = viewManagerModel;
     }
 
     @Override
     public void prepareSuccessView(GenerateQuizOutputData outputData) {
-        StudyQuiz quiz = outputData.getQuiz();
-        List<Question> questions = quiz.getQuestions();
-
-        if (questions != null && !questions.isEmpty()) {
-            // Update view model with first question
-            Question firstQuestion = questions.get(0);
-            viewModel.setCurrentQuestion(firstQuestion.getQuestion());
-            viewModel.setCurrentOptions(firstQuestion.getPossibleAnswers());
-            viewModel.setCurrentQuestionNumber(1);
-            viewModel.setTotalQuestions(questions.size());
-            viewModel.setScoreDisplay("0/" + questions.size());
-            viewModel.setQuizComplete(false);
-            viewModel.setShowingExplanation(false);
-            viewModel.setErrorMessage("");
-        } else {
+        List<AnswerableQuestion> questions = outputData.getQuestions();
+        if (questions == null || questions.isEmpty()) {
             prepareFailView("No questions were generated.");
+            return;
         }
+
+        quizViewModel.setState(new QuizState(questions, outputData.getStartTime()));
+        quizViewModel.firePropertyChange();
+        viewManagerModel.setView(quizViewModel.getViewName());
     }
 
     @Override
-    public void prepareFailView(String error) {
-        viewModel.setErrorMessage(error);
-        viewModel.setQuizComplete(false);
+    public void prepareFailView(String errorMessage) {
+        // FUCK
+        System.out.println("GenerateQuizPresenter preparing fail view: " + errorMessage);
+        viewManagerModel.setView("dashboard");
     }
 }

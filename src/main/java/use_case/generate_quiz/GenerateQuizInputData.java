@@ -1,43 +1,31 @@
 package use_case.generate_quiz;
 
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Input data for the Generate Quiz use case.
+ * Immutable and used by the interactor to generate quizzes.
  */
 public class GenerateQuizInputData {
     private final String userId;
-    private final String sessionId;
-    private final String courseId;
     private final String prompt;
-    private final List<String> referenceMaterialIds;
+    private final String referenceFile;
 
-    public GenerateQuizInputData(String userId, String sessionId, String courseId,
-            String prompt, List<String> referenceMaterialIds) {
-        this.userId = userId;
-        this.sessionId = sessionId;
-        this.courseId = courseId;
-        this.prompt = prompt;
-        this.referenceMaterialIds = referenceMaterialIds;
+    public GenerateQuizInputData(String userId, String prompt, String referenceFile) {
+        this.userId = Objects.requireNonNull(userId, "userId cannot be null");
+        this.prompt = Objects.requireNonNull(prompt, "prompt cannot be null");
+        this.referenceFile = Objects.requireNonNull(referenceFile, "referenceFile cannot be null");
     }
 
     public String getUserId() {
         return userId;
     }
 
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public String getCourseId() {
-        return courseId;
-    }
-
     public String getPrompt() {
         return prompt;
     }
 
-    public List<String> getReferenceMaterialIds() {
-        return referenceMaterialIds;
+    public String getReferenceFile() {
+        return referenceFile;
     }
 }
