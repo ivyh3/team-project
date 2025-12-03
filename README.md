@@ -27,9 +27,7 @@ Slides: https://docs.google.com/presentation/d/1OZKGy73GqQBH4XlzVhJXqXNjHAYyr0xk
 <img width="499" height="413" alt="image" src="https://github.com/user-attachments/assets/4f3bc28a-8e72-42f0-807d-fe26309bfd86" />
 <img width="561" height="449" alt="Image" src="https://github.com/user-attachments/assets/25e48cb2-0832-4f58-b2fa-b72243260ef7" />
 <img width="568" height="436" alt="image" src="https://github.com/user-attachments/assets/377050c0-3305-4aa0-bc90-f146b7089bcb" />
-
-(insert quiz questions screenshot here)
-
+<img width="415" height="336" alt="image" src="https://github.com/user-attachments/assets/fe12a119-5e6e-4d59-b00e-71b447eb14e9" />
 <img width="499" height="428" alt="image" src="https://github.com/user-attachments/assets/a20f1d3e-ed2d-47f6-ae79-9a99d9283b7a" />
 <img width="428" height="446" alt="image" src="https://github.com/user-attachments/assets/076424fa-cb05-4316-993a-b4159673d64c" />
 
