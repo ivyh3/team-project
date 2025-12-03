@@ -2,8 +2,10 @@ package interface_adapter.view_model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ViewModel for the Schedule Session view.
@@ -11,131 +13,87 @@ import java.util.List;
  */
 public class ScheduleSessionViewModel {
     private final PropertyChangeSupport support;
+    public final List<ScheduleSessionState> scheduledSessions;
 
-    private List<String> scheduledSessions;
-    private String selectedCourse;
-    private String selectedDate;
-    private String selectedStartTime;
-    private String selectedEndTime;
-    private boolean syncWithCalendar;
     private String statusMessage;
     private String errorMessage;
-    private boolean scheduleInProgress;
 
     public ScheduleSessionViewModel() {
         this.support = new PropertyChangeSupport(this);
         this.scheduledSessions = new ArrayList<>();
-        this.selectedCourse = "";
-        this.selectedDate = "";
-        this.selectedStartTime = "";
-        this.selectedEndTime = "";
-        this.syncWithCalendar = false;
-        this.statusMessage = "";
-        this.errorMessage = "";
-        this.scheduleInProgress = false;
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
     }
 
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        support.removePropertyChangeListener(listener);
-    }
-
-    public List<String> getScheduledSessions() {
+    public List<ScheduleSessionState> getScheduledSessions() {
         return new ArrayList<>(scheduledSessions);
     }
 
-    public void setScheduledSessions(List<String> scheduledSessions) {
-        List<String> oldValue = this.scheduledSessions;
-        this.scheduledSessions = new ArrayList<>(scheduledSessions);
-        support.firePropertyChange("scheduledSessions", oldValue, this.scheduledSessions);
+    public void addScheduledSession(ScheduleSessionState sessionState) {
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        this.scheduledSessions.add(sessionState);
+        support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
     }
 
-    public void addScheduledSession(String session) {
-        List<String> oldValue = new ArrayList<>(this.scheduledSessions);
-        this.scheduledSessions.add(session);
-        support.firePropertyChange("scheduledSessions", oldValue, this.scheduledSessions);
-    }
-
-    public String getSelectedCourse() {
-        return selectedCourse;
-    }
-
-    public void setSelectedCourse(String selectedCourse) {
-        String oldValue = this.selectedCourse;
-        this.selectedCourse = selectedCourse;
-        support.firePropertyChange("selectedCourse", oldValue, selectedCourse);
-    }
-
-    public String getSelectedDate() {
-        return selectedDate;
-    }
-
-    public void setSelectedDate(String selectedDate) {
-        String oldValue = this.selectedDate;
-        this.selectedDate = selectedDate;
-        support.firePropertyChange("selectedDate", oldValue, selectedDate);
-    }
-
-    public String getSelectedStartTime() {
-        return selectedStartTime;
-    }
-
-    public void setSelectedStartTime(String selectedStartTime) {
-        String oldValue = this.selectedStartTime;
-        this.selectedStartTime = selectedStartTime;
-        support.firePropertyChange("selectedStartTime", oldValue, selectedStartTime);
-    }
-
-    public String getSelectedEndTime() {
-        return selectedEndTime;
-    }
-
-    public void setSelectedEndTime(String selectedEndTime) {
-        String oldValue = this.selectedEndTime;
-        this.selectedEndTime = selectedEndTime;
-        support.firePropertyChange("selectedEndTime", oldValue, selectedEndTime);
-    }
-
-    public boolean isSyncWithCalendar() {
-        return syncWithCalendar;
-    }
-
-    public void setSyncWithCalendar(boolean syncWithCalendar) {
-        boolean oldValue = this.syncWithCalendar;
-        this.syncWithCalendar = syncWithCalendar;
-        support.firePropertyChange("syncWithCalendar", oldValue, syncWithCalendar);
+    public void setStatusMessage(String message) {
+        String old = this.statusMessage;
+        this.statusMessage = message;
+        support.firePropertyChange("statusMessage", old, message);
     }
 
     public String getStatusMessage() {
         return statusMessage;
     }
 
-    public void setStatusMessage(String statusMessage) {
-        String oldValue = this.statusMessage;
-        this.statusMessage = statusMessage;
-        support.firePropertyChange("statusMessage", oldValue, statusMessage);
+    public void setErrorMessage(String message) {
+        String old = this.errorMessage;
+        this.errorMessage = message;
+        support.firePropertyChange("errorMessage", old, message);
     }
 
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        String oldValue = this.errorMessage;
-        this.errorMessage = errorMessage;
-        support.firePropertyChange("errorMessage", oldValue, errorMessage);
+    public void clearSessions() {
+        scheduledSessions.clear();
     }
 
-    public boolean isScheduleInProgress() {
-        return scheduleInProgress;
+    public String[] getSessionStrings() {
+        return scheduledSessions.stream()
+                .map(ScheduleSessionState::toString)
+                .toArray(String[]::new);
     }
 
-    public void setScheduleInProgress(boolean scheduleInProgress) {
-        boolean oldValue = this.scheduleInProgress;
-        this.scheduleInProgress = scheduleInProgress;
-        support.firePropertyChange("scheduleInProgress", oldValue, scheduleInProgress);
+    public List<ScheduleSessionState> getSessionsForDate(LocalDate date) {
+        return scheduledSessions.stream()
+                .filter(s -> s.getStartTime().toLocalDate().equals(date))
+                .collect(Collectors.toList());
+    }
+
+    public void removeScheduledSession(ScheduleSessionState sessionState) {
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+        if (scheduledSessions.remove(sessionState)) {
+            support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
+        }
+    }
+
+    /**
+     * Removes a scheduled session by its ID.
+     * @param sessionId The ID of the session to remove.
+     * @return true if a session was removed, false otherwise.
+     */
+    public boolean removeScheduledSessionById(String sessionId) {
+        List<ScheduleSessionState> oldValue = new ArrayList<>(scheduledSessions);
+
+        // Find and remove the session by ID
+        boolean removed = scheduledSessions.removeIf(s -> s.getId().equals(sessionId));
+
+        if (removed) {
+            support.firePropertyChange("scheduledSessions", oldValue, scheduledSessions);
+        }
+        return removed;
     }
 }

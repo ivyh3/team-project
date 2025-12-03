@@ -75,7 +75,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
             result = userFactory.create(userRecord.getUid(), email, createdAt);
         }
         catch (FirebaseAuthException event) {
-            System.err.println("Error getting user: " + event.getMessage());
             result = null;
         }
         return result;
@@ -128,8 +127,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
             final String userId = userRecord.getUid();
 
             createUserDocument(userId);
-
-            System.out.println("Successfully created new user: " + userId);
         }
         catch (FirebaseAuthException event) {
             System.err.println("Error creating user: " + event.getMessage());
@@ -172,7 +169,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
             result = response.isSuccessful();
         }
         catch (IOException event) {
-            System.err.println("Error signing in: " + event.getMessage());
             result = false;
         }
         return result;
@@ -210,7 +206,6 @@ public class FirebaseUserDataAccessObject implements SignupUserDataAccessInterfa
                     .setPassword(newPassword);
 
             firebaseAuth.updateUser(request);
-            System.out.println("Successfully updated password for user: " + userId);
         }
         catch (FirebaseAuthException event) {
             System.err.println("Error updating password: " + event.getMessage());

@@ -1,27 +1,66 @@
 package use_case.schedule_study_session;
 
-import frameworks_drivers.google_calendar.GoogleCalendarService;
+import entity.ScheduledSession;
+import java.util.List;
 
 /**
  * Interactor for the Schedule Study Session use case.
  */
 public class ScheduleStudySessionInteractor implements ScheduleStudySessionInputBoundary {
-    private final GoogleCalendarService calendarService;
+    private final ScheduleStudySessionDataAccessInterface dataAccess;
     private final ScheduleStudySessionOutputBoundary outputBoundary;
 
-    public ScheduleStudySessionInteractor(GoogleCalendarService calendarService,
-            ScheduleStudySessionOutputBoundary outputBoundary) {
-        this.calendarService = calendarService;
-        this.outputBoundary = outputBoundary;
+	public ScheduleStudySessionInteractor(ScheduleStudySessionDataAccessInterface dataAccess,
+			ScheduleStudySessionOutputBoundary outputBoundary) {
+		this.dataAccess = dataAccess;
+		this.outputBoundary = outputBoundary;
+	}
+
+	@Override
+    public void execute(ScheduleStudySessionInputData inputData) {
+        ScheduledSession session = new ScheduledSession(
+                null,
+                inputData.getStartTime(),
+                inputData.getEndTime(),
+                inputData.getTitle()
+        );
+
+        String formattedStartTime = session.getStartTime().toString();
+        String formattedEndTime = session.getEndTime().toString();
+
+        String sessionId = dataAccess.saveSession(inputData.getUserId(), session).getId();
+        ScheduleStudySessionOutputData outputData = new ScheduleStudySessionOutputData(
+                sessionId,
+                session.getTitle(),
+                formattedStartTime,
+                formattedEndTime,
+                true
+        );
+        outputBoundary.prepareSuccessView(outputData);
     }
 
     @Override
-    public void execute(ScheduleStudySessionInputData inputData) {
-        // TODO: Implement the business logic for scheduling a study session
-        // 1. Validate start and end times
-        // 2. Create StudySession entity
-        // 3. Save to repository
-        // 4. If syncWithCalendar, create calendar event
-        // 5. Prepare success or failure view
+    public void delete(DeleteScheduledSessionInputData inputData) {
+
+        ScheduledSession sessionToDelete = dataAccess.getScheduledSessionById(
+                inputData.getUserId(), inputData.getSessionId());
+
+        if (sessionToDelete != null) {
+
+            dataAccess.deleteSession(inputData.getUserId(), sessionToDelete);
+
+            DeleteScheduledSessionOutputData outputData = new DeleteScheduledSessionOutputData(
+                    sessionToDelete.getId(),
+                    "Session deleted successfully!"
+            );
+            outputBoundary.prepareDeleteSuccessView(outputData);
+        } else {
+            outputBoundary.prepareFailView("Session not found or already deleted.");
+        }
+    }
+    @Override
+    public void executeLoad(String userId) {
+        List<ScheduledSession> sessions = dataAccess.getAllSessions(userId);
+        outputBoundary.loadSessions(sessions);
     }
 }

@@ -12,13 +12,29 @@ import io.github.cdimascio.dotenv.DotenvException;
 /**
  * Configuration class for managing API keys and application settings.
  * Uses Dotenv to load environment variables from .env file.
+ * Implements the Singleton pattern to ensure only one instance exists.
  */
 public final class Config {
+    private static Config instance;
     private static Dotenv dotenv;
     private static boolean firebaseInitialized;
 
     // Private constructor to prevent instantiation of utility class.
     private Config() {
+    }
+
+    /**
+     * Gets the singleton instance of Config.
+     * Automatically loads Dotenv on first access.
+     *
+     * @return the singleton Config instance
+     */
+    public static Config getInstance() {
+        if (instance == null) {
+            instance = new Config();
+            loadDotenv();
+        }
+        return instance;
     }
 
     // ============================================
@@ -53,11 +69,6 @@ public final class Config {
      * @throws IOException if the credentials file cannot be read
      */
     public static void initializeFirebase() throws IOException {
-        // Load dotenv first if not already loaded
-        if (dotenv == null) {
-            loadDotenv();
-        }
-
         // Prevent multiple Firebase initializations
         if (!firebaseInitialized) {
             final String credentialsPath = getFirebaseCredentialsPath();
@@ -163,42 +174,5 @@ public final class Config {
         }
         return dotenv.get("GEMINI_API_URL",
                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent");
-    }
-
-    /**
-     * Gets the Google OAuth client ID from environment variables.
-     *
-     * @return the Google OAuth client ID
-     */
-    public static String getGoogleOAuthClientId() {
-        if (dotenv == null) {
-            loadDotenv();
-        }
-        return dotenv.get("GOOGLE_OAUTH_CLIENT_ID", "");
-    }
-
-    /**
-     * Gets the Google OAuth client secret from environment variables.
-     *
-     * @return the Google OAuth client secret
-     */
-    public static String getGoogleOAuthClientSecret() {
-        if (dotenv == null) {
-            loadDotenv();
-        }
-        return dotenv.get("GOOGLE_OAUTH_CLIENT_SECRET", "");
-    }
-
-    /**
-     * Gets the Google OAuth redirect URI from environment variables.
-     *
-     * @return the Google OAuth redirect URI
-     */
-    public static String getGoogleOAuthRedirectUri() {
-        if (dotenv == null) {
-            loadDotenv();
-        }
-        return dotenv.get("GOOGLE_OAUTH_REDIRECT_URI",
-                "http://localhost:8080/oauth/callback");
     }
 }

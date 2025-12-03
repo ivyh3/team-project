@@ -1,13 +1,10 @@
-package use_case.sync_google_calendar;
+package use_case.schedule_study_session;
 
-/**
- * Input data for the Sync Google Calendar use case.
- */
-public class SyncGoogleCalendarInputData {
+public class DeleteScheduledSessionInputData {
     private final String userId;
     private final String sessionId;
 
-    public SyncGoogleCalendarInputData(String userId, String sessionId) {
+    public DeleteScheduledSessionInputData(String userId, String sessionId) {
         this.userId = userId;
         this.sessionId = sessionId;
     }
@@ -20,3 +17,4 @@ public class SyncGoogleCalendarInputData {
         return sessionId;
     }
 }
+

@@ -11,8 +11,11 @@ import javax.swing.WindowConstants;
 import entity.StudyQuizFactory;
 import entity.StudySessionFactory;
 import entity.UserFactory;
+import entity.ScheduledSession;
+import entity.ScheduledSessionFactory;
 import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
 import frameworks_drivers.firebase.FirebaseMetricsDataAccessObject;
+import frameworks_drivers.firebase.FirebaseScheduledSessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudyQuizDataAccessObject;
 import frameworks_drivers.firebase.FirebaseStudySessionDataAccessObject;
 import frameworks_drivers.firebase.FirebaseUserDataAccessObject;
@@ -21,6 +24,7 @@ import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.controller.EndStudySessionController;
 import interface_adapter.controller.GenerateQuizController;
 import interface_adapter.controller.LoginController;
+import interface_adapter.controller.ScheduleStudySessionController;
 import interface_adapter.controller.LogoutController;
 import interface_adapter.controller.SignupController;
 import interface_adapter.controller.StartStudySessionController;
@@ -29,6 +33,7 @@ import interface_adapter.presenter.ChangePasswordPresenter;
 import interface_adapter.presenter.EndStudySessionPresenter;
 import interface_adapter.presenter.GenerateQuizPresenter;
 import interface_adapter.presenter.LoginPresenter;
+import interface_adapter.presenter.ScheduleStudySessionPresenter;
 import interface_adapter.presenter.LogoutPresenter;
 import interface_adapter.presenter.SignupPresenter;
 import interface_adapter.presenter.StartStudySessionPresenter;
@@ -37,6 +42,7 @@ import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.LoginViewModel;
 import interface_adapter.view_model.MetricsViewModel;
 import interface_adapter.view_model.QuizViewModel;
+import interface_adapter.view_model.ScheduleSessionViewModel;
 import interface_adapter.view_model.SettingsViewModel;
 import interface_adapter.view_model.SignupViewModel;
 import interface_adapter.view_model.StudySessionConfigViewModel;
@@ -53,6 +59,10 @@ import use_case.generate_quiz.GenerateQuizOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
+import use_case.schedule_study_session.ScheduleStudySessionDataAccessInterface;
+import use_case.schedule_study_session.ScheduleStudySessionInteractor;
+import use_case.schedule_study_session.ScheduleStudySessionInputBoundary;
+import use_case.schedule_study_session.ScheduleStudySessionOutputBoundary;
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
@@ -93,6 +103,9 @@ public class AppBuilder {
             userFactory);
     final FirebaseFileDataAccessObject fileDataAccessObject = new FirebaseFileDataAccessObject();
     final GeminiQuizDataAccessObject generateQuizDataAccessObject = new GeminiQuizDataAccessObject();
+    final ScheduledSessionFactory scheduledSessionFactory = new ScheduledSessionFactory();
+    final FirebaseScheduledSessionDataAccessObject scheduledSessionDataAccessObject = new FirebaseScheduledSessionDataAccessObject(
+            scheduledSessionFactory);
     private final String APP_TITLE = "AI Study Companion";
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
@@ -111,6 +124,7 @@ public class AppBuilder {
     private LoginViewModel loginViewModel;
     private DashboardViewModel dashboardViewModel;
     private LoginView loginView;
+    private ScheduleSessionView scheduleSessionView;
 
     private SettingsView settingsView;
     private SettingsViewModel settingsViewModel;
@@ -304,7 +318,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addScheduleSessionView() {
-        ScheduleSessionView scheduleSessionView = new ScheduleSessionView();
+        ScheduleSessionViewModel scheduleViewModel = new ScheduleSessionViewModel();
+        ScheduleStudySessionOutputBoundary presenter = new ScheduleStudySessionPresenter(scheduleViewModel);
+        ScheduleStudySessionDataAccessInterface dataAccess = scheduledSessionDataAccessObject;
+        ScheduleStudySessionInputBoundary interactor = new ScheduleStudySessionInteractor(dataAccess, presenter);
+        ScheduleStudySessionController controller = new ScheduleStudySessionController(interactor);
+        scheduleSessionView = new ScheduleSessionView(controller, scheduleViewModel, dashboardViewModel);
         cardPanel.add(scheduleSessionView, scheduleSessionView.getViewName());
         return this;
     }
