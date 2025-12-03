@@ -3,139 +3,157 @@ package frameworks_drivers.firebase;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.Bucket;
-import com.google.firebase.cloud.FirestoreClient;
-import com.google.firebase.cloud.StorageClient;
 
 import app.Config;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
-import use_case.upload_reference_material.UploadReferenceMaterialDataAccessInterface;
 
-/**
- * Firebase implementation for file storage and metadata management.
- */
-public class FirebaseFileDataAccessObject implements UploadReferenceMaterialDataAccessInterface,
-        StartStudySessionDataAccessInterface {
-
-    private final String FILES_BUCKET;
+public class FirebaseFileDataAccessObject implements StartStudySessionDataAccessInterface {
+    private final String filesBucket;
     private final Bucket bucket;
 
     public FirebaseFileDataAccessObject() {
-        this.FILES_BUCKET = Config.getFirebaseStorageBucket();
+        filesBucket = Config.getFirebaseStorageBucket();
         try {
-            if (!Config.isFirebaseInitialized()) {
-                Config.initializeFirebase();
-            }
-            this.bucket = StorageClient.getInstance().bucket();
-        } catch (IOException e) {
-            throw new RuntimeException("Error initializing Firebase: " + e.getMessage(), e);
+            final Storage storage = StorageOptions.newBuilder()
+                    .setCredentials(
+                            GoogleCredentials.fromStream(new FileInputStream(Config.getFirebaseCredentialsPath())))
+                    .build()
+                    .getService();
+
+            bucket = storage.get(filesBucket);
+        }
+        catch (IOException err) {
+            throw new RuntimeException("Error initializing Firebase Storage: " + err.getMessage(), err);
         }
     }
 
-    private String getUserFilePath(String userId, String fileName) {
+    /**
+     * Uploads a file to Firebase Storage under the specified user's directory.
+     * 
+     * @param userId The id of the user
+     * @param file   The file to upload
+     * @return The path of the uploaded file
+     */
+    public String uploadFile(String userId, File file) {
+        try {
+            final String fileName = file.getName();
+            final byte[] data = Files.readAllBytes(file.toPath());
+
+            // Determine the MIME type of the file
+            String mimeType = Files.probeContentType(file.toPath());
+            if (mimeType == null) {
+                // Fallback to a default MIME type
+                mimeType = "application/octet-stream";
+            }
+
+            final String filePath = getFilePath(userId, fileName);
+
+            bucket.create(filePath, data, mimeType);
+
+            return filePath;
+
+        }
+        catch (IOException err) {
+            throw new RuntimeException("Error uploading file: " + err.getMessage(), err);
+        }
+    }
+
+    /**
+     * Deletes a file from Firebase Storage.
+     * 
+     * @param userId   The id of the user
+     * @param fileName The name of the file to delete
+     */
+    public void deleteFile(String userId, String fileName) {
+        try {
+            final String filePath = getFilePath(userId, fileName);
+            final BlobId blobId = BlobId.of(filesBucket, filePath);
+            final boolean deleted = bucket.getStorage().delete(blobId);
+            if (!deleted) {
+                throw new RuntimeException("File not deleted, may not exist.");
+            }
+        }
+        catch (Exception err) {
+            throw new RuntimeException("Error deleting file: " + err.getMessage(), err);
+        }
+    }
+
+    /**
+     * Return whether the user's file exists within their storage bucket.
+     * 
+     * @param userId   The id of the user
+     * @param fileName The name of the file to check
+     */
+    public boolean fileExistsByName(String userId, String fileName) {
+        final String filePath = getFilePath(userId, fileName);
+        final BlobId blobId = BlobId.of(filesBucket, filePath);
+
+        return bucket.getStorage().get(blobId) != null;
+    }
+
+    /**
+     * Return url paths for all files for given user.
+     * 
+     * @param userId The id of the user
+     * @return filenames for all files belonging to the user
+     */
+    public List<String> getAllUserFiles(String userId) {
+        final List<String> fileNames = new ArrayList<>();
+        final String prefix = String.format("users/%s/", userId);
+
+        try {
+            bucket.list(Storage.BlobListOption.prefix(prefix)).iterateAll().forEach(blob -> {
+                final String filePath = blob.getName();
+
+                // Skip the prefix itself or empty file paths
+                if (filePath.equals(prefix) || filePath.isEmpty()) {
+                    return;
+                }
+
+                final String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+                fileNames.add(fileName);
+            });
+        }
+        catch (Exception err) {
+            throw new RuntimeException("Error retrieving user files: " + err.getMessage(), err);
+        }
+        return fileNames;
+    }
+
+    /**
+     * Get the contents of a file as a byte array.
+     * 
+     * @param userId The userId
+     * @param fileName the filaname 
+     * @return the byte[] of the content
+     */
+    public byte[] getFileContents(String userId, String fileName) {
+        final String filePath = getFilePath(userId, fileName);
+        try {
+            final BlobId blobId = BlobId.of(filesBucket, filePath);
+            return bucket.getStorage().readAllBytes(blobId);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error retrieving file contents: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Given the userID and the filename, return the file path for this file in firebase storage.
+     * @param userId The user Id
+     * @param fileName The file name
+     * @return The path of the file
+     */
+    private String getFilePath(String userId, String fileName) {
         return String.format("users/%s/%s", userId, fileName);
     }
 
-    @Override
-    public String uploadFile(String userId, File file) throws IOException {
-        String timestampedFileName = System.currentTimeMillis() + "_" + file.getName();
-        String path = getUserFilePath(userId, timestampedFileName);
-        String mimeType = java.nio.file.Files.probeContentType(file.toPath());
-        if (mimeType == null) mimeType = "application/octet-stream";
-
-        // Stream upload to avoid large file memory issues
-        try (FileInputStream fis = new FileInputStream(file)) {
-            bucket.create(path, fis, mimeType);
-        }
-
-        return path;
-    }
-
-    @Override
-    public void saveMetadata(String userId, String storagePath, String prompt) throws Exception {
-        Firestore firestore = FirestoreClient.getFirestore();
-        Map<String, Object> data = new HashMap<>();
-        String fileName = storagePath.substring(storagePath.lastIndexOf("/") + 1);
-
-        data.put("fileName", fileName);
-        data.put("storagePath", storagePath);
-        data.put("prompt", prompt);
-
-        // Use full storage path as document ID to avoid collisions
-        firestore.collection("users")
-                .document(userId)
-                .collection("materials")
-                .document(storagePath.replace("/", "_"))
-                .set(data)
-                .get();
-    }
-
-    @Override
-    public void deleteFile(String userId, String fileName) throws Exception {
-        String path = getUserFilePath(userId, fileName);
-        BlobId blobId = BlobId.of(FILES_BUCKET, path);
-        boolean deleted = bucket.getStorage().delete(blobId);
-        if (!deleted) {
-            throw new RuntimeException("File not found or could not be deleted: " + path);
-        }
-    }
-
-    public void deleteFileWithMetadata(String userId, String fileName) throws Exception {
-        deleteFile(userId, fileName);
-
-        Firestore firestore = FirestoreClient.getFirestore();
-        firestore.collection("users")
-                .document(userId)
-                .collection("materials")
-                .document(getUserFilePath(userId, fileName).replace("/", "_"))
-                .delete()
-                .get();
-    }
-
-    @Override
-    public boolean fileExistsByName(String userId, String fileName) {
-        Blob blob = bucket.get(getUserFilePath(userId, fileName));
-        return blob != null;
-    }
-
-    public String getFileContent(String userId, String fileName) throws IOException {
-        Blob blob = bucket.get(getUserFilePath(userId, fileName));
-        if (blob == null) throw new IOException("File not found: " + fileName);
-        return new String(blob.getContent());
-    }
-
-    @Override
-    public List<String> getAllFiles(String userId) {
-        return getAllUserFiles(userId);
-    }
-
-    @Override
-    public List<String> getFilesForUser(String userId) {
-        return getAllUserFiles(userId);
-    }
-
-    @Override
-    public List<String> getAllUserFiles(String userId) {
-        List<String> fileNames = new ArrayList<>();
-        String prefix = String.format("users/%s/", userId);
-
-        bucket.list(com.google.cloud.storage.Storage.BlobListOption.prefix(prefix))
-                .iterateAll()
-                .forEach(blob -> {
-                    String path = blob.getName();
-                    if (!path.equals(prefix) && !path.isEmpty()) {
-                        fileNames.add(path.substring(path.lastIndexOf('/') + 1));
-                    }
-                });
-
-        return fileNames;
-    }
 }
