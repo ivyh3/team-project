@@ -3,6 +3,8 @@ package interface_adapter.view_model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 /**
  * State for configuring a study session.
@@ -17,6 +19,7 @@ public class StudySessionConfigState {
     private String prompt;
     private String referenceFile;
     private String error;
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     public StudySessionConfigState() {
         this.sessionType = SessionType.VARIABLE;
@@ -81,8 +84,11 @@ public class StudySessionConfigState {
         return fileOptions;
     }
 
-    public void setFileOptions(List<String> fileOptions) {
-        this.fileOptions = fileOptions;
+    // In StudySessionConfigState
+    public void setFileOptions(List<String> newFileOptions) {
+        List<String> oldOptions = this.fileOptions;
+        this.fileOptions = newFileOptions;
+        pcs.firePropertyChange("fileOptions", oldOptions, newFileOptions);
     }
 
     /**
@@ -120,6 +126,14 @@ public class StudySessionConfigState {
         copy.setPrompt(this.prompt);
         copy.setReferenceFile(this.referenceFile);
         return copy;
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(listener);
     }
 
     @Override

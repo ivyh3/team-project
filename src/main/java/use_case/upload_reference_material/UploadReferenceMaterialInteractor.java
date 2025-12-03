@@ -1,49 +1,70 @@
 package use_case.upload_reference_material;
 
-import frameworks_drivers.firebase.FirebaseFileDataAccessObject;
-
 import java.io.File;
+import java.util.Objects;
 
+/**
+ * Interactor for the Upload Reference Material use case.
+ */
 public class UploadReferenceMaterialInteractor implements UploadReferenceMaterialInputBoundary {
 
-    private final FirebaseFileDataAccessObject fileDAO;
+    private final UploadReferenceMaterialDataAccessInterface fileDAO;
     private final UploadReferenceMaterialOutputBoundary presenter;
 
-    public UploadReferenceMaterialInteractor(FirebaseFileDataAccessObject fileDAO,
-                                             UploadReferenceMaterialOutputBoundary presenter) {
-        this.fileDAO = fileDAO;
-        this.presenter = presenter;
+    public UploadReferenceMaterialInteractor(
+            UploadReferenceMaterialDataAccessInterface fileDAO,
+            UploadReferenceMaterialOutputBoundary presenter) {
+        this.fileDAO = Objects.requireNonNull(fileDAO, "fileDAO cannot be null");
+        this.presenter = Objects.requireNonNull(presenter, "presenter cannot be null");
     }
 
     @Override
     public void execute(UploadReferenceMaterialInputData inputData) {
-        try {
-            // Upload the file to Firebase
-            String storagePath = fileDAO.uploadFile(inputData.getUserId(), inputData.getFile());
-
-            // Save metadata in Firestore (optional)
-            fileDAO.saveMetadata(inputData.getUserId(), storagePath, inputData.getPrompt());
-
-            // Prepare output data for the presenter
-            UploadReferenceMaterialOutputData out = new UploadReferenceMaterialOutputData(
-                    inputData.getFile().getName(),
-                    storagePath,
-                    inputData.getPrompt()
-            );
-
-            presenter.prepareSuccessView(out);
-        } catch (Exception e) {
-            presenter.prepareFailView(e.getMessage());
+        if (inputData == null) {
+            presenter.prepareFailView("Upload failed: inputData cannot be null.");
+            return;
         }
-    }
 
-    // Optional delete method (can be removed if handled elsewhere)
-    public void delete(String userId, String fileName) {
         try {
-            fileDAO.deleteFileWithMetadata(userId, fileName);
-            presenter.presentDeletion(String.format("users/%s/%s", userId, fileName));
+            // Validate the file
+            File file = inputData.getFile();
+            if (file == null || !file.exists() || !file.isFile()) {
+                presenter.prepareFailView("Upload failed: file must exist and be a valid file.");
+                return;
+            }
+
+            // Validate courseCode and title
+            String courseCode = inputData.getCourseCode();
+            String title = inputData.getTitle();
+            if (courseCode == null || courseCode.isEmpty()) {
+                presenter.prepareFailView("Upload failed: courseCode cannot be null or empty.");
+                return;
+            }
+            if (title == null || title.isEmpty()) {
+                presenter.prepareFailView("Upload failed: title cannot be null or empty.");
+                return;
+            }
+
+            // Upload the file using DAO
+            String storagePath = fileDAO.uploadFile(courseCode, file);
+            if (storagePath == null || storagePath.isEmpty()) {
+                presenter.prepareFailView("Upload failed: storage path returned by DAO is invalid.");
+                return;
+            }
+
+            // Save metadata (use title as description)
+            fileDAO.saveMetadata(courseCode, storagePath, title);
+
+            // Prepare output for presenter
+            UploadReferenceMaterialOutputData outputData = new UploadReferenceMaterialOutputData(
+                    file.getName(),
+                    storagePath,
+                    title
+            );
+            presenter.prepareSuccessView(outputData);
+
         } catch (Exception e) {
-            presenter.prepareFailView("Deletion failed: " + e.getMessage());
+            presenter.prepareFailView("Upload failed: " + e.getMessage());
         }
     }
 }

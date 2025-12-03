@@ -1,60 +1,43 @@
 package interface_adapter.view_model;
 
-import view.StatefulView;
-import view.UploadSessionMaterialsView;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
-/**
- * ViewModel for UploadMaterialsView.
- * Holds uploaded materials and notifies observers on changes.
- */
-public class UploadMaterialsViewModel extends ViewModel<UploadMaterialsState> {
+public class UploadMaterialsViewModel {
 
-    private final List<String> uploadedMaterials = new ArrayList<>();
-    private final List<Consumer<List<String>>> observers = new ArrayList<>();
+    private final String currentUserId;
+    private final ViewModel<UploadMaterialsState> viewModel;
 
-    public UploadMaterialsViewModel() {
-        super("uploadMaterials");
+    public UploadMaterialsViewModel(String currentUserId) {
+        this.currentUserId = currentUserId;
+        this.viewModel = new ViewModel<>("uploadMaterials");
+        this.viewModel.setState(new UploadMaterialsState());
     }
 
-    // Register observer
-    public void addObserver(Consumer<List<String>> observer) {
-        if (observer != null) observers.add(observer);
+    public ViewModel<UploadMaterialsState> getViewModel() {
+        return viewModel;
     }
 
-    // Notify observers
-    private void notifyObservers() {
-        for (Consumer<List<String>> observer : observers) {
-            observer.accept(Collections.unmodifiableList(uploadedMaterials));
+    public String getCurrentUserId() {
+        return currentUserId;
+    }
+
+    // Adds a material and notifies the view
+    public void addMaterial(String fileName) {
+        UploadMaterialsState state = viewModel.getState();
+        if (state.getUploadedMaterials() == null) {
+            state.setUploadedMaterials(new ArrayList<>());
         }
+        state.getUploadedMaterials().add(fileName);
+        viewModel.firePropertyChange(); // Notify observers
     }
 
-    // Add a material
-    public void addMaterial(String materialName) {
-        if (!uploadedMaterials.contains(materialName)) {
-            uploadedMaterials.add(materialName);
-            notifyObservers();
+    // Removes a material and notifies the view
+    public void removeMaterial(String fileName) {
+        UploadMaterialsState state = viewModel.getState();
+        if (state.getUploadedMaterials() != null) {
+            state.getUploadedMaterials().remove(fileName);
+            viewModel.firePropertyChange(); // Notify observers
         }
-    }
-
-    // Remove a material
-    public void removeMaterial(String materialName) {
-        if (uploadedMaterials.remove(materialName)) {
-            notifyObservers();
-        }
-    }
-
-    // Get list of uploaded materials
-    public List<String> getUploadedMaterials() {
-        return Collections.unmodifiableList(uploadedMaterials);
-    }
-
-    // Show error
-    public void showError(String message) {
-        System.err.println("Error: " + message);
     }
 }

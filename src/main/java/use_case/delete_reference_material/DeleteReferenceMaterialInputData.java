@@ -8,41 +8,24 @@ import java.util.Objects;
  */
 public class DeleteReferenceMaterialInputData {
     private final String userId;
-    private final List<String> materialIds;
-    private final boolean confirmed;
+    private final String fileName;
 
     /**
      * Full constructor with confirmation flag.
      *
-     * @param userId      the ID of the user
-     * @param materialIds the list of material IDs to delete
-     * @param confirmed   whether the deletion is confirmed
+     * @param userId    the ID of the user
+     * @param fileName  the list of material IDs to delete
      */
-    public DeleteReferenceMaterialInputData(String userId, List<String> materialIds, boolean confirmed) {
-        this.userId = Objects.requireNonNull(userId);
-        this.materialIds = Objects.requireNonNull(materialIds);
-        this.confirmed = confirmed;
-    }
-
-    /**
-     * Overloaded constructor defaults confirmed to true.
-     *
-     * @param userId      the ID of the user
-     * @param materialIds the list of material IDs to delete
-     */
-    public DeleteReferenceMaterialInputData(String userId, List<String> materialIds) {
-        this(userId, materialIds, true);
+    public DeleteReferenceMaterialInputData(String userId, String fileName) {
+        this.userId = userId;
+        this.fileName = fileName;
     }
 
     public String getUserId() {
         return userId;
     }
 
-    public List<String> getMaterialIds() {
-        return materialIds;
-    }
-
-    public boolean isConfirmed() {
-        return confirmed;
+    public String getFileName() {
+        return fileName;
     }
 }

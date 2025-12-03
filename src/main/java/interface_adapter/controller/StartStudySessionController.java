@@ -1,6 +1,5 @@
 package interface_adapter.controller;
 
-import interface_adapter.view_model.DashboardViewModel;
 import interface_adapter.view_model.StudySessionConfigState;
 import use_case.start_study_session.StartStudySessionInputBoundary;
 import use_case.start_study_session.StartStudySessionInputData;
@@ -9,6 +8,7 @@ import use_case.start_study_session.StartStudySessionInputData;
  * Controller for starting a study session.
  */
 public class StartStudySessionController {
+
     private final StartStudySessionInputBoundary interactor;
 
     public StartStudySessionController(StartStudySessionInputBoundary interactor) {
@@ -16,31 +16,32 @@ public class StartStudySessionController {
     }
 
     /**
-     * Attempts to start a study session with the current config.
+     * Start a study session with the given configuration.
      *
-     * @param userId the current state
-     * @param state The current configuration
+     * @param userId the ID of the user
+     * @param state the current configuration state
      */
     public void execute(String userId, StudySessionConfigState state) {
-        final StartStudySessionInputData inputData = new StartStudySessionInputData(
-            userId,
-            state.copy());
+        if (userId == null || userId.isBlank() || state == null) return;
+
+        StartStudySessionInputData inputData = new StartStudySessionInputData(userId, state.copy());
         interactor.execute(inputData);
     }
 
     /**
-     * Abort configuration and return.
+     * Abort the current study session configuration.
      */
     public void abortStudySessionConfig() {
         interactor.abortStudySessionConfig();
     }
 
     /**
-     * Refresh the file options that are available.
+     * Refresh the available file options for the user.
      *
-     * @param userId The User ID
+     * @param userId the ID of the user
      */
     public void refreshFileOptions(String userId) {
+        if (userId == null || userId.isBlank()) return;
         interactor.refreshFileOptions(userId);
     }
 }

@@ -6,5 +6,5 @@ public interface UploadReferenceMaterialOutputBoundary {
 
     void prepareFailView(String errorMessage);
 
-    void presentDeletion(String storagePath); // <-- add this
+    void presentDeletion(String storagePath);
 }

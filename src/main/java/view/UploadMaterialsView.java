@@ -1,95 +1,149 @@
 package view;
 
 import app.AppBuilder;
+import interface_adapter.controller.UploadReferenceMaterialController;
+import interface_adapter.view_model.UploadMaterialsViewModel;
+import interface_adapter.view_model.UploadMaterialsState;
+import interface_adapter.view_model.ViewModel;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.io.File;
+import java.util.List;
 
-/**
- * View for uploading and managing reference materials.
- */
-public class UploadMaterialsView extends View {
-    private final JButton uploadButton;
-    private final JButton deleteButton;
-    private final JList<String> materialsList;
-    private final JTextArea promptArea;
-    private final DefaultListModel<String> listModel;
+public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
 
-    public UploadMaterialsView() {
-        super("uploadMaterials");
-        JPanel header = new ViewHeader("Upload Materials");
+    private final String viewName = "uploadMaterials";
+    private final ViewModel<UploadMaterialsState> viewModel;
+    private final UploadMaterialsViewModel uploadMaterialsViewModel;
 
-        JPanel main = new JPanel();
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+    private JButton uploadButton;
+    private JButton returnButton;
+    private JButton deleteButton;
+    private JLabel statusLabel;
+    private JList<String> materialsList;
+    private DefaultListModel<String> listModel;
 
-        JPanel promptPanel = new JPanel();
+    private final UploadReferenceMaterialController uploadController;
 
-        JLabel promptLabel = new JLabel("Upload and manage your reference materials here.");
-        promptArea = new JTextArea(3, 30);
-        promptArea.setLineWrap(true);
+    public UploadMaterialsView(UploadMaterialsViewModel uploadMaterialsViewModel,
+                               UploadReferenceMaterialController controller) {
+        super("uploadMaterials", uploadMaterialsViewModel.getViewModel());
+        this.uploadMaterialsViewModel = uploadMaterialsViewModel;
+        this.viewModel = uploadMaterialsViewModel.getViewModel();
+        this.uploadController = controller;
 
-        promptPanel.add(promptLabel);
-        promptPanel.add(new JScrollPane(promptArea));
+        setupUI();
+        setupActions();
+        refreshMaterialList();
+    }
 
-        uploadButton = new JButton("Upload File");
+    private void setupUI() {
+        setLayout(new BorderLayout(10, 10));
 
-        JPanel uploadButtonPanel = new JPanel();
-        uploadButtonPanel.add(uploadButton);
+        uploadButton = new JButton("Upload PDF");
+        deleteButton = new JButton("Delete Selected");
+        returnButton = new JButton("Return");
+        statusLabel = new JLabel("Select a PDF to upload.", SwingConstants.CENTER);
 
-        JPanel deletePanel = new JPanel();
-
-        JLabel materialsLabel = new JLabel("Uploaded Materials:");
         listModel = new DefaultListModel<>();
         materialsList = new JList<>(listModel);
         materialsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        deletePanel.add(materialsLabel);
-        deletePanel.add(new JScrollPane(materialsList));
+        JScrollPane listScrollPane = new JScrollPane(materialsList);
 
-        deleteButton = new JButton("Delete Selected");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(uploadButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(returnButton);
 
-        deletePanel.add(deleteButton);
-
-        main.add(promptPanel);
-        main.add(uploadButtonPanel);
-        main.add(deletePanel);
-
-        JPanel dashboard = new JPanel();
-
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(e -> {
-            // Navigate back to dashboard
-            AppBuilder.viewManagerModel.setView("settings");
-        });
-
-        dashboard.add(cancelButton);
-
-        this.add(header, BorderLayout.NORTH);
-        this.add(main, BorderLayout.CENTER);
-        this.add(dashboard, BorderLayout.SOUTH);
+        add(listScrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+        add(statusLabel, BorderLayout.NORTH);
     }
 
-    public void addMaterial(String materialName) {
-        listModel.addElement(materialName);
+    private void setupActions() {
+        uploadButton.addActionListener(e -> selectPdfAndUpload());
+        deleteButton.addActionListener(e -> deleteSelectedMaterials());
+        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("settings"));
     }
 
-    public void removeMaterial(String materialName) {
-        listModel.removeElement(materialName);
+    private void selectPdfAndUpload() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF Documents", "pdf"));
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+
+        File selectedFile = fileChooser.getSelectedFile();
+
+        try {
+            // Always fetch logged-in user ID from ViewModel or session
+            String userId = uploadMaterialsViewModel.getCurrentUserId();
+            if (userId == null || userId.isBlank()) {
+                throw new IllegalStateException("User must be logged in to upload files.");
+            }
+
+            uploadController.uploadReferenceMaterial(userId, selectedFile, null);
+
+            // Update the view state
+            viewModel.getState().addMaterial(selectedFile.getName());
+            viewModel.firePropertyChange(); // notify observers
+
+            // Refresh list immediately
+            refreshMaterialList();
+
+            statusLabel.setText("Upload successful: " + selectedFile.getName());
+            JOptionPane.showMessageDialog(this,
+                    "File uploaded successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception ex) {
+            statusLabel.setText("Upload failed: " + (ex.getMessage() != null ? ex.getMessage() : "Unknown error"));
+            JOptionPane.showMessageDialog(this,
+                    "Failed to upload file: " + (ex.getMessage() != null ? ex.getMessage() : "Unknown error"),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    public String[] getSelectedMaterials() {
-        return materialsList.getSelectedValuesList().toArray(new String[0]);
+    private void deleteSelectedMaterials() {
+        List<String> selectedFiles = materialsList.getSelectedValuesList();
+
+        if (selectedFiles.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No files selected for deletion.",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete the selected materials?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            for (String fileName : selectedFiles) {
+                viewModel.getState().removeMaterial(fileName);
+            }
+            viewModel.firePropertyChange();
+            refreshMaterialList();
+            statusLabel.setText("Selected materials deleted.");
+        }
     }
 
-    public String getPrompt() {
-        return promptArea.getText();
+    private void refreshMaterialList() {
+        listModel.clear();
+        for (String material : viewModel.getState().getUploadedMaterials()) {
+            listModel.addElement(material);
+        }
     }
 
-    public void setUploadButtonListener(java.awt.event.ActionListener listener) {
-        uploadButton.addActionListener(listener);
-    }
-
-    public void setDeleteButtonListener(java.awt.event.ActionListener listener) {
-        deleteButton.addActionListener(listener);
+    public String getViewName() {
+        return viewName;
     }
 }

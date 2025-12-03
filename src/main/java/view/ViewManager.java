@@ -24,11 +24,19 @@ public class ViewManager implements PropertyChangeListener {
         this.views = views;
     }
 
+    /**
+     * Programmatically shows a view by name.
+     * This updates the ViewManagerModel state, which triggers propertyChange().
+     */
+    public void showView(String viewName) {
+        if (viewName != null && !viewName.isEmpty()) {
+            viewManagerModel.setView(viewName);
+        }
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent event) {
         if (event.getPropertyName().equals("state")) {
-            System.out.println(event.getNewValue());
-
             final String viewModelName = (String) event.getNewValue();
             cardLayout.show(views, viewModelName);
 

@@ -1,55 +1,55 @@
 package interface_adapter.view_model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Holds the state for the Upload Materials view.
- * Tracks the list of uploaded materials.
+ * State class for managing uploaded reference materials.
  */
 public class UploadMaterialsState {
 
-    private final List<String> uploadedMaterials;
+    private List<String> uploadedMaterials;
 
     public UploadMaterialsState() {
         this.uploadedMaterials = new ArrayList<>();
     }
 
     /**
-     * Returns an unmodifiable copy of the uploaded materials.
+     * Get the list of uploaded materials.
+     *
+     * @return list of file names
      */
     public List<String> getUploadedMaterials() {
-        return Collections.unmodifiableList(uploadedMaterials);
+        return uploadedMaterials;
     }
 
     /**
-     * Adds a material to the list.
+     * Set the list of uploaded materials.
+     *
+     * @param uploadedMaterials list of file names
      */
-    public void addMaterial(String materialName) {
-        if (materialName != null && !materialName.isEmpty()) {
-            uploadedMaterials.add(materialName);
+    public void setUploadedMaterials(List<String> uploadedMaterials) {
+        this.uploadedMaterials = Objects.requireNonNullElse(uploadedMaterials, new ArrayList<>());
+    }
+
+    /**
+     * Add a material to the uploaded materials list.
+     *
+     * @param fileName name of the file to add
+     */
+    public void addMaterial(String fileName) {
+        if (fileName != null && !fileName.isEmpty()) {
+            uploadedMaterials.add(fileName);
         }
     }
 
     /**
-     * Removes a material from the list.
+     * Remove a material from the uploaded materials list.
+     *
+     * @param fileName name of the file to remove
      */
-    public void removeMaterial(String materialName) {
-        uploadedMaterials.remove(materialName);
-    }
-
-    /**
-     * Clears all uploaded materials.
-     */
-    public void clearMaterials() {
-        uploadedMaterials.clear();
-    }
-
-    /**
-     * Checks if a material exists in the state.
-     */
-    public boolean hasMaterial(String materialName) {
-        return uploadedMaterials.contains(materialName);
+    public void removeMaterial(String fileName) {
+        uploadedMaterials.remove(fileName);
     }
 }

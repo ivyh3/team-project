@@ -76,15 +76,14 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     // make sure this is called when the config view is opened somehow.
     @Override
     public void refreshFileOptions(String userId) {
-
-        // TODO: Use real user ID
         final List<String> fileOptions = fileDataAccessObject.getAllUserFiles(userId);
+
         if (fileOptions == null || fileOptions.isEmpty()) {
             presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
             presenter.abortStudySessionConfig();
-        }
-        else {
-            presenter.refreshFileOptions(fileOptions);
+        } else {
+            // Update the presenter or ViewModel
+            presenter.refreshFileOptions(fileOptions);  // pass to presenter which will update ViewModel
         }
     }
 

@@ -61,7 +61,6 @@ public class Main {
                     .addSettingsView()
                     .addChangePasswordUseCase()
                     .addLogoutUseCase()
-                    .addUploadSessionMaterialsView()
                     .addStudySessionView()
                     .addStudySessionEndView()
                     .addEndStudySessionUseCase()
@@ -71,7 +70,6 @@ public class Main {
                     .addScheduleSessionView()
                     .addStudyMetricsView()
                     .addStudySessionConfigView()
-                    .addConfigStudySessionUseCase()
                     .addUploadMaterialsView()
                     .build();
 

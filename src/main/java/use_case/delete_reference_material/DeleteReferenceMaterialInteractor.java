@@ -1,25 +1,37 @@
 package use_case.delete_reference_material;
 
 import use_case.upload_reference_material.UploadReferenceMaterialDataAccessInterface;
-import use_case.upload_reference_material.UploadReferenceMaterialOutputBoundary;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
-public class DeleteReferenceMaterialInteractor {
+/**
+ * Interactor for deleting reference materials.
+ */
+public class DeleteReferenceMaterialInteractor implements DeleteReferenceMaterialInputBoundary {
 
-    private final UploadReferenceMaterialDataAccessInterface repository;
-    private final UploadReferenceMaterialOutputBoundary presenter;
+    private final UploadReferenceMaterialDataAccessInterface fileDAO;
+    private final DeleteReferenceMaterialOutputBoundary presenter;
 
-    public DeleteReferenceMaterialInteractor(UploadReferenceMaterialDataAccessInterface repository,
-                                             UploadReferenceMaterialOutputBoundary presenter) {
-        this.repository = repository;
+    public DeleteReferenceMaterialInteractor(
+            UploadReferenceMaterialDataAccessInterface fileDAO,
+            DeleteReferenceMaterialOutputBoundary presenter) {
+        this.fileDAO = fileDAO;
         this.presenter = presenter;
     }
 
-    public void delete(String userId, String fileName) {
+    public void delete(String userId, List<String> fileNames) {
+        List<String> deletedFiles = new ArrayList<>();
         try {
-            repository.deleteFile(userId, fileName);
-            presenter.presentDeletion(fileName);// ✅ works now
+            for (String fileName : fileNames) {
+                fileDAO.deleteFile(userId, fileName);
+                deletedFiles.add(fileName);
+            }
+            presenter.presentDeletionSuccess(deletedFiles);
         } catch (Exception e) {
-            presenter.prepareFailView(e.getMessage());
+            presenter.presentDeletionFailure(
+                    "Failed to delete files: " + e.getMessage()
+            );
         }
     }
 }

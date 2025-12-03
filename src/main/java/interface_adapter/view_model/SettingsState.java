@@ -46,8 +46,8 @@ public class SettingsState {
         this.currentUserId = ""; // default empty
     }
 
-    public String getCurrentUserId() {
-        return currentUserId;
+    public String getUserId() {
+        return this.currentUserId; // or wherever you store the current user's ID
     }
 
     public void setCurrentUserId(String currentUserId) {
