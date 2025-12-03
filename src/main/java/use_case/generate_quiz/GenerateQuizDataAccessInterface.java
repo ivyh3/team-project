@@ -9,9 +9,17 @@ import entity.Question;
  */
 public interface GenerateQuizDataAccessInterface {
     /**
+     * Retrieves the Firebase Storage file path for a given user.
+     *
+     * @param userId   The ID of the user.
+     * @param filename The name of the file.
+     * @return The Firebase Storage file path
+     */
+    String getFilePath(String userId, String filename);
+
+    /**
      * Generates a list of questions for a study quiz.
-     * Supposed to be used when a file cannot be base64 read and using gemini file
-     * api.
+     * Supposed to be used when a file cannot be base64 read and using gemini file api.
      *
      * @param pdfBytes the PDF file as a byte array
      * @param context      The context for the study quiz

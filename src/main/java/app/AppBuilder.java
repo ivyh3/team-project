@@ -354,6 +354,8 @@ public class AppBuilder {
 
         // Default view to dashboard view
         viewManagerModel.setView(initialView.getViewName());
+        // TODO: Temporary view
+        viewManagerModel.setView(dashboardView.getViewName());
 
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         app.setVisible(true);

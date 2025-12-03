@@ -17,12 +17,11 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
 import app.Config;
-import use_case.generate_quiz.GenerateQuizFileDataAccessInterface;
 import use_case.start_study_session.StartStudySessionDataAccessInterface;
 
 // TODO: Fix this garbage.
 public class FirebaseFileDataAccessObject
-        implements StartStudySessionDataAccessInterface, GenerateQuizFileDataAccessInterface {
+        implements StartStudySessionDataAccessInterface {
 
     private final String FILES_BUCKET;
     // private final Storage storage;
@@ -78,7 +77,7 @@ public class FirebaseFileDataAccessObject
      * Deletes a file from Firebase Storage.
      * 
      * @param userId   The id of the user
-     * @param filePath The path of the file to delete
+     * @param fileName The path of the file to delete
      */
     public void deleteFile(String userId, String fileName) {
         try {
@@ -88,7 +87,8 @@ public class FirebaseFileDataAccessObject
             if (!deleted) {
                 throw new RuntimeException("File not deleted, may not exist.");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Error deleting file: " + e.getMessage(), e);
         }
     }

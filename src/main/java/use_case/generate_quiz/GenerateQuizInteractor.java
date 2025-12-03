@@ -35,8 +35,8 @@ public final class GenerateQuizInteractor implements GenerateQuizInputBoundary {
         }
 
         try {
-            // Technically a filename. Gotta get the file from Firebase.
-            String referenceFile = input.getReferenceFile();
+            // Actually is a filename, not the file itself.
+            final String referenceFile = input.getReferenceFile();
 
             // I think this only supports PDFS. Great.
             byte[] pdfBytes = fileDataAccessObject.getFileContents(
