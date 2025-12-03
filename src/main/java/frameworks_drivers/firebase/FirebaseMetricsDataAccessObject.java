@@ -1,18 +1,12 @@
 package frameworks_drivers.firebase;
 
-import entity.User;
-import interface_adapter.view_model.DashboardState;
-import entity.StudySession;
-import entity.StudyQuiz;
-import entity.Question;
-import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
 
-//TODO: replace fake data and implement the getSessionsPerWeek and getQuizzesPerWeek methods from the DAI
+import entity.StudyQuiz;
+import entity.StudySession;
+import use_case.view_study_metrics.ViewStudyMetricsDataAccessInterface;
 
 /**
  * Temporary mock implementation of ViewStudyMetricsDataAccessInterface.
@@ -20,32 +14,30 @@ import java.util.*;
  */
 public class FirebaseMetricsDataAccessObject implements ViewStudyMetricsDataAccessInterface {
 
-    private FirebaseStudySessionDataAccessObject sessionDAO;
-    private FirebaseStudyQuizDataAccessObject quizDAO;
+    public static final int DAYS_PER_WEEK = 7;
+    private final FirebaseStudySessionDataAccessObject studySessionDataAccessObject;
+    private final FirebaseStudyQuizDataAccessObject studyQuizDataAccessObject;
 
-    public FirebaseMetricsDataAccessObject(FirebaseStudySessionDataAccessObject sessionDAO,
-            FirebaseStudyQuizDataAccessObject quizDAO) {
-        this.sessionDAO = sessionDAO;
-        this.quizDAO = quizDAO;
+    public FirebaseMetricsDataAccessObject(FirebaseStudySessionDataAccessObject studySessionDataAccessObject,
+                                           FirebaseStudyQuizDataAccessObject studyQuizDataAccessObject) {
+        this.studySessionDataAccessObject = studySessionDataAccessObject;
+        this.studyQuizDataAccessObject = studyQuizDataAccessObject;
     }
 
     @Override
     public List<StudySession> getSessionsPerWeek(String userId, LocalDateTime currentTime) {
         // Get date range for a week (starting from the given sunday).
-        LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
-        List<StudySession> sessions = sessionDAO.getStudySessionsInRange(userId, start, end);
-        return sessions;
+        final LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
+        final LocalDateTime end = currentTime.plusDays(DAYS_PER_WEEK).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
+        return studySessionDataAccessObject.getStudySessionsInRange(userId, start, end);
     }
 
     @Override
     public List<StudyQuiz> getQuizzesPerWeek(String userId, LocalDateTime currentTime) {
         // Get date range for a week (starting from the given sunday).
-        LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime end = currentTime.plusDays(7).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
+        final LocalDateTime start = currentTime.truncatedTo(ChronoUnit.DAYS);
+        final LocalDateTime end = currentTime.plusDays(DAYS_PER_WEEK).truncatedTo(ChronoUnit.DAYS).minusNanos(1);
 
-        List<StudyQuiz> quizzes = quizDAO.getStudyQuizzesInRange(userId, start, end);
-
-        return quizzes;
+        return studyQuizDataAccessObject.getStudyQuizzesInRange(userId, start, end);
     }
 }
