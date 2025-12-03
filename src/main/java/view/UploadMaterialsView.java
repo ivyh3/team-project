@@ -1,6 +1,5 @@
 package view;
 
-import app.AppBuilder;
 import interface_adapter.controller.UploadReferenceMaterialController;
 import interface_adapter.view_model.UploadMaterialsViewModel;
 import interface_adapter.view_model.UploadMaterialsState;
@@ -17,6 +16,7 @@ public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
     private final String viewName = "uploadMaterials";
     private final ViewModel<UploadMaterialsState> viewModel;
     private final UploadMaterialsViewModel uploadMaterialsViewModel;
+    private final UploadReferenceMaterialController uploadController;
 
     private JButton uploadButton;
     private JButton returnButton;
@@ -25,14 +25,14 @@ public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
     private JList<String> materialsList;
     private DefaultListModel<String> listModel;
 
-    private final UploadReferenceMaterialController uploadController;
-
+    // Constructor now properly accepts ViewModel and Controller
     public UploadMaterialsView(UploadMaterialsViewModel uploadMaterialsViewModel,
-                               UploadReferenceMaterialController controller) {
+                               UploadReferenceMaterialController uploadController) {
         super("uploadMaterials", uploadMaterialsViewModel.getViewModel());
+
         this.uploadMaterialsViewModel = uploadMaterialsViewModel;
         this.viewModel = uploadMaterialsViewModel.getViewModel();
-        this.uploadController = controller;
+        this.uploadController = uploadController;
 
         setupUI();
         setupActions();
@@ -66,7 +66,7 @@ public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
     private void setupActions() {
         uploadButton.addActionListener(e -> selectPdfAndUpload());
         deleteButton.addActionListener(e -> deleteSelectedMaterials());
-        returnButton.addActionListener(e -> AppBuilder.viewManagerModel.setView("settings"));
+        returnButton.addActionListener(e -> uploadController.showManageFilesView()); // or your ViewManager logic
     }
 
     private void selectPdfAndUpload() {
@@ -80,7 +80,6 @@ public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
         File selectedFile = fileChooser.getSelectedFile();
 
         try {
-            // Always fetch logged-in user ID from ViewModel or session
             String userId = uploadMaterialsViewModel.getCurrentUserId();
             if (userId == null || userId.isBlank()) {
                 throw new IllegalStateException("User must be logged in to upload files.");
@@ -88,11 +87,9 @@ public class UploadMaterialsView extends StatefulView<UploadMaterialsState> {
 
             uploadController.uploadReferenceMaterial(userId, selectedFile, null);
 
-            // Update the view state
             viewModel.getState().addMaterial(selectedFile.getName());
-            viewModel.firePropertyChange(); // notify observers
+            viewModel.firePropertyChange();
 
-            // Refresh list immediately
             refreshMaterialList();
 
             statusLabel.setText("Upload successful: " + selectedFile.getName());

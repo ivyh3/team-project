@@ -13,12 +13,12 @@ import java.io.File;
  */
 public class StudyQuizView extends JPanel {
 
-    private final QuizViewModel quizViewModel;
+    private QuizViewModel quizViewModel = new QuizViewModel();
     private final JButton generateQuizButton;
     private final JPanel quizPanel;
     private GenerateQuizController controller;
 
-    public StudyQuizView(QuizViewModel quizViewModel) {
+    public StudyQuizView() {
         this.quizViewModel = quizViewModel;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -115,4 +115,6 @@ public class StudyQuizView extends JPanel {
         quizPanel.revalidate();
         quizPanel.repaint();
     }
+
+    public String getViewName() {return "studyQuiz";}
 }

@@ -25,9 +25,6 @@ import interface_adapter.view_model.*;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
-import use_case.delete_reference_material.DeleteReferenceMaterialInputBoundary;
-import use_case.delete_reference_material.DeleteReferenceMaterialInteractor;
-import use_case.delete_reference_material.DeleteReferenceMaterialOutputBoundary;
 import use_case.end_study_session.EndStudySessionInteractor;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
@@ -42,8 +39,9 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+import use_case.start_study_session.StartStudySessionDataAccessInterface;
 import use_case.start_study_session.StartStudySessionInteractor;
-import use_case.upload_reference_material.UploadReferenceMaterialDataAccessInterface;
+import use_case.start_study_session.StartStudySessionOutputBoundary;
 import use_case.upload_reference_material.UploadReferenceMaterialInputBoundary;
 import use_case.upload_reference_material.UploadReferenceMaterialInteractor;
 import use_case.upload_reference_material.UploadReferenceMaterialOutputBoundary;
@@ -68,6 +66,7 @@ import view.ViewManager;
 
 public class AppBuilder {
     public static final ViewManagerModel viewManagerModel = new ViewManagerModel();
+    public static ViewModel<UploadMaterialsState> uploadMaterialsViewModel;
     // TODO: Sort things out.
     final UserFactory userFactory = new UserFactory();
     final StudySessionFactory studySessionFactory = new StudySessionFactory();
@@ -87,16 +86,12 @@ public class AppBuilder {
     private final CardLayout cardLayout = new CardLayout();
     final ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
     private DashboardView dashboardView;
-    private QuizViewModel quizViewModel;
     private StudySessionConfigView studySessionConfigView;
     private StudySessionView studySessionView;
     private StudySessionEndView studySessionEndView;
     private StudySessionConfigViewModel studySessionConfigViewModel;
     private StudySessionViewModel studySessionViewModel;
     private StudySessionEndViewModel studySessionEndViewModel;
-    private UploadMaterialsView uploadMaterialsView;
-    private UploadSessionMaterialsView uploadSessionMaterialsView;
-    private UploadMaterialsViewModel uploadMaterialsViewModel;
     private InitialView initialView;
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -196,35 +191,11 @@ public class AppBuilder {
     }
 
     public AppBuilder addSettingsView() {
-        // 1. Create the ViewModel instances
-        settingsViewModel = new SettingsViewModel(); // assign to field
-        dashboardViewModel = new DashboardViewModel(); // assign to field
+        settingsViewModel = new SettingsViewModel();
+        settingsView = new SettingsView(settingsViewModel, dashboardViewModel);
 
-        // 2. Create your presenter for uploading
-        String currentUsername = dashboardViewModel.getState().getEmail(); // or a fallback ""
-        uploadMaterialsViewModel = new UploadMaterialsViewModel(currentUsername);
-        UploadReferenceMaterialOutputBoundary uploadPresenter =
-                new UploadMaterialsPresenter(uploadMaterialsViewModel);
-
-        // 3. Use your Firebase DAO as data access
-        UploadReferenceMaterialDataAccessInterface dataAccess = fileDataAccessObject;
-
-        // 4. Create the interactor
-        UploadReferenceMaterialInputBoundary uploadInteractor =
-                new UploadReferenceMaterialInteractor(dataAccess, uploadPresenter);
-
-        // 5. Use the existing ViewManager (already a field)
-
-        // 6. Create the controller
-        UploadReferenceMaterialController uploadController =
-                new UploadReferenceMaterialController(uploadInteractor, dataAccess, viewManager);
-
-        // 7. Assign to class field, not local variable
-        settingsView = new SettingsView(settingsViewModel, dashboardViewModel, viewManagerModel);
-        settingsView.setUploadController(uploadController);
-
-        // 8. Add the view to your CardLayout
         cardPanel.add(settingsView, settingsView.getViewName());
+
         return this;
     }
 
@@ -238,22 +209,47 @@ public class AppBuilder {
 
     public AppBuilder addStudySessionConfigView() {
         studySessionConfigViewModel = new StudySessionConfigViewModel();
-
-        // Create controller for this view
-        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
-                new StartStudySessionPresenter(studySessionConfigViewModel, studySessionViewModel, viewManagerModel, dashboardView.getViewName()),
-                fileDataAccessObject
-        );
-        StartStudySessionController studySessionConfigController = new StartStudySessionController(configStudySessionInteractor);
-
-        // Pass controller to constructor
-        studySessionConfigView = new StudySessionConfigView(
-                studySessionConfigViewModel,
-                dashboardViewModel,
-                studySessionConfigController
-        );
-
+        studySessionConfigView = new StudySessionConfigView(studySessionConfigViewModel, dashboardViewModel);
         cardPanel.add(studySessionConfigView, studySessionConfigView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addConfigStudySessionUseCase() {
+        StartStudySessionPresenter startStudySessionPresenter = new StartStudySessionPresenter(
+                studySessionConfigViewModel,
+                studySessionViewModel,
+                viewManagerModel,
+                dashboardView.getViewName());
+        StartStudySessionInteractor configStudySessionInteractor = new StartStudySessionInteractor(
+                (StartStudySessionOutputBoundary) startStudySessionPresenter, (StartStudySessionDataAccessInterface) fileDataAccessObject);
+        StartStudySessionController studySessionConfigController = new StartStudySessionController(
+                configStudySessionInteractor);
+        studySessionConfigView.setStartStudySessionController(studySessionConfigController);
+        return this;
+    }
+
+
+    public AppBuilder addUploadMaterialsView() {
+        // 1. Initialize the UploadMaterialsViewModel for the logged-in user
+        UploadMaterialsViewModel uploadVM = new UploadMaterialsViewModel(dashboardViewModel.getState().getEmail());
+        uploadMaterialsViewModel = uploadVM.getViewModel(); // assign to AppBuilder field of type UploadMaterialsViewModel
+
+        // 2. Create the presenter and interactor
+        UploadReferenceMaterialOutputBoundary uploadPresenter =
+                new UploadMaterialsPresenter(uploadVM);
+        UploadReferenceMaterialInputBoundary uploadInteractor =
+                new UploadReferenceMaterialInteractor(fileDataAccessObject, uploadPresenter);
+
+        // 3. Create the controller
+        UploadReferenceMaterialController uploadController =
+                new UploadReferenceMaterialController(uploadInteractor, fileDataAccessObject, viewManager);
+
+        // 4. Create the view with the UploadMaterialsViewModel and controller
+        UploadMaterialsView uploadMaterialsView = new UploadMaterialsView(uploadVM, uploadController);
+
+        // 5. Add the view to the card panel
+        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
+
         return this;
     }
 
@@ -278,37 +274,14 @@ public class AppBuilder {
     }
 
     public AppBuilder addStudyQuizView() {
-        StudyQuizView studyQuizView = new StudyQuizView(quizViewModel);
-        cardPanel.add(studyQuizView, "STUDY_QUIZ");
+        StudyQuizView studyQuizView = new StudyQuizView();
+        cardPanel.add(studyQuizView, studyQuizView.getViewName());
         return this;
     }
 
     public AppBuilder addFileManagerView() {
         FileManagerView fileManagerView = new FileManagerView();
         cardPanel.add(fileManagerView, fileManagerView.getViewName());
-        return this;
-    }
-
-    public AppBuilder addUploadMaterialsView() {
-        // 1. Initialize ViewModel
-        uploadMaterialsViewModel = new UploadMaterialsViewModel(dashboardViewModel.getState().getEmail());
-
-        // 2. Create the presenter and interactor for uploading
-        UploadReferenceMaterialOutputBoundary uploadPresenter =
-                new UploadMaterialsPresenter(uploadMaterialsViewModel);
-        UploadReferenceMaterialInputBoundary uploadInteractor =
-                new UploadReferenceMaterialInteractor(fileDataAccessObject, uploadPresenter);
-
-        // 3. Create and attach controller
-        UploadReferenceMaterialController uploadController =
-                new UploadReferenceMaterialController(uploadInteractor, fileDataAccessObject, viewManager);
-
-        // 4. Create the UploadMaterialsView with ViewModel + controller
-        uploadMaterialsView = new UploadMaterialsView(uploadMaterialsViewModel, uploadController);
-
-        // 5. Add the view to the card panel
-        cardPanel.add(uploadMaterialsView, uploadMaterialsView.getViewName());
-
         return this;
     }
 
@@ -334,7 +307,7 @@ public class AppBuilder {
         ViewStudyMetricsPresenter presenter = new ViewStudyMetricsPresenter(metricsViewModel);
 
         ViewStudyMetricsDataAccessInterface metricsDAO = new FirebaseMetricsDataAccessObject(
-            studySessionDataAccessObject, quizDataAccessObject);
+                studySessionDataAccessObject, quizDataAccessObject);
         ViewStudyMetricsInteractor interactor = new ViewStudyMetricsInteractor(metricsDAO, presenter);
 
         ViewStudyMetricsController controller = new ViewStudyMetricsController(interactor);

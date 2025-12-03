@@ -1,18 +1,31 @@
 package view;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import app.AppBuilder;
 import interface_adapter.controller.ChangePasswordController;
 import interface_adapter.controller.LogoutController;
-import interface_adapter.controller.UploadReferenceMaterialController;
-import interface_adapter.view_model.*;
+import interface_adapter.view_model.DashboardViewModel;
+import interface_adapter.view_model.SettingsState;
+import interface_adapter.view_model.SettingsViewModel;
 
 /**
  * View for Application settings.
@@ -21,9 +34,8 @@ public class SettingsView extends StatefulView<SettingsState> {
 
     private ChangePasswordController changePasswordController;
     private LogoutController logoutController;
-    private UploadReferenceMaterialController uploadController; // <-- add this
+
     private final DashboardViewModel dashboardViewModel;
-    private final ViewManagerModel viewManagerModel;
 
     private final JPasswordField oldPasswordInputField = new JPasswordField(15);
     private final JPasswordField newPasswordInputField = new JPasswordField(15);
@@ -31,13 +43,9 @@ public class SettingsView extends StatefulView<SettingsState> {
     private final JLabel changePasswordErrorField = new JLabel();
     private final JLabel userEmailLabel = new JLabel();
 
-    // Updated constructor
-    public SettingsView(SettingsViewModel settingsViewModel,
-                        DashboardViewModel dashboardViewModel,
-                        ViewManagerModel viewManagerModel) {
+    public SettingsView(SettingsViewModel settingsViewModel, DashboardViewModel dashboardViewModel) {
         super("settings", settingsViewModel);
         this.dashboardViewModel = dashboardViewModel;
-        this.viewManagerModel = viewManagerModel;
 
         final JPanel viewHeader = getHeaderPanel();
 
@@ -55,19 +63,18 @@ public class SettingsView extends StatefulView<SettingsState> {
         userEmailLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         final JButton manageUploadedFilesButton = new JButton("Manage Uploaded Files");
-        manageUploadedFilesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         manageUploadedFilesButton.addActionListener(event -> {
-            viewModel.firePropertyChange();
-            viewManagerModel.setView("uploadMaterials"); // navigate via ViewManagerModel
-            openManageFilesView(); // call controller to handle any setup logic if needed
+            AppBuilder.viewManagerModel.setView("uploadMaterials");
         });
+        manageUploadedFilesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         leftPanel.add(userEmailLabel);
         leftPanel.add(Box.createVerticalStrut(20));
         leftPanel.add(manageUploadedFilesButton);
+
         leftWrapper.add(leftPanel, BorderLayout.NORTH);
 
-        // Right side: Change password form (rest of your existing code)
+        // Right side - Change password form (wrapper for centering)
         final JPanel rightWrapper = new JPanel(new BorderLayout());
         final JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
@@ -84,11 +91,13 @@ public class SettingsView extends StatefulView<SettingsState> {
         final LabelTextPanel confirmPasswordInfo = new LabelTextPanel(
                 new JLabel("Confirm Password"), confirmPasswordInputField);
 
+        // Style the error label
         changePasswordErrorField.setForeground(Color.RED);
         changePasswordErrorField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         final JButton changePasswordButton = getChangePasswordButton();
 
+        // Add document listeners for password fields
         addPasswordFieldListener(oldPasswordInputField, SettingsState::setOldPassword);
         addPasswordFieldListener(newPasswordInputField, SettingsState::setNewPassword);
         addPasswordFieldListener(confirmPasswordInputField, SettingsState::setConfirmPassword);
@@ -115,9 +124,10 @@ public class SettingsView extends StatefulView<SettingsState> {
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
         final JButton returnButton = new JButton("Return");
         returnButton.addActionListener(event -> {
+            // Clear form when navigating away
             viewModel.setState(new SettingsState());
             viewModel.firePropertyChange();
-            viewManagerModel.setView("dashboard");
+            AppBuilder.viewManagerModel.setView("dashboard");
         });
         bottomPanel.add(returnButton);
 
@@ -125,11 +135,17 @@ public class SettingsView extends StatefulView<SettingsState> {
         this.add(mainContent, BorderLayout.CENTER);
         this.add(bottomPanel, BorderLayout.SOUTH);
 
+        // Update user email when view becomes visible
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
                 final String userEmail = dashboardViewModel.getState().getEmail();
-                userEmailLabel.setText(userEmail.isEmpty() ? "<no user found>" : userEmail);
+                if (userEmail.isEmpty()) {
+                    userEmailLabel.setText("<no user found>");
+                }
+                else {
+                    userEmailLabel.setText(dashboardViewModel.getState().getEmail());
+                }
             }
         });
     }
@@ -140,13 +156,13 @@ public class SettingsView extends StatefulView<SettingsState> {
         final JButton logoutButton = new JButton("Log Out");
         logoutButton.addActionListener(event -> {
             if (logoutController != null) {
-                int confirm = JOptionPane.showConfirmDialog(
+                final int logoutConfirmOptionPane = JOptionPane.showConfirmDialog(
                         this,
                         "Are you sure you want to log out?",
                         "Confirm Logout",
                         JOptionPane.YES_NO_OPTION);
 
-                if (confirm == JOptionPane.YES_OPTION) {
+                if (logoutConfirmOptionPane == JOptionPane.YES_OPTION) {
                     logoutController.execute();
                 }
             }
@@ -160,6 +176,7 @@ public class SettingsView extends StatefulView<SettingsState> {
         changePasswordButton.addActionListener(event -> {
             if (changePasswordController != null) {
                 final SettingsState state = viewModel.getState();
+
                 changePasswordController.execute(
                         dashboardViewModel.getState().getUserId(),
                         state.getOldPassword(),
@@ -175,46 +192,51 @@ public class SettingsView extends StatefulView<SettingsState> {
                                           java.util.function.BiConsumer<SettingsState, String> setter) {
         field.getDocument().addDocumentListener(new DocumentListener() {
             private void documentListenerHelper() {
-                SettingsState currentState = viewModel.getState();
+                final SettingsState currentState = viewModel.getState();
                 setter.accept(currentState, new String(field.getPassword()));
                 viewModel.setState(currentState);
             }
 
             @Override
-            public void insertUpdate(DocumentEvent e) { documentListenerHelper(); }
+            public void insertUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
+
             @Override
-            public void removeUpdate(DocumentEvent e) { documentListenerHelper(); }
+            public void removeUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
+
             @Override
-            public void changedUpdate(DocumentEvent e) { documentListenerHelper(); }
+            public void changedUpdate(DocumentEvent e) {
+                documentListenerHelper();
+            }
         });
-    }
-
-    public void setUploadController(UploadReferenceMaterialController controller) {
-        this.uploadController = controller;
-    }
-
-    private void openManageFilesView() {
-        if (uploadController != null) {
-            uploadController.showManageFilesView(); // you need this method in your UploadReferenceMaterialController
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "Controller not set. Cannot open Manage Files view.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if ("state".equals(evt.getPropertyName())) {
-            SettingsState state = (SettingsState) evt.getNewValue();
+        if (evt.getPropertyName().equals("state")) {
+            final SettingsState state = (SettingsState) evt.getNewValue();
 
-            if (state.getOldPassword().isEmpty()) oldPasswordInputField.setText("");
-            if (state.getNewPassword().isEmpty()) newPasswordInputField.setText("");
-            if (state.getConfirmPassword().isEmpty()) confirmPasswordInputField.setText("");
+            // Update password fields if they've been cleared
+            if (state.getOldPassword().isEmpty()) {
+                oldPasswordInputField.setText("");
+            }
+            if (state.getNewPassword().isEmpty()) {
+                newPasswordInputField.setText("");
+            }
+            if (state.getConfirmPassword().isEmpty()) {
+                confirmPasswordInputField.setText("");
+            }
 
-            changePasswordErrorField.setText(
-                    (state.getChangePasswordError() != null) ? state.getChangePasswordError() : "");
+            // Display error message if present
+            if (state.getChangePasswordError() != null && !state.getChangePasswordError().isEmpty()) {
+                changePasswordErrorField.setText(state.getChangePasswordError());
+            }
+            else {
+                changePasswordErrorField.setText("");
+            }
         }
     }
 
@@ -225,4 +247,5 @@ public class SettingsView extends StatefulView<SettingsState> {
     public void setLogoutController(LogoutController logoutController) {
         this.logoutController = logoutController;
     }
+
 }

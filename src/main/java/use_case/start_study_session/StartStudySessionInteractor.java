@@ -33,7 +33,7 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
             presenter.prepareErrorView("You need a session type selected.");
         }
         else if (config.getSessionType() == SessionType.FIXED
-            && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
+                && (config.getTotalTargetDurationMinutes() == null || config.getTotalTargetDurationMinutes() <= 0)) {
             presenter.prepareErrorView("Please study a bit more seriously (time can't be zero)!");
         }
         else if (config.getReferenceFile() == null || config.getReferenceFile().isEmpty()) {
@@ -48,8 +48,8 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
         else {
             // Passed all validation checks. Start the study session.
             final StartStudySessionOutputData outputData = new StartStudySessionOutputData(
-                config,
-                LocalDateTime.now());
+                    config,
+                    LocalDateTime.now());
 
             presenter.startStudySession(outputData);
         }
@@ -74,13 +74,12 @@ public class StartStudySessionInteractor implements StartStudySessionInputBounda
     @Override
     public void refreshFileOptions(String userId) {
         final List<String> fileOptions = fileDataAccessObject.getAllUserFiles(userId);
-
         if (fileOptions == null || fileOptions.isEmpty()) {
             presenter.prepareErrorView("No textbook files. Go to the settings and add some first.");
             presenter.abortStudySessionConfig();
-        } else {
-            // Update the presenter or ViewModel
-            presenter.refreshFileOptions(fileOptions);  // pass to presenter which will update ViewModel
+        }
+        else {
+            presenter.refreshFileOptions(fileOptions);
         }
     }
 

@@ -4,52 +4,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * State class for managing uploaded reference materials.
- */
 public class UploadMaterialsState {
-
+    private final String userId;
     private List<String> uploadedMaterials;
 
-    public UploadMaterialsState() {
+    public UploadMaterialsState(String userId) {
+        this.userId = Objects.requireNonNull(userId, "userId cannot be null");
         this.uploadedMaterials = new ArrayList<>();
     }
 
-    /**
-     * Get the list of uploaded materials.
-     *
-     * @return list of file names
-     */
+    public String getUserId() {
+        return userId;
+    }
+
     public List<String> getUploadedMaterials() {
         return uploadedMaterials;
     }
 
-    /**
-     * Set the list of uploaded materials.
-     *
-     * @param uploadedMaterials list of file names
-     */
     public void setUploadedMaterials(List<String> uploadedMaterials) {
-        this.uploadedMaterials = Objects.requireNonNullElse(uploadedMaterials, new ArrayList<>());
+        this.uploadedMaterials = Objects.requireNonNull(uploadedMaterials, "uploadedMaterials cannot be null");
     }
 
-    /**
-     * Add a material to the uploaded materials list.
-     *
-     * @param fileName name of the file to add
-     */
-    public void addMaterial(String fileName) {
-        if (fileName != null && !fileName.isEmpty()) {
-            uploadedMaterials.add(fileName);
-        }
+    public void addMaterial(String name) {
+        uploadedMaterials.add(name);
     }
 
-    /**
-     * Remove a material from the uploaded materials list.
-     *
-     * @param fileName name of the file to remove
-     */
-    public void removeMaterial(String fileName) {
-        uploadedMaterials.remove(fileName);
+    public void removeMaterial(String name) {
+        uploadedMaterials.remove(name);
     }
 }

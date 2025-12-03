@@ -1,43 +1,45 @@
 package interface_adapter.view_model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class UploadMaterialsViewModel {
 
     private final String currentUserId;
     private final ViewModel<UploadMaterialsState> viewModel;
 
-    public UploadMaterialsViewModel(String currentUserId) {
-        this.currentUserId = currentUserId;
-        this.viewModel = new ViewModel<>("uploadMaterials");
-        this.viewModel.setState(new UploadMaterialsState());
-    }
+    public UploadMaterialsViewModel(String userId) {
+        this.currentUserId = userId;
 
-    public ViewModel<UploadMaterialsState> getViewModel() {
-        return viewModel;
+        // Initialize the ViewModel with the view name
+        this.viewModel = new ViewModel<>("uploadMaterials");
+
+        // Set the initial state
+        this.viewModel.setState(new UploadMaterialsState(userId));
     }
 
     public String getCurrentUserId() {
         return currentUserId;
     }
 
-    // Adds a material and notifies the view
     public void addMaterial(String fileName) {
         UploadMaterialsState state = viewModel.getState();
         if (state.getUploadedMaterials() == null) {
             state.setUploadedMaterials(new ArrayList<>());
         }
         state.getUploadedMaterials().add(fileName);
-        viewModel.firePropertyChange(); // Notify observers
+        viewModel.firePropertyChange();
     }
 
-    // Removes a material and notifies the view
     public void removeMaterial(String fileName) {
         UploadMaterialsState state = viewModel.getState();
         if (state.getUploadedMaterials() != null) {
             state.getUploadedMaterials().remove(fileName);
-            viewModel.firePropertyChange(); // Notify observers
+            viewModel.firePropertyChange();
         }
+    }
+
+    // Return the internal ViewModel (non-null now)
+    public ViewModel<UploadMaterialsState> getViewModel() {
+        return viewModel;
     }
 }
